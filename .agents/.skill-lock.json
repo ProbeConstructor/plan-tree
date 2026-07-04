@@ -1,0 +1,15 @@
+{
+  "version": 3,
+  "skills": {
+    "grill-me": {
+      "source": "tkersey/dotfiles",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/tkersey/dotfiles.git",
+      "skillPath": "codex/skills/grill-me/SKILL.md",
+      "skillFolderHash": "19290387618a464e7a5cfd62e9c7e557dbc41039",
+      "installedAt": "2026-07-04T11:00:18.730Z",
+      "updatedAt": "2026-07-04T11:00:18.730Z"
+    }
+  },
+  "dismissed": {}
+}

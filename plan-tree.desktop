@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Plan Tree
+Comment=Organizador de tareas en arbol
+Exec=kitty fish ~/.local/bin/plan-tree.fish
+Icon=utilities-terminal
+Terminal=false
+Categories=Utility;Development;
+StartupWMClass=plan-tree

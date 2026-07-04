@@ -1,0 +1,85 @@
+.node {
+  display: flex;
+  flex-direction: column;
+}
+
+.node:not(.root-node) {
+  align-items: flex-start;
+}
+
+.trunk {
+  width: 2px;
+  height: 22px;
+  background: #2a2f37;
+}
+
+.branches {
+  display: flex;
+  gap: 32px;
+  align-items: flex-start;
+}
+
+.branch {
+  position: relative;
+  padding-top: 22px;
+}
+
+.branch::before,
+.branch::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  width: 50%;
+  height: 22px;
+  border-top: 2px solid #2a2f37;
+}
+
+.branch::before {
+  left: 0;
+  border-right: 2px solid #2a2f37;
+}
+
+.branch::after {
+  left: 50%;
+}
+
+.branch:first-child::before {
+  border-top-color: transparent;
+}
+
+.branch:last-child::after {
+  border-top-color: transparent;
+}
+
+.branch:only-child::before,
+.branch:only-child::after {
+  border-top-color: transparent;
+}
+
+.stem {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 10px;
+  margin-left: 10px;
+  padding-left: 22px;
+  border-left: 2px solid #2a2f37;
+}
+
+.twig {
+  position: relative;
+}
+
+.twig::before {
+  content: "";
+  position: absolute;
+  left: -22px;
+  top: 17px;
+  width: 22px;
+  height: 2px;
+  background: #2a2f37;
+}
+
+.stem .twig:last-child {
+  margin-bottom: -10px;
+}

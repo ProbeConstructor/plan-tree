@@ -37,12 +37,17 @@
     }
 
     loading = true;
-    const ok = await deleteProfileWithAuth(openFor, password);
-    loading = false;
-
-    if (!ok) {
-      error = "Contraseña incorrecta";
+    try {
+      const ok = await deleteProfileWithAuth(openFor, password);
+      if (!ok) {
+        error = "Contraseña incorrecta";
+        return;
+      }
+    } catch (e) {
+      error = e instanceof Error ? e.message : String(e);
       return;
+    } finally {
+      loading = false;
     }
 
     openFor = null;

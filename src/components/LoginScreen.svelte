@@ -66,8 +66,8 @@
       error = "Ingresa tu usuario";
       return;
     }
-    if (!password) {
-      error = "Ingresa tu contraseña";
+    if (password.length < 4) {
+      error = "La contraseña debe tener al menos 4 caracteres";
       return;
     }
 
@@ -84,10 +84,14 @@
     const pwd = password;
     password = ""; // no dejar la contraseña en memoria más de lo necesario
 
-    const ok = await session.login(pwd);
+    try {
+      const ok = await session.login(pwd);
 
-    if (!ok) {
-      error = "Usuario o contraseña incorrectos";
+      if (!ok) {
+        error = "Usuario o contraseña incorrectos";
+      }
+    } catch (e) {
+      error = e instanceof Error ? e.message : String(e);
     }
 
     loading = false;

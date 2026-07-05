@@ -143,6 +143,33 @@ pub fn unlock(
     Ok(())
 }
 
+/// Como `unlock`, pero sin validar el largo de la contraseña.
+/// Existe exclusivamente para que perfiles creados antes de la
+/// validación de mínimo 4 caracteres puedan verificar su contraseña
+/// y borrar la cuenta. Después de usar este comando hay que hacer
+/// `lock` — no deja la clave activa para operaciones normales.
+#[tauri::command]
+pub fn unlock_no_length_check(
+    password: String,
+    salt: String,
+    state: tauri::State<VaultState>,
+    rate_limit: tauri::State<UnlockRateLimit>,
+) -> Result<(), String> {
+    check_rate_limit(&rate_limit)?;
+
+    let salt_bytes = hex::decode(&salt).map_err(|e| format!("sal invalida: {e}"))?;
+
+    let mut key = [0u8; 32];
+    Argon2::default()
+        .hash_password_into(password.as_bytes(), &salt_bytes, &mut key)
+        .map_err(|e| format!("error derivando la clave: {e}"))?;
+
+    let mut guard = state.0.lock().map_err(|_| "no se pudo bloquear el estado".to_string())?;
+    *guard = Some(key);
+
+    Ok(())
+}
+
 /// Borra la clave de memoria (cerrar sesión / bloquear la app).
 #[tauri::command]
 pub fn lock(state: tauri::State<VaultState>) {

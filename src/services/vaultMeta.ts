@@ -1,6 +1,7 @@
 import {
   generateSalt,
   unlockVault,
+  unlockVaultNoLengthCheck,
   encryptText,
   decryptText,
 } from "./vaultManager";
@@ -106,6 +107,30 @@ export async function tryUnlockVault(password: string): Promise<boolean> {
   await verifyMetaChecksum(meta);
 
   await unlockVault(password, meta.salt);
+
+  try {
+    const decrypted = await decryptText(meta.check);
+    return decrypted === CHECK_VALUE;
+  } catch {
+    // contraseña incorrecta: AES-GCM no pudo verificar el tag
+    return false;
+  }
+}
+
+/** Como `tryUnlockVault`, pero saltea la validación de largo mínimo.
+ * Solo para borrar perfiles creados antes de que existiera esa validación. */
+export async function tryUnlockVaultNoLengthCheck(password: string): Promise<boolean> {
+  const { readTextFile, BaseDirectory } = await fsModule();
+
+  const text = await readTextFile(vaultMetaPath(), {
+    baseDir: BaseDirectory.AppData,
+  });
+  const meta: VaultMeta = JSON.parse(text);
+
+  // verify integrity BEFORE using the data
+  await verifyMetaChecksum(meta);
+
+  await unlockVaultNoLengthCheck(password, meta.salt);
 
   try {
     const decrypted = await decryptText(meta.check);

@@ -8,6 +8,12 @@ export async function unlockVault(password: string, salt: string): Promise<void>
   await invoke("unlock", { password, salt });
 }
 
+/** Como unlockVault, pero sin validar el largo de la contraseña.
+ * Solo para borrar perfiles creados antes de la validación de 4 caracteres. */
+export async function unlockVaultNoLengthCheck(password: string, salt: string): Promise<void> {
+  await invoke("unlock_no_length_check", { password, salt });
+}
+
 export async function lockVault(): Promise<void> {
   await invoke("lock");
 }

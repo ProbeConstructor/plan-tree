@@ -46,6 +46,7 @@ pub fn run() {
     .invoke_handler(tauri::generate_handler![
       vault::generate_salt,
       vault::unlock,
+      vault::unlock_no_length_check,
       vault::lock,
       vault::is_unlocked,
       vault::encrypt,

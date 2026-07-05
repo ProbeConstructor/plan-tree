@@ -10,6 +10,7 @@
     getStatusDotColor,
     getCellDisplayInfo,
   } from "../utils/calendarUtils";
+  import { isValidIconDataUri } from "../utils/validation";
   import NodeDetailModal from "../modals/NodeDetailModal.svelte";
 
   const MAX_VISIBLE = 3;
@@ -108,8 +109,8 @@
                   class:done={node.status === "done"}
                   onclick={() => onNodeClick(node.id)}
                 >
-                  {#if node.icon}
-                    <span class="node-icon">{node.icon}</span>
+                  {#if isValidIconDataUri(node.icon)}
+                    <img src={node.icon} alt="" class="node-icon" />
                   {/if}
                   <span
                     class="status-dot"
@@ -234,10 +235,9 @@
   }
 
   .day-cell.today {
-    border: 1px solid #facc15;
-    margin: -1px; /* compensate for the gap+border */
+    outline: 2px solid #facc15;
+    outline-offset: -2px;
     z-index: 1;
-    position: relative;
   }
 
   .day-cell.empty {

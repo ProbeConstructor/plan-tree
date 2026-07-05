@@ -151,7 +151,7 @@ export function getStatusDotColor(status: TreeNode["status"]): string {
     doing: "#3b82f6",
     done: "#22c55e",
   };
-  return colors[status];
+  return colors[status] ?? "#6b7280"; // fallback to gray for unknown status
 }
 
 // ---------------------------------------------------------------------------

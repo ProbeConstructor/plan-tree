@@ -10,6 +10,7 @@
   import { clearActiveProfile } from "./services/profileManager";
   import Sidebar from "./components/Sidebar.svelte";
   import Dashboard from "./pages/Dashboard.svelte";
+  import Calendar from "./pages/Calendar.svelte";
   import { currentView } from "./stores/viewStore";
   import ModalHost from "./components/ModalHost.svelte";
   import RecoveryBanner from "./components/RecoveryBanner.svelte";
@@ -137,6 +138,8 @@
                 <TreeCanvas />
               </div>
             </div>
+          {:else if $currentView === "calendar"}
+            <Calendar />
           {:else}
             <Dashboard />
           {/if}

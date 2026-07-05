@@ -26,6 +26,9 @@ export function moveNode(
   const draggedNode = findNode(root, draggedId);
   if (!draggedNode) return root;
   if (containsId(draggedNode, targetParentId)) return root; // soltarías dentro de sí mismo
+  // Validar que el target existe ANTES de mutar — si no, el deleteNode
+  // borra el nodo y updateNode es no-op, dejándolo huérfano (data loss).
+  if (!findNode(root, targetParentId)) return root;
   const withoutDragged = deleteNode(root, draggedId);
   return updateNode(withoutDragged, targetParentId, (n) => ({
     ...n,

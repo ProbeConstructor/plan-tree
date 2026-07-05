@@ -239,14 +239,12 @@ describe("moveNode", () => {
     expect(result).toEqual(tree);
   });
 
-  it("removes the dragged node when target parent does not exist (node gets orphaned — no parent to attach to)", () => {
+  it("returns the tree unchanged when target parent does not exist (no orphaning)", () => {
     const tree = buildTestTree();
     const result = moveNode(tree, "child1", "nonexistent");
-    // The node is deleted from its original position but updateNode
-    // with a non-existent id is a no-op, so the dragged node is lost
-    expect(findNode(result, "child1")).toBeNull();
-    expect(findNode(result, "grandchild1")).toBeNull();
-    expect(findNode(result, "grandchild2")).toBeNull();
+    // Antes: el nodo se perdía porque deleteNode corría antes de validar.
+    // Ahora: se valida que el target existe antes de mutar.
+    expect(result).toEqual(tree);
   });
 
   it("returns the tree unchanged when dragged node does not exist", () => {

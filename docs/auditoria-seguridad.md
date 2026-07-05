@@ -80,11 +80,11 @@ encriptación de extremo a extremo. Todos los datos se almacenan cifrados en dis
 
 ### 4. Scopes del Plugin `fs`
 
-- [ ] **Scopes actuales**: las operaciones de fs se hacen con `BaseDirectory.AppData` y paths
-      relativos. Verificar que ningún path pueda escapar via directory traversal (e.g. nombres
-      de proyecto como `../../etc/passwd`).
+- [x] **Scopes actuales**: las operaciones de fs se hacen con `BaseDirectory.AppData` y paths
+      relativos. `SAFE_NAME_REGEX = /^[A-Za-z0-9 _-]{1,32}$/` previene cualquier path traversal
+      (sin `/`, `..`, o caracteres de control). Máx 32 caracteres alineado con AGENTS.md.
 - [x] **Sanitización de nombres de archivo**: creado `src/utils/validation.ts` con
-      `validateSafeName()` (regex `/^[A-Za-z0-9 _-]{1,64}$/`). Aplicado en:
+      `validateSafeName()` (regex `/^[A-Za-z0-9 _-]{1,32}$/` alineado con AGENTS.md). Aplicado en:
       `createProfile`, `createProject`, `renameProject`, y en los modales
       `NewProjectModal` y `RenameProjectModal` con feedback instantáneo.
 - [ ] **Operación `remove` en profile**: borra recursivamente `profiles/<name>/`. Verificar
@@ -93,8 +93,9 @@ encriptación de extremo a extremo. Todos los datos se almacenan cifrados en dis
 ### 5. Frontend XSS
 
 - [x] **`innerHTML` en `main.ts:18`**: migrado a DOM API segura (`textContent` + `appendChild`).
-- [ ] **`node.icon` en `<img src>`**: verificar que el origen del icono siempre sea un archivo
-      de imagen válido, no un string arbitrario.
+- [x] **`node.icon` en `<img src>`**: validado con `isValidIconDataUri()` en `validation.ts` — solo
+      data URIs de imagen (PNG/JPEG base64) pasan al render. El picker (`pickAndResizeImage`) ya
+      filtra por tipo y tamaño, la validación en `NodeCard.svelte` es la segunda barrera.
 - [ ] **Node titles / project names / profile names**: se renderizan con Svelte `{...}` que
       auto-escapena. Sin riesgo actual.
 - [ ] **Event handlers**: revisar que ningún evento svelte (`on:click`, `on:input`, etc.)
@@ -104,10 +105,10 @@ encriptación de extremo a extremo. Todos los datos se almacenan cifrados en dis
 
 - [x] **Agregar `npm audit` al CI** o al workflow de build. → `npm run audit:npm` agregado en package.json. 0 vulnerabilities.
 - [x] **Agregar `cargo audit`** para dependencias Rust. → `npm run audit:cargo` agregado. 2 vulnerabilities encontradas (quick-xml 0.39.4, ambas high).
-- [ ] **Vulnerabilidad activa**: `quick-xml 0.39.4` (transitiva via tauri → plist). Dos CVEs:
+- [x] **Vulnerabilidad activa**: `quick-xml 0.39.4` (transitiva via tauri → plist). Dos CVEs:
   - RUSTSEC-2026-0194: Quadratic run time en start tag con atributos duplicados (7.5 high)
   - RUSTSEC-2026-0195: Unbounded namespace allocation en NsReader → DoS memory (7.5 high)
-  - Solución: upgrade tauri a versión que use quick-xml >=0.41.0
+  - Solución: ✅ `cargo update -p plist` → plist 1.10.0 trae quick-xml 0.41.0. Tauri actualizado a 2.11.5.
 - [x] **Revisar dependencias no utilizadas**: `log 0.4` se usa directamente en `lib.rs:36`
       (`log::LevelFilter::Info`). `tauri-plugin-log` no re-exporta el crate, es necesaria
       como dependencia directa. ✓
@@ -124,8 +125,9 @@ encriptación de extremo a extremo. Todos los datos se almacenan cifrados en dis
 - [x] **Recovery key en pantalla**: en `RecoveryBanner.svelte`, al cerrar el banner se asigna
       `showRecoveryKey = ""` y el `{#if}` se destruye (no queda hidden DOM). En
       `LoginScreen.svelte`, `newRecoveryKeyResult` se limpia al volver al login.
-- [ ] **Logs**: `tauri-plugin-log` solo se carga en debug (`lib.rs:33-39`). Verificar que
-      ningún log accidental imprima datos sensibles (passwords, keys).
+- [x] **Logs**: `tauri-plugin-log` solo se carga en debug (`lib.rs:33-39`). No hay
+      `log!()` / `println!` / `console.log` en todo el código de la app. Cero riesgo de
+      filtrado de datos sensibles por logs.
 
 ### 8. Configuración de Tauri
 

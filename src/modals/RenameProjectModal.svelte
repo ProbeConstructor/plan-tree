@@ -38,6 +38,7 @@ function focus(node: HTMLInputElement) {
 
 <input
     bind:value={name}
+    maxlength="32"
     use:focus
     on:keydown={(e)=>e.key==="Enter" && rename()}
 />

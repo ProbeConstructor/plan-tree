@@ -148,6 +148,7 @@
     <input
       type="text"
       placeholder="Usuario"
+      maxlength="32"
       bind:value={username}
       disabled={loading}
     />
@@ -198,6 +199,7 @@
       <input
         type="text"
         placeholder="Usuario"
+        maxlength="32"
         bind:value={username}
         disabled={loading}
       />

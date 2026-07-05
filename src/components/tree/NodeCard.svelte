@@ -1,5 +1,6 @@
 <script lang="ts">
   import { getNodeType, isOverdue } from "../../utils/treeUtils";
+  import { isValidIconDataUri } from "../../utils/validation";
   import { draggedNodeId, focusedNodeId } from "../../stores/treeStore";
 
   let {
@@ -127,7 +128,7 @@
         </div>
       {/if}
 
-      {#if node.icon}
+      {#if isValidIconDataUri(node.icon)}
         <img src={node.icon} alt="icon" class="node-icon" />
       {/if}
 
@@ -186,7 +187,7 @@
           onchange={onDueDate}
         />
         <div class="image-controls">
-          {#if node.icon}
+          {#if isValidIconDataUri(node.icon)}
             <img src={node.icon} alt="preview" class="icon-preview" />
             <button class="icon-btn danger" onclick={() => onRemoveIcon?.()}>🗑️</button>
           {/if}

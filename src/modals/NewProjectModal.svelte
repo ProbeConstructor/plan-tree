@@ -36,6 +36,7 @@ function focusOnMount(node: HTMLInputElement) {
   <input
     bind:value={name}
     placeholder="Nombre del proyecto"
+    maxlength="32"
     use:focusOnMount
     on:keydown={(e) => e.key === "Enter" && create()}
   />

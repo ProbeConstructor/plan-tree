@@ -381,3 +381,81 @@ pub fn reset_master_key_atomic(
         check,
     })
 }
+
+// ---------------------------------------------------------------------------
+// Tests
+// ---------------------------------------------------------------------------
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_validate_password_ok() {
+        assert!(validate_password("abcd").is_ok());
+        assert!(validate_password(&"a".repeat(512)).is_ok());
+        assert!(validate_password("hola mundo 123!").is_ok());
+    }
+
+    #[test]
+    fn test_validate_password_too_short() {
+        let err = validate_password("ab").unwrap_err();
+        assert!(err.contains("menos"));
+        let err = validate_password("").unwrap_err();
+        assert!(err.contains("menos"));
+    }
+
+    #[test]
+    fn test_validate_password_too_long() {
+        let err = validate_password(&"a".repeat(513)).unwrap_err();
+        assert!(err.contains("superar"));
+    }
+
+    #[test]
+    fn test_wrap_unwrap_roundtrip() {
+        let mut key = [0u8; 32];
+        OsRng.fill_bytes(&mut key);
+
+        let plaintext = b"plan-tree-ok";
+        let wrapped = wrap_with_key(&key, plaintext).unwrap();
+        let unwrapped = unwrap_with_key(&key, &wrapped).unwrap();
+
+        assert_eq!(unwrapped, plaintext);
+    }
+
+    #[test]
+    fn test_unwrap_with_wrong_key_fails() {
+        let mut key_a = [0u8; 32];
+        let mut key_b = [0u8; 32];
+        OsRng.fill_bytes(&mut key_a);
+        OsRng.fill_bytes(&mut key_b);
+
+        let wrapped = wrap_with_key(&key_a, b"secreto").unwrap();
+        let result = unwrap_with_key(&key_b, &wrapped);
+
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_unwrap_malformed_payload() {
+        let key = [0u8; 32];
+        let result = unwrap_with_key(&key, "no-hay-dos-puntos");
+        assert!(result.is_err());
+
+        let result = unwrap_with_key(&key, "hexinvalido:hexinvalido");
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_generate_salt_returns_hex() {
+        let salt = generate_salt();
+        // 16 bytes → 32 hex chars
+        assert_eq!(salt.len(), 32);
+        assert!(salt.chars().all(|c| c.is_ascii_hexdigit()));
+    }
+
+    #[test]
+    fn test_check_rate_limit_first_call_ok() {
+        let limit = UnlockRateLimit(AtomicU64::new(0));
+        assert!(check_rate_limit(&limit).is_ok());
+    }
+}

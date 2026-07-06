@@ -12,11 +12,13 @@
   import { useNodeDetails } from "./useNodeDetails";
   import type { TreeViewNode } from "../../types";
   import { COLUMN_WIDTH } from "../../constants/layout";
+  import { openModal } from "../../stores/modalStore";
+  import NodeDetailModal from "../../modals/NodeDetailModal.svelte";
   import {
     registerNodeMeasurement,
     unregisterNodeMeasurement,
   } from "../../stores/nodeMeasurementsStore";
-  import { onMount } from "svelte";
+  import { onMount, tick } from "svelte";
   import { onDestroy } from "svelte";
 
   export let node: TreeNode;
@@ -82,6 +84,10 @@
     if (dataUri) actions.setIcon(node, dataUri);
   }
 
+  function openDetailsModal() {
+    openModal(NodeDetailModal, { nodeId: node.id });
+  }
+
   function handleHeightChange(height: number) {
     registerNodeMeasurement(
       node.id,
@@ -94,6 +100,7 @@
 
 <div
   class="node"
+  id={node.id}
   class:root-node={layout.isRoot}
   role="treeitem"
   tabindex="0"
@@ -130,7 +137,11 @@
     onToggleDetails={details.toggleDetails}
     onToggle={expansion.toggle}
     onExtract={extractToProject}
-    onAddChild={() => actions.addChild(node, layout.depth)}
+    onAddChild={async () => {
+      const newId = actions.addChild(node, layout.depth);
+      await tick();
+      document.getElementById(newId)?.scrollIntoView({ behavior: "smooth", block: "center", inline: "center" });
+    }}
     onDelete={() => actions.removeNode(node)}
     onFocus={() => actions.toggleFocus(node)}
     onStatus={(e: Event) => actions.setStatus(node, e)}
@@ -140,6 +151,7 @@
     onHeightChange={handleHeightChange}
     onPickImage={() => handlePickImage(node)}
     onRemoveIcon={() => actions.removeIcon(node)}
+    onOpenDetailsModal={openDetailsModal}
   />
 </div>
 

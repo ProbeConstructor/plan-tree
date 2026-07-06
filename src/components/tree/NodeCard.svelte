@@ -33,8 +33,12 @@
     onHeightChange,
     onPickImage,
     onRemoveIcon,
+    onOpenDetailsModal,
   } = $props();
+  import CommentPopover from "./CommentPopover.svelte";
+
   let cardElement: HTMLDivElement;
+  let showCommentPopover = $state(false);
 
   import { tick } from "svelte";
 
@@ -132,6 +136,18 @@
         <img src={node.icon} alt="icon" class="node-icon" />
       {/if}
 
+      <button
+        class="comment-btn"
+        class:has-comments={node.comments}
+        onclick={(e: MouseEvent) => {
+          e.stopPropagation();
+          showCommentPopover = !showCommentPopover;
+        }}
+        title="Comentarios"
+      >
+        💬
+      </button>
+
       <span class="progress-pct">
         {progress}%
       </span>
@@ -140,6 +156,19 @@
         {detailsOpen ? "▴" : "▾"}
       </span>
     </div>
+
+    {#if showCommentPopover}
+      <div class="popover-anchor">
+        <CommentPopover
+          comments={node.comments ?? ""}
+          onEdit={() => {
+            showCommentPopover = false;
+            onOpenDetailsModal();
+          }}
+          onClose={() => (showCommentPopover = false)}
+        />
+      </div>
+    {/if}
 
     {#if detailsOpen}
       <div class="bar">
@@ -208,6 +237,7 @@
           🎯
         </button>
         <button class="icon-btn" onclick={onAddChild}> ＋ </button>
+        <button class="icon-btn" onclick={onOpenDetailsModal}> 📝 </button>
         <button class="icon-btn danger" onclick={onDelete}> 🗑️ </button>
       </div>
     {/if}
@@ -220,6 +250,7 @@
     gap: 10px;
     align-items: flex-start;
     background: #1a1d24;
+    position: relative;
     border: 1px solid #262b33;
     border-left: 4px solid var(--accent);
     border-radius: 10px;
@@ -359,5 +390,33 @@
 
   .chevron {
     flex-shrink: 0;
+  }
+
+  .comment-btn {
+    background: none;
+    border: 1px solid transparent;
+    cursor: pointer;
+    font-size: 12px;
+    padding: 1px 4px;
+    border-radius: 4px;
+    line-height: 1;
+    flex-shrink: 0;
+    opacity: 0.5;
+    transition: opacity 0.15s;
+  }
+
+  .comment-btn:hover {
+    opacity: 1;
+    background: #2a2f37;
+  }
+
+  .comment-btn.has-comments {
+    opacity: 1;
+    border-color: #3b82f6;
+    background: rgba(59, 130, 246, 0.1);
+  }
+
+  .popover-anchor {
+    position: relative;
   }
 </style>

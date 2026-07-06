@@ -4,6 +4,7 @@ import { snapshot, mutateTree, focusedNodeId } from "../../stores/treeStore";
 import { updateNode, getDefaultTitle, deleteNode } from "../../utils/treeUtils";
 
 export function addChild(node: TreeNode, depth: number) {
+  const newId = crypto.randomUUID();
   snapshot();
   mutateTree((t) =>
     updateNode(t, node.id, (n) => ({
@@ -12,7 +13,7 @@ export function addChild(node: TreeNode, depth: number) {
       children: [
         ...n.children,
         {
-          id: crypto.randomUUID(),
+          id: newId,
           title: getDefaultTitle(depth + 1),
           expanded: true,
           status: "todo",
@@ -23,6 +24,7 @@ export function addChild(node: TreeNode, depth: number) {
       ],
     })),
   );
+  return newId;
 }
 
 export function removeNode(node: TreeNode) {

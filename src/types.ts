@@ -39,3 +39,19 @@ export interface TreeViewNode {
   x: number;
   y: number;
 }
+
+// 📊 progreso mensual
+export type StatusBreakdown = { todo: number; doing: number; done: number };
+export type PriorityCount = { total: number; done: number };
+export type PriorityBreakdown = Record<"critical" | "high" | "medium" | "low", PriorityCount>;
+export type BranchProgress = { id: string; title: string; progress: number };
+
+export interface Snapshot {
+  timestamp: string;           // ISO 8601
+  globalProgress: number;
+  branchProgress: BranchProgress[];
+  totalNodes: number;
+  doneNodes: number;
+  statusBreakdown: StatusBreakdown;
+  priorityBreakdown: PriorityBreakdown;
+}

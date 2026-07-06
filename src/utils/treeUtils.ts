@@ -268,6 +268,20 @@ export function getPriorityBreakdown(root: TreeNode) {
   return breakdown;
 }
 
+export function getStatusBreakdown(root: TreeNode): { todo: number; doing: number; done: number } {
+  const breakdown = { todo: 0, doing: 0, done: 0 };
+
+  function walk(node: TreeNode) {
+    if (node.status === "todo") breakdown.todo++;
+    else if (node.status === "doing") breakdown.doing++;
+    else if (node.status === "done") breakdown.done++;
+    node.children.forEach(walk);
+  }
+
+  walk(root);
+  return breakdown;
+}
+
 export function getOverdueAndUpcoming(root: TreeNode, upcomingDays = 5) {
   const today = new Date();
   today.setHours(0, 0, 0, 0);

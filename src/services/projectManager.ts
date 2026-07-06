@@ -3,6 +3,7 @@ import * as IO from "./projectIO";
 import { encryptProject, decryptProject } from "./projectCrypto";
 import { exportTree as exportDialog, importTree as importDialog } from "./dialogAdapter";
 import { validateSafeName } from "../utils/validation";
+import { progressSnapshot } from "./progressSnapshotService";
 
 let migrated = false;
 
@@ -89,6 +90,7 @@ export async function listProjects(): Promise<string[]> {
 
 export async function deleteProject(name: string): Promise<void> {
   await IO.removeFile(name);
+  await progressSnapshot.deleteProject(name);
 }
 
 export async function renameProject(
@@ -97,6 +99,7 @@ export async function renameProject(
 ): Promise<void> {
   validateSafeName(newName, "Proyecto");
   await IO.renameFile(oldName, newName);
+  await progressSnapshot.renameProject(oldName, newName);
 }
 
 export { exportDialog as exportTree, importDialog as importTree };

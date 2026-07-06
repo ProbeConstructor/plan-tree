@@ -5,6 +5,9 @@ export type AutoSaveStatus = "idle" | "saving" | "error";
 
 type SaveFn = (project: string, data: TreeNode) => Promise<void>;
 
+/** Callback opcional que se dispara después de un guardado exitoso. */
+export type AfterSaveFn = (project: string, data: TreeNode) => Promise<void> | void;
+
 export class AutoSaveStrategy {
   private timer: ReturnType<typeof setTimeout> | null = null;
   private pendingData: TreeNode | null = null;
@@ -12,6 +15,9 @@ export class AutoSaveStrategy {
   private saveFn: SaveFn;
   private debounceMs: number;
   private maxRetries: number;
+
+  /** Callback opcional: se ejecuta después de cada flush exitoso. */
+  onAfterSave: AfterSaveFn | null = null;
 
   readonly status = writable<AutoSaveStatus>("idle");
 
@@ -47,13 +53,22 @@ export class AutoSaveStrategy {
     for (let attempt = 0; attempt < this.maxRetries; attempt++) {
       try {
         await this.saveFn(project, data);
-        this.status.set("idle");
-        return;
       } catch {
         if (attempt < this.maxRetries - 1) {
           await new Promise((r) => setTimeout(r, 500 * Math.pow(2, attempt)));
         }
+        continue;
       }
+
+      // onAfterSave fire-and-forget — error NO debe afectar el save ni el status
+      try {
+        await this.onAfterSave?.(project, data);
+      } catch {
+        // silently swallow: snapshot errors no interrumpen el auto-save
+      }
+
+      this.status.set("idle");
+      return;
     }
 
     this.status.set("error");

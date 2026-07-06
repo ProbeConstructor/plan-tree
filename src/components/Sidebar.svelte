@@ -46,6 +46,8 @@
 
   <button on:click={() => currentView.set("calendar")}> 📅 Calendario </button>
 
+  <button on:click={() => currentView.set("progress")}> 📈 Progreso </button>
+
   <hr />
   <select value={$activeProject} on:change={changeProject}>
     {#each $projects as project}

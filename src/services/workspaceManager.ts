@@ -16,12 +16,16 @@ import {
 
 import { getLastProject, setLastProject } from "./profileManager";
 import { AutoSaveStrategy } from "./autoSaveStrategy";
+import { progressSnapshot } from "./progressSnapshotService";
 
 import type { TreeNode } from "../types";
 
 let isLoading = false;
 
 export const autoSave = new AutoSaveStrategy(saveProject);
+autoSave.onAfterSave = (project, data) => {
+  progressSnapshot.capture(project, data);
+};
 
 export async function refreshProjects(): Promise<void> {
   const list = await listProjects();

@@ -20,6 +20,7 @@ import {
   getOverdueAndUpcoming,
   daysOverdue,
   calculateProgressMap,
+  searchNodes,
 } from "./treeUtils";
 
 // ---------------------------------------------------------------------------
@@ -778,6 +779,139 @@ describe("daysOverdue", () => {
     const today = daysFromNow(0);
     const days = daysOverdue(today);
     expect(Math.abs(days)).toBeLessThanOrEqual(1);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// searchNodes
+// ---------------------------------------------------------------------------
+
+function buildSearchTestTree(): TreeNode {
+  return {
+    id: "root",
+    title: "Root",
+    expanded: true,
+    status: "todo",
+    priority: "medium",
+    children: [
+      {
+        id: "child1",
+        title: "Configurar servidor",
+        expanded: true,
+        status: "doing",
+        priority: "high",
+        children: [],
+        startDate: "2026-01-01",
+        comments: "Usar Docker para el despliegue",
+      },
+      {
+        id: "child2",
+        title: "Diseñar base de datos",
+        expanded: false,
+        status: "todo",
+        priority: "medium",
+        children: [],
+        startDate: "2026-01-01",
+        comments: "Revisar esquema de PostgreSQL con índices",
+      },
+      {
+        id: "child3",
+        title: "Frontend",
+        expanded: false,
+        status: "todo",
+        priority: "medium",
+        children: [],
+        startDate: "2026-01-01",
+        comments: "usar react con typescript",
+      },
+    ],
+    startDate: "2026-01-01",
+  };
+}
+
+describe("searchNodes", () => {
+  it("matches by title case-insensitively", () => {
+    const tree = buildSearchTestTree();
+    const results = searchNodes(tree, "servidor");
+    expect(results).toHaveLength(1);
+    expect(results[0].id).toBe("child1");
+    expect(results[0].matchField).toBe("title");
+  });
+
+  it("matches by comments case-insensitively", () => {
+    const tree = buildSearchTestTree();
+    const results = searchNodes(tree, "docker");
+    expect(results).toHaveLength(1);
+    expect(results[0].id).toBe("child1");
+    expect(results[0].matchField).toBe("comments");
+    expect(results[0].matchSnippet).toBeTruthy();
+  });
+
+  it("matches multiple nodes across title and comments", () => {
+    const tree = buildSearchTestTree();
+    // child1 comment: "Usar Docker..." → matches "usar"
+    // child3 comment: "usar react..." → matches "usar"
+    const results = searchNodes(tree, "usar");
+    expect(results).toHaveLength(2);
+    const ids = results.map((r) => r.id).sort();
+    expect(ids).toEqual(["child1", "child3"]);
+  });
+
+  it("does not duplicate a node when both title and comments match", () => {
+    const tree = buildSearchTestTree();
+    // child1: title="Configurar servidor" contains "config"
+    //        comment="Usar Docker para el despliegue" does NOT contain "config"
+    // Let's use a tree where a node explicitly matches in both fields
+    const dualTree: TreeNode = {
+      id: "root",
+      title: "Root",
+      expanded: true,
+      status: "todo",
+      priority: "medium",
+      children: [
+        {
+          id: "dual",
+          title: "PostgreSQL setup",
+          expanded: false,
+          status: "todo",
+          priority: "medium",
+          children: [],
+          startDate: "2026-01-01",
+          comments: "postgresql connection string here",
+        },
+      ],
+      startDate: "2026-01-01",
+    };
+    const results = searchNodes(dualTree, "postgresql");
+    expect(results).toHaveLength(1);
+    expect(results[0].id).toBe("dual");
+    expect(results[0].matchField).toBe("title"); // title match wins
+  });
+
+  it("returns empty array when query is empty", () => {
+    const tree = buildSearchTestTree();
+    expect(searchNodes(tree, "")).toHaveLength(0);
+  });
+
+  it("returns empty array when no match is found", () => {
+    const tree = buildSearchTestTree();
+    const results = searchNodes(tree, "zzzznotfound");
+    expect(results).toHaveLength(0);
+  });
+
+  it("is case-insensitive", () => {
+    const tree = buildSearchTestTree();
+    const upper = searchNodes(tree, "SERVIDOR");
+    const lower = searchNodes(tree, "servidor");
+    expect(upper).toEqual(lower);
+  });
+
+  it("includes snippet for comment matches", () => {
+    const tree = buildSearchTestTree();
+    const results = searchNodes(tree, "índices");
+    expect(results).toHaveLength(1);
+    expect(results[0].matchSnippet).toBeTruthy();
+    expect(results[0].matchSnippet!.toLowerCase()).toContain("índices");
   });
 });
 

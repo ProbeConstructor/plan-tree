@@ -24,6 +24,8 @@
   import ErrorBoundary from "./components/ErrorBoundary.svelte";
   import { check } from "@tauri-apps/plugin-updater";
   import { pendingUpdate, checkingUpdate } from "./stores/updateStore";
+  import NodeSearch from "./components/tree/NodeSearch.svelte";
+  import { isOpen, openSearch } from "./stores/searchStore";
 
   let appReady = false;
   let workspaceInitialized = false;
@@ -121,6 +123,10 @@
 
 <svelte:window
   on:keydown={(e) => {
+    if (e.ctrlKey && e.key === "f") {
+      e.preventDefault();
+      openSearch();
+    }
     if (e.key === "ArrowDown") {
       e.preventDefault();
       keyboardScroll(80);
@@ -157,6 +163,9 @@
           {#if $currentView === "tree"}
             <div id="tree-anchor"></div>
             <div class="tree-viewport">
+              {#if $isOpen}
+                <NodeSearch />
+              {/if}
               <div class="tree-canvas">
                 <TreeCanvas />
               </div>

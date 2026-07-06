@@ -26,6 +26,8 @@ tauri-plugin-log = "2"
 tauri-plugin-fs = "2"
 tauri-plugin-dialog = "2"
 tauri-plugin-single-instance = "2"
+tauri-plugin-process = "2"
+tauri-plugin-updater = "2"
 
 # 🔐 vault: derivacion de clave (Argon2id) + cifrado (AES-256-GCM)
 argon2 = "0.5"

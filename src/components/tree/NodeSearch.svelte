@@ -1,15 +1,21 @@
 <script lang="ts">
-  import { query, results, isOpen, closeSearch } from "../../stores/searchStore";
+  import { query, results } from "../../stores/searchStore";
   import { tree } from "../../stores/treeStore";
   import { setFocus } from "../../utils/treeUtils";
-  import { onMount } from "svelte";
+  import { closeModal } from "../../stores/modalStore";
+  import Modal from "../Modal.svelte";
+  import { onMount, onDestroy } from "svelte";
 
   let inputEl: HTMLInputElement;
-  let searchEl: HTMLDivElement;
 
   onMount(() => {
-    // small delay to let the DOM settle before focusing
+    query.set("");
     setTimeout(() => inputEl?.focus(), 50);
+  });
+
+  onDestroy(() => {
+    tree.update((t) => setFocus(t, null));
+    query.set("");
   });
 
   function handleSelect(id: string) {
@@ -17,30 +23,11 @@
     document
       .getElementById(id)
       ?.scrollIntoView({ behavior: "smooth", block: "center", inline: "center" });
-    closeSearch();
-  }
-
-  function handleKeydown(e: KeyboardEvent) {
-    if (e.key === "Escape") {
-      e.preventDefault();
-      tree.update((t) => setFocus(t, null));
-      closeSearch();
-    }
-  }
-
-  function handleClickOutside(e: MouseEvent) {
-    if (searchEl && !searchEl.contains(e.target as Node)) {
-      closeSearch();
-    }
+    closeModal();
   }
 </script>
 
-<svelte:window
-  on:keydown={handleKeydown}
-  on:click={handleClickOutside}
-/>
-
-<div class="search-container" bind:this={searchEl}>
+<Modal title="Buscar nodos">
   <input
     bind:this={inputEl}
     type="text"
@@ -68,28 +55,20 @@
   {:else if $query.length > 0}
     <p class="no-results">Sin resultados</p>
   {/if}
-</div>
+</Modal>
 
 <style>
-  .search-container {
-    position: absolute;
-    top: 8px;
-    left: 8px;
-    right: 8px;
-    z-index: 1000;
-    max-width: 400px;
-  }
-
   .search-input {
     width: 100%;
     padding: 10px 14px;
     border: 1px solid #262b33;
     border-radius: 8px;
-    background: #1a1d24;
+    background: #0f1115;
     color: #e7e9ee;
     font-size: 14px;
     outline: none;
     box-sizing: border-box;
+    margin-bottom: 8px;
   }
 
   .search-input:focus {
@@ -98,9 +77,9 @@
 
   .search-results {
     list-style: none;
-    margin: 4px 0 0;
+    margin: 0;
     padding: 0;
-    background: #1a1d24;
+    background: #0f1115;
     border: 1px solid #262b33;
     border-radius: 8px;
     max-height: 300px;
@@ -153,9 +132,9 @@
   }
 
   .no-results {
-    margin: 4px 0 0;
+    margin: 0;
     padding: 10px 14px;
-    background: #1a1d24;
+    background: #0f1115;
     border: 1px solid #262b33;
     border-radius: 8px;
     color: #6b7280;

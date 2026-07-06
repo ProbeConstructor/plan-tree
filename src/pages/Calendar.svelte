@@ -1,5 +1,6 @@
 <script lang="ts">
   import { tree } from "../stores/treeStore";
+  import { completions, toggle as toggleCompletion } from "../stores/completionStore";
   import { openModal } from "../stores/modalStore";
   import {
     getMonthGrid,
@@ -10,6 +11,8 @@
     getStatusDotColor,
     getCellDisplayInfo,
   } from "../utils/calendarUtils";
+  import { getRecurrenceInstances } from "../utils/recurrence";
+  import type { TreeNode, VirtualInstance } from "../types";
   import { isValidIconDataUri } from "../utils/validation";
   import NodeDetailModal from "../modals/NodeDetailModal.svelte";
 
@@ -23,7 +26,8 @@
   // will silently break reactivity.
 
   let grid = $derived(getMonthGrid(currentYear, currentMonth));
-  let nodesByDate = $derived(groupNodesByDate($tree, currentYear, currentMonth));
+  let virtualInstances = $derived(getRecurrenceInstances($tree, $completions, currentYear, currentMonth));
+  let nodesByDate = $derived(groupNodesByDate($tree, currentYear, currentMonth, virtualInstances));
   let weekDays = $derived(getWeekDays());
   let monthYear = $derived(formatMonthYear(currentYear, currentMonth));
 
@@ -68,8 +72,24 @@
     expandedCells = next;
   }
 
-  function onNodeClick(nodeId: string) {
-    openModal(NodeDetailModal, { nodeId });
+  function isVirtualEntry(entry: unknown): entry is VirtualInstance {
+    return typeof entry === "object" && entry !== null && "isVirtual" in entry;
+  }
+
+  function getEntryStatus(entry: unknown): string {
+    if (isVirtualEntry(entry)) return entry.status;
+    return (entry as TreeNode).status;
+  }
+
+  function onEntryClick(entry: unknown) {
+    if (isVirtualEntry(entry)) {
+      if (entry.status !== "missed") {
+        toggleCompletion(entry.nodeId, entry.date);
+      }
+    } else {
+      const node = entry as TreeNode;
+      openModal(NodeDetailModal, { nodeId: node.id });
+    }
   }
 </script>
 
@@ -103,20 +123,29 @@
           >
             <span class="day-number">{day}</span>
             <div class="node-entries">
-              {#each displayNodes as node (node.id)}
+              {#each displayNodes as entry (entry.id)}
+                {@const eStatus = getEntryStatus(entry)}
+                {@const isVirtual = isVirtualEntry(entry)}
                 <button
                   class="node-entry"
-                  class:done={node.status === "done"}
-                  onclick={() => onNodeClick(node.id)}
+                  class:done={eStatus === "done"}
+                  class:missed={eStatus === "missed"}
+                  onclick={() => onEntryClick(entry)}
+                  disabled={eStatus === "missed"}
                 >
-                  {#if isValidIconDataUri(node.icon)}
-                    <img src={node.icon} alt="" class="node-icon" />
+                  {#if isVirtual}
+                    <span class="virtual-badge">♻️</span>
+                  {:else if "icon" in (entry as any) && isValidIconDataUri((entry as any).icon)}
+                    <img src={(entry as any).icon} alt="" class="node-icon" />
                   {/if}
                   <span
                     class="status-dot"
-                    style="background: {getStatusDotColor(node.status)}"
+                    style="background: {getStatusDotColor(eStatus)}"
                   ></span>
-                  <span class="node-title">{node.title}</span>
+                  <span class="node-title">{(entry as any).title}</span>
+                  {#if eStatus === "missed"}
+                    <span class="missed-label">omitida</span>
+                  {/if}
                 </button>
               {/each}
               {#if overflow > 0 && !expandedCells.has(dateKey)}
@@ -284,6 +313,27 @@
 
   .node-entry.done {
     opacity: 0.5;
+  }
+
+  .node-entry.missed {
+    opacity: 0.4;
+    text-decoration: line-through;
+  }
+
+  .node-entry:disabled {
+    cursor: default;
+  }
+
+  .missed-label {
+    font-size: 10px;
+    color: #991b1b;
+    margin-left: auto;
+    flex-shrink: 0;
+  }
+
+  .virtual-badge {
+    font-size: 12px;
+    flex-shrink: 0;
   }
 
   .status-dot {

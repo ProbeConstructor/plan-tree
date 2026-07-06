@@ -1,4 +1,4 @@
-import type { TreeNode } from "../types";
+import type { TreeNode, ProjectData } from "../types";
 import * as IO from "./projectIO";
 import { encryptProject, decryptProject } from "./projectCrypto";
 import { exportTree as exportDialog, importTree as importDialog } from "./dialogAdapter";
@@ -20,7 +20,7 @@ async function ensureMigrated(): Promise<void> {
   if (raw) {
     try {
       const tree = JSON.parse(raw) as TreeNode;
-      const encrypted = await encryptProject(tree);
+      const encrypted = await encryptProject({ tree, completions: {} });
       await IO.writeFile("Principal", encrypted);
     } catch {
       // datos legacy corruptos — seguir sin migrar
@@ -58,7 +58,7 @@ export async function saveToDisk(data: TreeNode): Promise<void> {
 
 export async function createProject(
   name: string,
-  data: TreeNode,
+  data: ProjectData,
 ): Promise<void> {
   validateSafeName(name, "Proyecto");
   await ensureMigrated();
@@ -68,7 +68,7 @@ export async function createProject(
 
 export async function saveProject(
   name: string,
-  data: TreeNode,
+  data: ProjectData,
 ): Promise<void> {
   const encrypted = await encryptProject(data);
   await IO.writeFile(name, encrypted);
@@ -76,7 +76,7 @@ export async function saveProject(
 
 export async function loadProject(
   name: string,
-): Promise<TreeNode | null> {
+): Promise<ProjectData | null> {
   await ensureMigrated();
   const encrypted = await IO.readFile(name);
   if (!encrypted) return null;

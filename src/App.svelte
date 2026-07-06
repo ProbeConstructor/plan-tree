@@ -25,7 +25,7 @@
   import { check } from "@tauri-apps/plugin-updater";
   import { pendingUpdate, checkingUpdate } from "./stores/updateStore";
   import NodeSearch from "./components/tree/NodeSearch.svelte";
-  import { isOpen, openSearch } from "./stores/searchStore";
+  import { openModal } from "./stores/modalStore";
 
   let appReady = false;
   let workspaceInitialized = false;
@@ -125,7 +125,7 @@
   on:keydown={(e) => {
     if (e.ctrlKey && e.key === "f") {
       e.preventDefault();
-      openSearch();
+      openModal(NodeSearch, {});
     }
     if (e.key === "ArrowDown") {
       e.preventDefault();
@@ -163,9 +163,6 @@
           {#if $currentView === "tree"}
             <div id="tree-anchor"></div>
             <div class="tree-viewport">
-              {#if $isOpen}
-                <NodeSearch />
-              {/if}
               <div class="tree-canvas">
                 <TreeCanvas />
               </div>

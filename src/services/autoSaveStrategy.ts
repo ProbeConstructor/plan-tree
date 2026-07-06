@@ -1,16 +1,16 @@
-import type { TreeNode } from "../types";
+import type { ProjectData } from "../types";
 import { writable } from "svelte/store";
 
 export type AutoSaveStatus = "idle" | "saving" | "error";
 
-type SaveFn = (project: string, data: TreeNode) => Promise<void>;
+type SaveFn = (project: string, data: ProjectData) => Promise<void>;
 
 /** Callback opcional que se dispara después de un guardado exitoso. */
-export type AfterSaveFn = (project: string, data: TreeNode) => Promise<void> | void;
+export type AfterSaveFn = (project: string, data: ProjectData) => Promise<void> | void;
 
 export class AutoSaveStrategy {
   private timer: ReturnType<typeof setTimeout> | null = null;
-  private pendingData: TreeNode | null = null;
+  private pendingData: ProjectData | null = null;
   private pendingProject: string | null = null;
   private saveFn: SaveFn;
   private debounceMs: number;
@@ -27,7 +27,7 @@ export class AutoSaveStrategy {
     this.maxRetries = maxRetries;
   }
 
-  schedule(project: string, data: TreeNode): void {
+  schedule(project: string, data: ProjectData): void {
     this.pendingProject = project;
     this.pendingData = data;
 

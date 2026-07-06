@@ -1,8 +1,9 @@
 import { writable, get } from "svelte/store";
-import type { TreeNode } from "../types";
+import type { TreeNode, CompletionsMap } from "../types";
 import { calculateProgressMap } from "../utils/treeUtils";
 import { derived } from "svelte/store";
 import { calculateLayout } from "../utils/treeLayout";
+import { completions } from "./completionStore";
 
 export const focusedNodeId = writable<string | null>(null);
 export const tree = writable(defaultTree());
@@ -14,7 +15,12 @@ tree.subscribe((t) => {
   progressMap.set(calculateProgressMap(t));
 });
 
-let history: TreeNode[] = [];
+interface HistoryEntry {
+  tree: TreeNode;
+  completions: CompletionsMap;
+}
+
+let history: HistoryEntry[] = [];
 const MAX_HISTORY = 50;
 
 progressMap.set(calculateProgressMap(get(tree)));
@@ -32,7 +38,10 @@ export function defaultTree(): TreeNode {
 }
 
 export function snapshot(): void {
-  history.push(structuredClone(get(tree)));
+  history.push({
+    tree: structuredClone(get(tree)),
+    completions: structuredClone(get(completions)),
+  });
   if (history.length > MAX_HISTORY) {
     history.shift();
   }
@@ -42,7 +51,8 @@ export function snapshot(): void {
 export function undo(): void {
   const previous = history.pop();
   if (previous) {
-    tree.set(previous);
+    tree.set(previous.tree);
+    completions.set(previous.completions);
   }
   canUndo.set(history.length > 0);
 }
@@ -53,6 +63,7 @@ export function mutateTree(callback: (tree: TreeNode) => TreeNode) {
 
 export function resetTree(): void {
   tree.set(defaultTree());
+  completions.set({});
   history = [];
   canUndo.set(false);
   focusedNodeId.set(null);

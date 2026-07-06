@@ -21,7 +21,7 @@ export async function extractNodeToNewProject(nodeId: string): Promise<void> {
 
   mutateTree(() => remainingTree); // saca el nodo del proyecto actual (autoguarda solo)
 
-  await createProjectFile(newProjectName, extracted); // crea el proyecto nuevo, ya cifrado
+  await createProjectFile(newProjectName, { tree: extracted, completions: {} }); // crea el proyecto nuevo, ya cifrado
   await refreshProjects();
   await switchProject(newProjectName); // te lleva a verlo
 }

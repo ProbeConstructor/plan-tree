@@ -27,9 +27,15 @@
         "img-src": "'self' data: blob:",
         "object-src": "'none'",
         "frame-src": "'none'",
-        "connect-src": "'self' ipc: http://ipc.localhost",
+        "connect-src": "'self' ipc: http://ipc.localhost https://api.github.com https://github.com",
         "font-src": "'self' data:"
       }
+    }
+  },
+  "plugins": {
+    "updater": {
+      "endpoints": ["https://github.com/ProbeConstructor/plan-tree/releases/latest/download/latest.json"],
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEY1N0EwNEUzRjZCMjI0OTAKUldTUUpMTDI0d1I2OWYzbytHVXNZSUNKWkl6eDYxaUFJdFo5ckZpalUzL1dkb0gwR25pblZCSU8K"
     }
   },
   "bundle": {

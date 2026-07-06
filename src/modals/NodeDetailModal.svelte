@@ -19,23 +19,26 @@
   import { tree, snapshot, mutateTree } from "../stores/treeStore";
   import { findNode, updateNode } from "../utils/treeUtils";
   import Modal from "../components/Modal.svelte";
+  import EasyMDE from "easymde";
+  import "easymde/dist/easymde.min.css";
 
   let { nodeId }: { nodeId: string } = $props();
 
   // ── Reactive node from tree ──────────────────────────────────────────────
   let node = $derived(findNode($tree, nodeId));
 
-  // ── Buffered local state (NOT bound to tree directly) ────────────────────
+  // ── Buffered local state ─────────────────────────────────────────────────
   let startDate = $state("");
   let dueDate = $state("");
   let status = $state<"todo" | "doing" | "done">("todo");
   let priority = $state<"low" | "medium" | "high" | "critical">("medium");
+  let comments = $state("");
   let error = $state("");
 
-  // Initialize buffer from node on mount.
-  // The modal is fresh-mounted per openModal() call (ModalHost unmounts on close),
-  // so this runs exactly once per instance. The formSynced guard prevents re-sync
-  // if the tree changes while the modal stays open (defense-in-depth).
+  // ── EasyMDE refs ─────────────────────────────────────────────────────────
+  let textarea: HTMLTextAreaElement | undefined = $state();
+  let mde: EasyMDE | null = null;
+
   let formSynced = $state(false);
 
   $effect(() => {
@@ -44,13 +47,62 @@
       dueDate = node.dueDate || "";
       status = node.status || "todo";
       priority = node.priority || "medium";
+      comments = node.comments || "";
       formSynced = true;
+
+      // Sync EasyMDE if already initialized
+      if (mde) {
+        mde.value(comments);
+      }
     }
+  });
+
+  // Initialize / teardown EasyMDE
+  $effect(() => {
+    if (!textarea || formSynced === false) return;
+
+    mde = new EasyMDE({
+      element: textarea,
+      initialValue: comments,
+      spellChecker: false,
+      forceSync: true,
+      status: false,
+      toolbar: [
+        "bold",
+        "italic",
+        "strikethrough",
+        "|",
+        "heading",
+        "|",
+        "unordered-list",
+        "ordered-list",
+        "|",
+        "link",
+        "horizontal-rule",
+        "|",
+        "preview",
+        "guide",
+      ],
+      renderingConfig: {
+        singleLineBreaks: true,
+        codeSyntaxHighlighting: false,
+      },
+    });
+
+    return () => {
+      mde?.toTextArea();
+      mde = null;
+    };
   });
 
   // ── Save ─────────────────────────────────────────────────────────────────
   function save() {
     if (!node) return;
+
+    // Sync comments from EasyMDE
+    if (mde) {
+      comments = mde.value();
+    }
 
     // Validate dates
     const validationError = validateDates(startDate, dueDate);
@@ -64,7 +116,8 @@
       startDate !== (node.startDate ?? "") ||
       dueDate !== (node.dueDate ?? "") ||
       status !== node.status ||
-      priority !== node.priority;
+      priority !== node.priority ||
+      comments !== (node.comments ?? "");
 
     if (hasChanges) {
       snapshot();
@@ -75,6 +128,7 @@
           dueDate: dueDate || undefined,
           status,
           priority,
+          comments: comments || undefined,
         })),
       );
     }
@@ -127,6 +181,12 @@
         <option value="high">Alta</option>
         <option value="critical">Crítica</option>
       </select>
+    </div>
+
+    <!-- Comments (Markdown) -->
+    <div class="field">
+      <label for="nd-comments">Comentarios</label>
+      <textarea id="nd-comments" bind:this={textarea} class="mde-textarea"></textarea>
     </div>
 
     {#if error}
@@ -201,5 +261,51 @@
     background: #3b82f6;
     color: white;
     border: none;
+  }
+
+  :global(.EasyMDEContainer) {
+    width: 100%;
+  }
+
+  :global(.editor-toolbar) {
+    background: #0f1115;
+    border: 1px solid #2a2f37;
+    border-bottom: none;
+    border-radius: 4px 4px 0 0;
+  }
+
+  :global(.editor-toolbar button) {
+    color: #9ca3af;
+  }
+
+  :global(.editor-toolbar button:hover) {
+    background: #1a1d24;
+    color: #e5e7eb;
+  }
+
+  :global(.editor-toolbar button.active) {
+    background: #2a2f37;
+    color: #e5e7eb;
+  }
+
+  :global(.CodeMirror) {
+    background: #0f1115;
+    color: #e5e7eb;
+    border: 1px solid #2a2f37;
+    border-radius: 0 0 4px 4px;
+    min-height: 120px;
+  }
+
+  :global(.CodeMirror-cursor) {
+    border-color: #e5e7eb;
+  }
+
+  :global(.CodeMirror-gutters) {
+    background: #1a1d24;
+    border-right: 1px solid #2a2f37;
+  }
+
+  .mde-textarea {
+    display: none;
   }
 </style>

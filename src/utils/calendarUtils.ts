@@ -1,4 +1,4 @@
-import type { TreeNode } from "../types";
+import type { TreeNode, VirtualInstance } from "../types";
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -60,8 +60,9 @@ export function groupNodesByDate(
   tree: TreeNode,
   year: number,
   month: number,
-): Map<string, TreeNode[]> {
-  const result = new Map<string, TreeNode[]>();
+  virtuals?: VirtualInstance[],
+): Map<string, (TreeNode | VirtualInstance)[]> {
+  const result = new Map<string, (TreeNode | VirtualInstance)[]>();
   const prefix = `${year}-${String(month + 1).padStart(2, "0")}`;
 
   function walk(node: TreeNode): void {
@@ -90,6 +91,16 @@ export function groupNodesByDate(
   // Skip root — walk its children
   for (const child of tree.children) {
     walk(child);
+  }
+
+  // Merge virtual instances into the same map
+  if (virtuals) {
+    for (const v of virtuals) {
+      if (!result.has(v.date)) {
+        result.set(v.date, []);
+      }
+      result.get(v.date)!.push(v);
+    }
   }
 
   return result;
@@ -145,11 +156,12 @@ export function isToday(year: number, month: number, day: number): boolean {
  * - doing: blue (#3b82f6)
  * - done: green (#22c55e)
  */
-export function getStatusDotColor(status: TreeNode["status"]): string {
-  const colors: Record<TreeNode["status"], string> = {
+export function getStatusDotColor(status: string): string {
+  const colors: Record<string, string> = {
     todo: "#6b7280",
     doing: "#3b82f6",
     done: "#22c55e",
+    missed: "#991b1b",
   };
   return colors[status] ?? "#6b7280"; // fallback to gray for unknown status
 }
@@ -167,10 +179,10 @@ export function getStatusDotColor(status: TreeNode["status"]): string {
  * @returns An object with `visible` nodes and `overflow` count
  */
 export function getCellDisplayInfo(
-  nodes: TreeNode[],
+  nodes: (TreeNode | VirtualInstance)[],
   maxVisible: number,
   expanded: boolean,
-): { visible: TreeNode[]; overflow: number } {
+): { visible: (TreeNode | VirtualInstance)[]; overflow: number } {
   if (expanded) {
     return { visible: nodes, overflow: 0 };
   }

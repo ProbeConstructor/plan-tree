@@ -1,4 +1,4 @@
-import type { TreeNode } from "../types";
+import type { TreeNode, VirtualInstance, CompletionsMap } from "../types";
 
 export function findNode(tree: TreeNode, id: string): TreeNode | null {
   if (tree.id === id) return tree;
@@ -125,20 +125,49 @@ export function getProgressColor(progress: number): string {
   return "#F44336"; // rojo
 }
 
-export function getTodayNodes(tree: TreeNode): TreeNode[] {
+export function getTodayNodes(
+  tree: TreeNode,
+  completions?: CompletionsMap,
+): (TreeNode | VirtualInstance)[] {
   function flatten(node: TreeNode): TreeNode[] {
     return [node, ...node.children.flatMap(flatten)];
   }
 
+  const today = new Date().toISOString().slice(0, 10);
+
   // 👇 solo los hijos del root, así el "Objetivo principal"
   // nunca aparece en la lista de "Para Hoy"
-  return tree.children
+  const treeNodes = tree.children
     .flatMap(flatten)
     .filter(
       (node) =>
         node.status !== "done" &&
         (node.priority === "critical" || node.priority === "high"),
     );
+
+  if (!completions) return treeNodes;
+
+  // Add today's virtual instances from recurring nodes
+  const virtuals: VirtualInstance[] = [];
+  const c = completions; // local ref for type narrowing
+  function walk(node: TreeNode): void {
+    if (node.recurrence && node.startDate <= today) {
+      if (!c[node.id]?.[today]) {
+        virtuals.push({
+          id: `${node.id}::${today}`,
+          nodeId: node.id,
+          date: today,
+          title: node.title,
+          status: "todo",
+          isVirtual: true,
+        });
+      }
+    }
+    for (const child of node.children) walk(child);
+  }
+  for (const child of tree.children) walk(child);
+
+  return [...treeNodes, ...virtuals];
 }
 
 export function getPriorityEmoji(priority: string): string {
@@ -335,15 +364,21 @@ function getMatchSnippet(text: string, query: string): string {
   return snippet;
 }
 
-export function getOverdueAndUpcoming(root: TreeNode, upcomingDays = 5) {
+export function getOverdueAndUpcoming(
+  root: TreeNode,
+  upcomingDays = 5,
+  completions?: CompletionsMap,
+): { overdue: (TreeNode | VirtualInstance)[]; upcoming: (TreeNode | VirtualInstance)[] } {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
+  const todayStr = today.toISOString().slice(0, 10);
 
   const limit = new Date(today);
   limit.setDate(limit.getDate() + upcomingDays);
+  const limitStr = limit.toISOString().slice(0, 10);
 
-  const overdue: TreeNode[] = [];
-  const upcoming: TreeNode[] = [];
+  const overdue: (TreeNode | VirtualInstance)[] = [];
+  const upcoming: (TreeNode | VirtualInstance)[] = [];
 
   function walk(node: TreeNode) {
     if (node.dueDate && node.status !== "done") {
@@ -356,8 +391,76 @@ export function getOverdueAndUpcoming(root: TreeNode, upcomingDays = 5) {
 
   root.children.forEach(walk);
 
-  overdue.sort((a, b) => (a.dueDate! < b.dueDate! ? -1 : 1));
-  upcoming.sort((a, b) => (a.dueDate! < b.dueDate! ? -1 : 1));
+  // Add recurring virtual instances
+  if (completions) {
+    const c = completions;
+    function walkRecurring(node: TreeNode): void {
+      if (node.recurrence) {
+        const start = new Date(node.startDate + "T00:00:00");
+        if (start > limit) return; // no instances in range
+
+        const checkFrom = start < today ? start : today;
+        const checkEnd = new Date(limitStr + "T00:00:00");
+
+        const current = new Date(checkFrom);
+        while (current <= checkEnd) {
+          const dateStr = current.toISOString().slice(0, 10);
+          if (dateStr >= node.startDate) {
+            if (node.recurrence.endDate && dateStr > node.recurrence.endDate) break;
+
+            // Simple check: daily always matches, weekly needs day-of-week
+            let matches = false;
+            if (node.recurrence.type === "daily") {
+              const diffDays = Math.round((current.getTime() - start.getTime()) / 86400000);
+              if (diffDays >= 0 && diffDays % node.recurrence.interval === 0) matches = true;
+            } else if (node.recurrence.type === "weekly") {
+              const diffDays = Math.round((current.getTime() - start.getTime()) / 86400000);
+              if (diffDays >= 0) {
+                const weeksElapsed = Math.floor(diffDays / 7);
+                if (weeksElapsed % node.recurrence.interval === 0) {
+                  const jsDay = current.getDay();
+                  const monDay = (jsDay + 6) % 7;
+                  if (node.recurrence.daysOfWeek ? node.recurrence.daysOfWeek.includes(monDay) : true) {
+                    matches = true;
+                  }
+                }
+              }
+            }
+
+            if (matches && !c[node.id]?.[dateStr]) {
+              const vi: VirtualInstance = {
+                id: `${node.id}::${dateStr}`,
+                nodeId: node.id,
+                date: dateStr,
+                title: node.title,
+                status: current < today ? "missed" : "todo",
+                isVirtual: true,
+              };
+              if (current < today) {
+                overdue.push(vi);
+              } else {
+                upcoming.push(vi);
+              }
+            }
+          }
+          current.setDate(current.getDate() + 1);
+        }
+      }
+      for (const child of node.children) walkRecurring(child);
+    }
+    for (const child of root.children) walkRecurring(child);
+  }
+
+  overdue.sort((a, b) => {
+    const da = "date" in a ? a.date : (a as TreeNode).dueDate ?? "";
+    const db = "date" in b ? b.date : (b as TreeNode).dueDate ?? "";
+    return da < db ? -1 : 1;
+  });
+  upcoming.sort((a, b) => {
+    const da = "date" in a ? a.date : (a as TreeNode).dueDate ?? "";
+    const db = "date" in b ? b.date : (b as TreeNode).dueDate ?? "";
+    return da < db ? -1 : 1;
+  });
 
   return { overdue, upcoming };
 }

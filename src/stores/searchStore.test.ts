@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { get } from "svelte/store";
-import { query, isOpen, results, openSearch, closeSearch } from "./searchStore";
+import { query, results } from "./searchStore";
 import { tree } from "./treeStore";
 import type { TreeNode } from "../types";
 
@@ -38,36 +38,16 @@ function buildTestTree(): TreeNode {
 
 describe("searchStore", () => {
   beforeEach(() => {
-    // Reset store state before each test
-    closeSearch();
+    query.set("");
     tree.set(buildTestTree());
-  });
-
-  describe("openSearch / closeSearch", () => {
-    it("openSearch sets isOpen to true and clears query", () => {
-      query.set("something");
-      openSearch();
-      expect(get(isOpen)).toBe(true);
-      expect(get(query)).toBe("");
-    });
-
-    it("closeSearch sets isOpen to false and clears query", () => {
-      openSearch();
-      query.set("test");
-      closeSearch();
-      expect(get(isOpen)).toBe(false);
-      expect(get(query)).toBe("");
-    });
   });
 
   describe("query-reactive result filtering", () => {
     it("returns empty results when query is empty", () => {
-      openSearch();
       expect(get(results)).toHaveLength(0);
     });
 
     it("filters results by title", () => {
-      openSearch();
       query.set("servidor");
       const res = get(results);
       expect(res).toHaveLength(1);
@@ -75,7 +55,6 @@ describe("searchStore", () => {
     });
 
     it("filters results by comments", () => {
-      openSearch();
       query.set("Docker");
       const res = get(results);
       expect(res).toHaveLength(1);
@@ -84,13 +63,11 @@ describe("searchStore", () => {
     });
 
     it("returns empty array when no match", () => {
-      openSearch();
       query.set("zzzznotfound");
       expect(get(results)).toHaveLength(0);
     });
 
     it("reactively updates results when tree changes", () => {
-      openSearch();
       query.set("servidor");
       expect(get(results)).toHaveLength(1);
 
@@ -109,7 +86,6 @@ describe("searchStore", () => {
     });
 
     it("reactively updates results when query changes", () => {
-      openSearch();
       query.set("servidor");
       expect(get(results)).toHaveLength(1);
 

@@ -1,6 +1,12 @@
 <script lang="ts">
 
 import { tree } from "../stores/treeStore";
+import { completions } from "../stores/completionStore";
+import type { VirtualInstance } from "../types";
+
+function isVirtualEntry(entry: unknown): entry is VirtualInstance {
+    return typeof entry === "object" && entry !== null && "isVirtual" in entry;
+}
 
 import {
     getTodayNodes,
@@ -18,18 +24,19 @@ $: globalProgress = calculateGlobalProgress($tree);
 $: branches = getDirectBranches($tree);
 $: priorityBreakdown = getPriorityBreakdown($tree);
 $: progress = calculateGlobalProgress($tree);
-$: today = getTodayNodes($tree);
+$: today = getTodayNodes($tree, $completions);
 $: priorities = getPriorityBreakdown($tree);
 
 $: ({ overdue, upcoming } =
-    getOverdueAndUpcoming($tree));
+    getOverdueAndUpcoming($tree, 5, $completions));
 
 function focusAndScroll(id:string){
+    const nodeId = id.includes("::") ? id.split("::")[0] : id;
 
-    tree.update(t=>setFocus(t,id));
+    tree.update(t=>setFocus(t, nodeId));
 
     document
-        .getElementById(id)
+        .getElementById(nodeId)
         ?.scrollIntoView({
             behavior:"smooth",
             block:"center"
@@ -72,21 +79,27 @@ function focusAndScroll(id:string){
   <div class="summary-block">
     <h2>🎯 Para hoy</h2>
 
-    {#if getTodayNodes($tree).length === 0}
+    {#if today.length === 0}
       <p class="empty">
         Nada urgente todavía 🙌
       </p>
     {:else}
       <ul>
-        {#each getTodayNodes($tree) as node}
+        {#each today as entry}
+          {@const isV = isVirtualEntry(entry)}
           <li>
             <button
               class="link-item"
-              on:click={() => focusAndScroll(node.id)}
+              class:virtual={isV}
+              on:click={() => focusAndScroll(entry.id)}
             >
-              {getPriorityEmoji(node.priority)}
-              {getStatusEmoji(node.status)}
-              {node.title}
+              {#if isV}
+                ♻️
+              {:else}
+                {getPriorityEmoji((entry as any).priority)}
+              {/if}
+              {getStatusEmoji((entry as any).status)}
+              {(entry as any).title}
             </button>
           </li>
         {/each}
@@ -115,28 +128,40 @@ function focusAndScroll(id:string){
       </p>
     {:else}
       <ul>
-        {#each overdue as node}
+        {#each overdue as entry}
+          {@const isV = isVirtualEntry(entry)}
           <li>
             <button
               class="link-item overdue"
-              on:click={() => focusAndScroll(node.id)}
+              class:virtual={isV}
+              on:click={() => focusAndScroll(entry.id)}
             >
-              🔴
-              {node.title}
-              ·
-              {daysOverdue(node.dueDate!)}d atrasado
+              {#if isV}
+                ♻️ {(entry as VirtualInstance).title} · {(entry as VirtualInstance).date}
+              {:else}
+                🔴
+                {(entry as any).title}
+                ·
+                {daysOverdue((entry as any).dueDate)}d atrasado
+              {/if}
             </button>
           </li>
         {/each}
-        {#each upcoming as node}
+        {#each upcoming as entry}
+          {@const isV = isVirtualEntry(entry)}
           <li>
             <button
               class="link-item"
-              on:click={() => focusAndScroll(node.id)}
+              class:virtual={isV}
+              on:click={() => focusAndScroll(entry.id)}
             >
-              🟡
-              {node.title}
-              · vence {node.dueDate}
+              {#if isV}
+                ♻️ {(entry as VirtualInstance).title} · {(entry as VirtualInstance).date}
+              {:else}
+                🟡
+                {(entry as any).title}
+                · vence {(entry as any).dueDate}
+              {/if}
             </button>
           </li>
         {/each}

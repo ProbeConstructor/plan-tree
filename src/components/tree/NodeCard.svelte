@@ -2,6 +2,8 @@
   import { getNodeType, isOverdue } from "../../utils/treeUtils";
   import { isValidIconDataUri } from "../../utils/validation";
   import { draggedNodeId, focusedNodeId } from "../../stores/treeStore";
+  import RecurrenceConfigModal from "../RecurrenceConfigModal.svelte";
+  import { openModal } from "../../stores/modalStore";
 
   let {
     node,
@@ -135,6 +137,18 @@
       {#if isValidIconDataUri(node.icon)}
         <img src={node.icon} alt="icon" class="node-icon" />
       {/if}
+
+      <button
+        class="recurrence-badge"
+        class:active={!!node.recurrence}
+        onclick={(e: MouseEvent) => {
+          e.stopPropagation();
+          openModal(RecurrenceConfigModal, { nodeId: node.id });
+        }}
+        title={node.recurrence ? 'Repetición configurada' : 'Configurar repetición'}
+      >
+        ♻️
+      </button>
 
       <button
         class="comment-btn"
@@ -408,6 +422,31 @@
   .comment-btn:hover {
     opacity: 1;
     background: #2a2f37;
+  }
+
+  .recurrence-badge {
+    background: none;
+    border: 1px solid transparent;
+    cursor: pointer;
+    font-size: 14px;
+    padding: 1px 4px;
+    border-radius: 4px;
+    line-height: 1;
+    flex-shrink: 0;
+    opacity: 0.5;
+    transition: opacity 0.15s, border-color 0.15s, background 0.15s;
+  }
+
+  .recurrence-badge:hover {
+    opacity: 1;
+    background: #2a2f37;
+    border-color: #2a2f37;
+  }
+
+  .recurrence-badge.active {
+    opacity: 1;
+    border-color: #facc15;
+    background: rgba(250, 204, 21, 0.1);
   }
 
   .comment-btn.has-comments {

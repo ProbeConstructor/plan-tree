@@ -1,5 +1,6 @@
 import { get } from "svelte/store";
 import { tree, resetTree, defaultTree } from "../stores/treeStore";
+import { completions } from "../stores/completionStore";
 import { projects, activeProject } from "../stores/workspaceStore";
 import { activeProfile } from "../stores/profileStore";
 import { openModal } from "../stores/modalStore";
@@ -18,13 +19,13 @@ import { getLastProject, setLastProject } from "./profileManager";
 import { AutoSaveStrategy } from "./autoSaveStrategy";
 import { progressSnapshot } from "./progressSnapshotService";
 
-import type { TreeNode } from "../types";
+import type { TreeNode, ProjectData } from "../types";
 
 let isLoading = false;
 
 export const autoSave = new AutoSaveStrategy(saveProject);
-autoSave.onAfterSave = (project, data) => {
-  progressSnapshot.capture(project, data);
+autoSave.onAfterSave = (_project, data) => {
+  progressSnapshot.capture(_project, data.tree);
 };
 
 export async function refreshProjects(): Promise<void> {
@@ -44,7 +45,7 @@ async function resolveActiveProject(): Promise<void> {
   let list = get(projects);
 
   if (list.length === 0) {
-    await createProjectFile("Principal", defaultTree());
+    await createProjectFile("Principal", { tree: defaultTree(), completions: {} });
     await refreshProjects();
     list = get(projects);
   }
@@ -68,7 +69,8 @@ export async function loadCurrentProject(): Promise<void> {
   const project = name ? await loadProject(name) : null;
 
   if (project) {
-    tree.set(project);
+    tree.set(project.tree);
+    completions.set(project.completions);
   } else {
     // 🔐 sin esto, si el perfil nuevo no tiene este proyecto, se queda
     // visible lo que estaba cargado del perfil/proyecto ANTERIOR.
@@ -90,14 +92,17 @@ export async function switchProject(name: string): Promise<void> {
 }
 
 export async function createProject(name: string): Promise<void> {
-  const data: TreeNode = {
-    id: "root",
-    title: name,
-    expanded: true,
-    status: "todo",
-    priority: "medium",
-    startDate: new Date().toISOString().slice(0, 10),
-    children: [],
+  const data: ProjectData = {
+    tree: {
+      id: "root",
+      title: name,
+      expanded: true,
+      status: "todo",
+      priority: "medium",
+      startDate: new Date().toISOString().slice(0, 10),
+      children: [],
+    },
+    completions: {},
   };
 
   await createProjectFile(name, data);
@@ -148,5 +153,15 @@ tree.subscribe((value) => {
   const project = get(activeProject);
   if (!project) return;
 
-  autoSave.schedule(project, value);
+  autoSave.schedule(project, { tree: value, completions: get(completions) });
+});
+
+// Completions-only changes (e.g. Calendar toggle) also need persistence
+completions.subscribe((value) => {
+  if (isLoading) return;
+
+  const project = get(activeProject);
+  if (!project) return;
+
+  autoSave.schedule(project, { tree: get(tree), completions: value });
 });

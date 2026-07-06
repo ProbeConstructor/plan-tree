@@ -14,6 +14,7 @@ jobs:
         platform:
           - ubuntu-latest
           - windows-latest
+          - macos-latest
 
     runs-on: ${{ matrix.platform }}
 
@@ -39,11 +40,16 @@ jobs:
             libsoup-3.0-dev \
             libjavascriptcoregtk-4.1-dev
 
+      - name: install system deps (macos)
+        if: runner.os == 'macOS'
+        run: |
+          # webkit2gtk y demás no aplican en macOS; Tauri usa WebKit del sistema
+
       - run: npm ci
 
       - run: npm run build
 
-      - uses: tauri-apps/tauri-action@v1
+      - uses: tauri-apps/tauri-action@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
@@ -58,6 +64,7 @@ jobs:
 
             - **Linux**: `.AppImage` (portable)
             - **Windows**: `.exe` (instalador)
+            - **macOS**: `.dmg` (app)
 
             ## Novedades
             _Insertá las novedades de esta versión_

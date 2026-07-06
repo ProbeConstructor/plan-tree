@@ -22,6 +22,8 @@
   import { getCurrentWindow } from "@tauri-apps/api/window";
   import { listen } from "@tauri-apps/api/event";
   import ErrorBoundary from "./components/ErrorBoundary.svelte";
+  import { check } from "@tauri-apps/plugin-updater";
+  import { pendingUpdate, checkingUpdate } from "./stores/updateStore";
 
   let appReady = false;
   let workspaceInitialized = false;
@@ -60,7 +62,27 @@
       } catch {
         // browser dev — Tauri API no disponible
       }
+
+      // 🔄 Check for updates (non-blocking)
+      checkForUpdates();
     };
+
+    async function checkForUpdates() {
+      try {
+        checkingUpdate.set(true);
+        const update = await check();
+        if (update) {
+          pendingUpdate.set({
+            version: update.version,
+            downloadAndInstall: () => update.downloadAndInstall(),
+          });
+        }
+      } catch {
+        // Silencio — fallo en check de updates no bloquea la app
+      } finally {
+        checkingUpdate.set(false);
+      }
+    }
 
     const cleanups: (() => void)[] = [];
     setup();

@@ -10,6 +10,8 @@
   import NewProjectModal from "../modals/NewProjectModal.svelte";
   import RenameProjectModal from "../modals/RenameProjectModal.svelte";
   import ConfirmModal from "../modals/ConfirmModal.svelte";
+  import { pendingUpdate, checkingUpdate } from "../stores/updateStore";
+  import { relaunch } from "@tauri-apps/plugin-process";
 
   function handleKeydown(event: KeyboardEvent) {
     const isUndo = (event.ctrlKey || event.metaKey) && event.key === "z";
@@ -83,6 +85,20 @@
   <button on:click={undo} disabled={!$canUndo}> ⏪ Undo </button>
 
   <hr />
+
+  {#if $pendingUpdate}
+    <button
+      class="update-btn"
+      on:click={async () => {
+        await $pendingUpdate!.downloadAndInstall();
+        await relaunch();
+      }}
+    >
+      ⬇️ Actualizar a v{$pendingUpdate.version}
+    </button>
+  {:else if $checkingUpdate}
+    <button class="update-btn" disabled> 🔄 Buscando actualizaciones… </button>
+  {/if}
 
   <button on:click={() => session.logout()}> 🔒 Bloquear </button>
 </div>

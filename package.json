@@ -31,6 +31,12 @@
     "@tauri-apps/cli": "^2.11.3",
     "@tauri-apps/plugin-dialog": "^2.7.1",
     "@tauri-apps/plugin-fs": "^2.5.1",
-    "chart.js": "^4.5.1"
+    "@tauri-apps/plugin-process": "^2.3.1",
+    "@tauri-apps/plugin-updater": "^2.10.1",
+    "@types/dompurify": "^3.0.5",
+    "chart.js": "^4.5.1",
+    "dompurify": "^3.4.11",
+    "easymde": "^2.21.0",
+    "marked": "^18.0.5"
   }
 }

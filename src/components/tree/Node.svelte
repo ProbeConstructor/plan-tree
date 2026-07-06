@@ -14,6 +14,7 @@
   import { COLUMN_WIDTH } from "../../constants/layout";
   import { openModal } from "../../stores/modalStore";
   import NodeDetailModal from "../../modals/NodeDetailModal.svelte";
+  import ConfirmModal from "../../modals/ConfirmModal.svelte";
   import {
     registerNodeMeasurement,
     unregisterNodeMeasurement,
@@ -72,11 +73,15 @@
     unregisterNodeMeasurement(node.id);
   });
 
-  async function extractToProject() {
+  function extractToProject() {
     if (layout.isRoot) return;
-    const confirmMsg = `¿Mover "${node.title}" (y todo lo que tiene adentro) a un proyecto nuevo llamado "${node.title}"?`;
-    if (!confirm(confirmMsg)) return;
-    await extractNodeToNewProject(node.id);
+    openModal(ConfirmModal, {
+      title: "Extraer a nuevo proyecto",
+      message: `Esto moverá "${node.title}" y todo su contenido a un proyecto nuevo. Esta acción no se puede deshacer. ¿Querés continuar?`,
+      confirmLabel: "Extraer",
+      danger: false,
+      onConfirm: () => extractNodeToNewProject(node.id),
+    });
   }
 
   async function handlePickImage(node: TreeNode) {

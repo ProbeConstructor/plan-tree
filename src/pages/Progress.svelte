@@ -4,7 +4,7 @@
   import type { Snapshot } from "../types";
   import {
     snapshotsToDailyLineData,
-    snapshotsToWeeklyBarData,
+    snapshotsToDailyGroupedByWeek,
     snapshotToDonutData,
     snapshotToStats,
   } from "../utils/chartDataUtils";
@@ -27,7 +27,7 @@
   let monthYear = $derived(`${MONTHS[currentMonth]} ${currentYear}`);
 
   let lineData = $derived(snapshotsToDailyLineData(snapshots));
-  let barData = $derived(snapshotsToWeeklyBarData(snapshots));
+  let dailyBarData = $derived(snapshotsToDailyGroupedByWeek(snapshots));
   let donutData = $derived(snapshotToDonutData(snapshots));
   let stats = $derived(snapshotToStats(snapshots));
   let isEmpty = $derived(snapshots.length === 0 && !loading && !error);
@@ -109,7 +109,13 @@
         <LineChart data={lineData} title="Progreso diario" />
       </div>
       <div class="chart-block">
-        <BarChart data={barData} title="Completados por semana" />
+        <BarChart
+          data={dailyBarData.data}
+          labels={dailyBarData.labels}
+          weekIndices={dailyBarData.weekIndices}
+          weekLabels={dailyBarData.weekLabels}
+          title="Completados por día"
+        />
       </div>
       <div class="chart-block">
         <DonutChart data={donutData} title="Estado actual" />

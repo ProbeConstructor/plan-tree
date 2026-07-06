@@ -15,6 +15,9 @@ export type TreeNode = {
 
   // 🖼️ icono
   icon?: string;
+
+  // 💬 comentarios en markdown
+  comments?: string;
 };
 
 export interface Project {

@@ -94,6 +94,7 @@
 
 <div
   class="node"
+  id={node.id}
   class:root-node={layout.isRoot}
   role="treeitem"
   tabindex="0"

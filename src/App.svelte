@@ -22,6 +22,8 @@
   import { getCurrentWindow } from "@tauri-apps/api/window";
   import { listen } from "@tauri-apps/api/event";
   import ErrorBoundary from "./components/ErrorBoundary.svelte";
+  import NodeSearch from "./components/tree/NodeSearch.svelte";
+  import { isOpen, openSearch } from "./stores/searchStore";
 
   let appReady = false;
   let workspaceInitialized = false;

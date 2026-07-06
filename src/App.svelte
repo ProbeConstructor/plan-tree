@@ -99,6 +99,10 @@
 
 <svelte:window
   on:keydown={(e) => {
+    if (e.ctrlKey && e.key === "f") {
+      e.preventDefault();
+      openSearch();
+    }
     if (e.key === "ArrowDown") {
       e.preventDefault();
       keyboardScroll(80);
@@ -135,6 +139,9 @@
           {#if $currentView === "tree"}
             <div id="tree-anchor"></div>
             <div class="tree-viewport">
+              {#if $isOpen}
+                <NodeSearch />
+              {/if}
               <div class="tree-canvas">
                 <TreeCanvas />
               </div>

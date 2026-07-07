@@ -34,7 +34,7 @@ export function computeSnapshot(data: TreeNode): Snapshot {
   function walk(node: TreeNode) {
     totalNodes++;
     if (node.status === "done") doneNodes++;
-    node.children.forEach(walk);
+    (node.children ?? []).forEach(walk);
   }
   walk(data);
 
@@ -81,7 +81,9 @@ class ProgressSnapshotService {
           baseDir: BaseDirectory.AppData,
         });
         const decrypted = await decryptText(raw);
-        snapshots = JSON.parse(decrypted);
+        const parsed = JSON.parse(decrypted);
+        if (Array.isArray(parsed)) snapshots = parsed;
+        // si no es array, arrancar de cero
       } catch {
         // No existe o corrupto → arrancar de cero
       }

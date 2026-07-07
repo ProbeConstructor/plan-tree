@@ -36,6 +36,7 @@
     onPickImage,
     onRemoveIcon,
     onOpenDetailsModal,
+    onFavorite,
   } = $props();
   import CommentPopover from "./CommentPopover.svelte";
 
@@ -137,6 +138,18 @@
       {#if isValidIconDataUri(node.icon)}
         <img src={node.icon} alt="icon" class="node-icon" />
       {/if}
+
+      <button
+        class="star-btn"
+        class:fav={node.favorite}
+        onclick={(e: MouseEvent) => {
+          e.stopPropagation();
+          onFavorite?.();
+        }}
+        title={node.favorite ? 'Quitar de favoritos' : 'Marcar como favorito'}
+      >
+        {node.favorite ? '⭐' : '☆'}
+      </button>
 
       <button
         class="recurrence-badge"
@@ -422,6 +435,28 @@
   .comment-btn:hover {
     opacity: 1;
     background: #2a2f37;
+  }
+
+  .star-btn {
+    background: none;
+    border: 1px solid transparent;
+    cursor: pointer;
+    font-size: 16px;
+    padding: 1px 4px;
+    border-radius: 4px;
+    line-height: 1;
+    flex-shrink: 0;
+    opacity: 0.5;
+    transition: opacity 0.15s;
+  }
+
+  .star-btn:hover {
+    opacity: 1;
+    background: #2a2f37;
+  }
+
+  .star-btn.favorited {
+    opacity: 1;
   }
 
   .recurrence-badge {

@@ -2,6 +2,7 @@
 
 import { tree } from "../stores/treeStore";
 import { completions } from "../stores/completionStore";
+import { currentView } from "../stores/viewStore";
 import type { VirtualInstance } from "../types";
 
 function isVirtualEntry(entry: unknown): entry is VirtualInstance {
@@ -17,7 +18,8 @@ import {
     getPriorityBreakdown,
     getOverdueAndUpcoming,
     daysOverdue,
-    setFocus
+    setFocus,
+    collectFavorites
 } from "../utils/treeUtils";
 
 $: globalProgress = calculateGlobalProgress($tree);
@@ -26,6 +28,7 @@ $: priorityBreakdown = getPriorityBreakdown($tree);
 $: progress = calculateGlobalProgress($tree);
 $: today = getTodayNodes($tree, $completions);
 $: priorities = getPriorityBreakdown($tree);
+$: favorites = collectFavorites($tree).slice(0, 10);
 
 $: ({ overdue, upcoming } =
     getOverdueAndUpcoming($tree, 5, $completions));
@@ -34,6 +37,7 @@ function focusAndScroll(id:string){
     const nodeId = id.includes("::") ? id.split("::")[0] : id;
 
     tree.update(t=>setFocus(t, nodeId));
+    currentView.set("tree");
 
     document
         .getElementById(nodeId)
@@ -106,6 +110,32 @@ function focusAndScroll(id:string){
       </ul>
     {/if}
   </div>
+
+  <div class="summary-block">
+    <h2>⭐ Favoritos</h2>
+
+    {#if favorites.length === 0}
+      <p class="empty">
+        Sin favoritos todavía — marcá nodos con la estrella ☆
+      </p>
+    {:else}
+      <ul>
+        {#each favorites as fav}
+          <li>
+            <button
+              class="link-item"
+              on:click={() => focusAndScroll(fav.id)}
+            >
+              {getPriorityEmoji(fav.priority)}
+              {getStatusEmoji(fav.status)}
+              {fav.title}
+            </button>
+          </li>
+        {/each}
+      </ul>
+    {/if}
+  </div>
+
   <div class="summary-block">
     <h2>🔥 Por prioridad</h2>
     <ul class="priority-list">

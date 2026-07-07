@@ -36,6 +36,13 @@ export function toggleFocus(node: TreeNode) {
   focusedNodeId.update((id) => (id === node.id ? null : node.id));
 }
 
+export function toggleFavorite(node: TreeNode) {
+  snapshot();
+  mutateTree((t) =>
+    updateNode(t, node.id, (n) => ({ ...n, favorite: !n.favorite })),
+  );
+}
+
 export function setStatus(node: TreeNode, event: Event) {
   const value = (event.target as HTMLSelectElement).value;
   snapshot();

@@ -11,7 +11,7 @@ export function calculateLayout(root: TreeNode) {
   const NODE_UNIT = 1;
 
   function calculateWidths(node: TreeNode): number {
-    if (node.children.length === 0) {
+    if (!node.children || node.children.length === 0) {
       layout.set(node.id, {
         subtreeWidth: NODE_UNIT,
         x: 0,
@@ -20,7 +20,7 @@ export function calculateLayout(root: TreeNode) {
       return 1;
     }
     let width = 0;
-    for (const child of node.children) {
+    for (const child of node.children ?? []) {
       width += calculateWidths(child);
     }
     layout.set(node.id, {
@@ -36,7 +36,7 @@ export function calculateLayout(root: TreeNode) {
     current.x = centerX;
     current.y = depth;
     let cursor = centerX - current.subtreeWidth / 2;
-    for (const child of node.children) {
+    for (const child of node.children ?? []) {
       const childLayout = layout.get(child.id)!;
       const childCenter = cursor + childLayout.subtreeWidth / 2;
       assignPositions(child, childCenter, depth + 1);

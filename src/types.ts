@@ -13,6 +13,9 @@ export type TreeNode = {
   // 🆕 para foco
   focused?: boolean;
 
+  // ⭐ favoritos
+  favorite?: boolean;
+
   // 🖼️ icono
   icon?: string;
 

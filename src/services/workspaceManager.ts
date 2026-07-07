@@ -71,6 +71,8 @@ export async function loadCurrentProject(): Promise<void> {
   if (project) {
     tree.set(project.tree);
     completions.set(project.completions);
+    // 📸 Forzar snapshot inicial para que el mes actual tenga datos
+    progressSnapshot.capture(name, project.tree);
   } else {
     // 🔐 sin esto, si el perfil nuevo no tiene este proyecto, se queda
     // visible lo que estaba cargado del perfil/proyecto ANTERIOR.

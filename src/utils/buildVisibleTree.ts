@@ -3,8 +3,29 @@ import type { TreeNode, TreeViewNode } from "../types";
 export function buildVisibleTree(
   root: TreeNode,
   rowOffsets: Map<number, number>,
+  favoriteIds?: Set<string>,
 ): TreeViewNode[] {
   const viewNodes: TreeViewNode[] = [];
+
+  // Precompute which nodes are visible in filter mode
+  const visibleInFilter = new Set<string>();
+  if (favoriteIds && favoriteIds.size > 0) {
+    function markVisible(node: TreeNode): boolean {
+      const isFav = favoriteIds!.has(node.id);
+      const hasFavDescendant = (node.children ?? []).some(markVisible);
+      if (isFav || hasFavDescendant) {
+        visibleInFilter.add(node.id);
+        return true;
+      }
+      return false;
+    }
+    markVisible(root);
+  }
+
+  function isVisible(node: TreeNode): boolean {
+    if (!favoriteIds || favoriteIds.size === 0) return true;
+    return visibleInFilter.has(node.id);
+  }
 
   function buildView(
     node: TreeNode,
@@ -23,10 +44,16 @@ export function buildVisibleTree(
       x: 0,
       y: depth,
     });
-    if (!node.expanded) {
+    if (!node.expanded && !favoriteIds) {
       return;
     }
-    node.children.forEach((child, index) => {
+    (node.children ?? []).forEach((child, index) => {
+      if (favoriteIds && !isVisible(child)) return;
+      // Force-expand ancestors of favorites
+      const childExpanded = favoriteIds && node.expanded === false
+        ? visibleInFilter.has(child.id)
+        : node.expanded;
+      if (!childExpanded && !favoriteIds) return;
       buildView(child, depth + 1, `${path}.${index + 1}`, false, node.id);
     });
   }

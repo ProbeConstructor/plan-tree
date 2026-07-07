@@ -1,6 +1,7 @@
 import { activeProfileDir } from "./profileManager";
 
 const PROJECT_EXTENSION = ".plan";
+const PROGRESS_EXTENSION = ".progress.plan";
 const LEGACY_FILE = "plan-tree.json";
 
 async function fs() {
@@ -51,7 +52,11 @@ export async function listFiles(): Promise<string[]> {
   });
 
   return entries
-    .filter((e) => e.name?.endsWith(PROJECT_EXTENSION))
+    .filter(
+      (e) =>
+        e.name?.endsWith(PROJECT_EXTENSION) &&
+        !e.name?.endsWith(PROGRESS_EXTENSION),
+    )
     .map((e) => e.name!.replace(PROJECT_EXTENSION, ""))
     .sort();
 }

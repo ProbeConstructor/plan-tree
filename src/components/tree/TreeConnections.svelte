@@ -12,7 +12,7 @@
     const result = [];
 
     for (const parent of nodes) {
-      for (const child of parent.node.children) {
+      for (const child of parent.node.children ?? []) {
         const childLayout = nodes.find(
           (n: TreeViewNode) => n.node.id === child.id,
         );

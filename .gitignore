@@ -18,6 +18,11 @@ src-tauri/target/
 # Environment
 .env
 
+# Agent/AI tooling config — local to each dev
+.agents/
+.atl/
+.claude/
+
 # Generated knowledge graph
 graphify-out/
 

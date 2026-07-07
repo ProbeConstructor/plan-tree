@@ -1,6 +1,6 @@
 <script lang="ts">
   import { get } from "svelte/store";
-  import { tree, undo, canUndo, snapshot } from "../stores/treeStore";
+  import { tree, undo, canUndo, snapshot, favoritesFilter } from "../stores/treeStore";
   import { projects, activeProject } from "../stores/workspaceStore";
   import { switchProject, deleteProject } from "../services/workspaceManager";
   import { exportTree, importTree } from "../services/projectManager";
@@ -44,11 +44,21 @@
 <div class="sidebar">
   <button on:click={() => currentView.set("tree")}> 🌳 Árbol </button>
 
-  <button on:click={() => currentView.set("dashboard")}> 📊 Dashboard </button>
+  {#if $currentView === "tree"}
+    <button
+      class="filter-btn"
+      class:active={$favoritesFilter}
+      on:click={() => favoritesFilter.update(v => !v)}
+    >
+      {$favoritesFilter ? "⭐ Ocultar filtro" : "⭐ Solo favoritos"}
+    </button>
+  {/if}
+
+  <button on:click={() => currentView.set("dashboard")}> 📊 Resumen </button>
 
   <button on:click={() => currentView.set("calendar")}> 📅 Calendario </button>
 
-  <button on:click={() => currentView.set("progress")}> 📈 Progreso </button>
+  <button on:click={() => currentView.set("progress")}> 📈 Gráficos </button>
 
   <hr />
   <select value={$activeProject} on:change={changeProject}>
@@ -127,6 +137,19 @@
 
   button:hover {
     background: #2b3138;
+  }
+
+  .filter-btn {
+    margin-left: 12px;
+    padding: 6px 10px !important;
+    font-size: 12px !important;
+    background: #1a1d24 !important;
+    border-color: #2a2f37 !important;
+  }
+
+  .filter-btn.active {
+    background: rgba(250, 204, 21, 0.1) !important;
+    border-color: #facc15 !important;
   }
 
   select {

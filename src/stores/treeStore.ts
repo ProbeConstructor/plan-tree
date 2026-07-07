@@ -10,6 +10,7 @@ export const tree = writable(defaultTree());
 export const draggedNodeId = writable<string | null>(null);
 export const canUndo = writable(false);
 export const progressMap = writable(new Map<string, number>());
+export const favoritesFilter = writable(false);
 
 tree.subscribe((t) => {
   progressMap.set(calculateProgressMap(t));

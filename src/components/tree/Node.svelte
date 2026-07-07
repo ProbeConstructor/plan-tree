@@ -149,6 +149,7 @@
     }}
     onDelete={() => actions.removeNode(node)}
     onFocus={() => actions.toggleFocus(node)}
+    onFavorite={() => actions.toggleFavorite(node)}
     onStatus={(e: Event) => actions.setStatus(node, e)}
     onPriority={(e: Event) => actions.setPriority(node, e)}
     onStartDate={(e: Event) => actions.setStartDate(node, e)}

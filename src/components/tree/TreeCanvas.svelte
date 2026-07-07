@@ -1,14 +1,16 @@
 <script lang="ts">
   import Node from "./Node.svelte";
-  import { tree } from "../../stores/treeStore";
+  import { tree, favoritesFilter } from "../../stores/treeStore";
   import { buildVisibleTree } from "../../utils/buildVisibleTree";
+  import { getFavoriteIds } from "../../utils/treeUtils";
   import { COLUMN_WIDTH, ROW_HEIGHT } from "../../constants/layout";
   import { nodeMeasurements } from "../../stores/nodeMeasurementsStore";
   import TreeConnections from "./TreeConnections.svelte";
 
   $: rowHeights = calculateRowHeights($nodeMeasurements);
   $: rowOffsets = calculateRowOffsets(rowHeights);
-  $: viewNodes = buildVisibleTree($tree, rowOffsets);
+  $: favoriteIds = $favoritesFilter ? getFavoriteIds($tree) : undefined;
+  $: viewNodes = buildVisibleTree($tree, rowOffsets, favoriteIds);
   $: maxX = Math.max(...viewNodes.map((n) => n.x), 0);
   $: canvasHeight =
     Math.max(...rowOffsets.values(), 0) +

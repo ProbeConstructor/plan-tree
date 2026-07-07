@@ -21,8 +21,21 @@
     }
   }
 
-  async function handleExport() {
-    await exportTree(get(tree));
+  function handleExport() {
+    openModal(ConfirmModal, {
+      title: "Exportar proyecto",
+      message:
+        "⚠️ El archivo exportado contiene los datos SIN ENCRIPTAR.\n" +
+        "Cualquiera que lo abra podrá leer su contenido.\n\n" +
+        "A continuación elegirá dónde guardarlo.",
+      confirmLabel: "Exportar",
+      danger: true,
+      onConfirm: () => {
+        // Deferred: onConfirm resuelve → confirmAction llama closeModal,
+        // y recién después se abre el diálogo nativo sin el modal encima.
+        setTimeout(() => exportTree(get(tree)), 0);
+      },
+    });
   }
 
   async function handleImport() {

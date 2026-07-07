@@ -4,7 +4,7 @@
  * Returns null if user cancels.
  */
 
-const isTauri = typeof window !== "undefined" && "__TAURI__" in window;
+const isTauri = typeof window !== "undefined" && ("__TAURI__" in window || "__TAURI_INTERNALS__" in window);
 const MAX_SIZE = 64;
 const SIZE_LIMIT = 50 * 1024; // 50 KB
 

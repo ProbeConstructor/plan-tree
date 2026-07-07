@@ -8,9 +8,15 @@ export let confirmLabel = "Eliminar";
 export let danger = true;
 export let showCancel = true;
 export let onConfirm: () => Promise<void> | void;
+export let onCancel: (() => void) | undefined = undefined;
 
 async function confirmAction() {
     await onConfirm();
+    closeModal();
+}
+
+function cancelAction() {
+    onCancel?.();
     closeModal();
 }
 </script>
@@ -21,7 +27,7 @@ async function confirmAction() {
 
 <div class="buttons">
     {#if showCancel}
-        <button on:click={closeModal}>
+        <button on:click={cancelAction}>
             Cancelar
         </button>
     {/if}

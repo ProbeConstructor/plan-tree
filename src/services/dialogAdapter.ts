@@ -1,8 +1,12 @@
 import type { TreeNode } from "../types";
 
-const isTauri = typeof window !== "undefined" && "__TAURI__" in window;
+const isTauri = typeof window !== "undefined" && ("__TAURI__" in window || "__TAURI_INTERNALS__" in window);
 
-export async function exportTree(data: TreeNode): Promise<void> {
+/**
+ * Abre el diálogo "Guardar como" y escribe el JSON del árbol en la ruta elegida.
+ * Devuelve true si se guardó, false si el usuario canceló.
+ */
+export async function exportTree(data: TreeNode): Promise<boolean> {
   const json = JSON.stringify(data, null, 2);
 
   if (isTauri) {
@@ -13,17 +17,21 @@ export async function exportTree(data: TreeNode): Promise<void> {
       defaultPath: "plan-tree-export.json",
       filters: [{ name: "JSON", extensions: ["json"] }],
     });
+    if (!path) return false;
 
-    if (path) await writeTextFile(path, json);
-  } else {
-    const blob = new Blob([json], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "plan-tree-export.json";
-    a.click();
-    URL.revokeObjectURL(url);
+    await writeTextFile(path as string, json);
+    return true;
   }
+
+  // Web descartado, pero por si las moscas
+  const blob = new Blob([json], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "plan-tree-export.json";
+  a.click();
+  URL.revokeObjectURL(url);
+  return true;
 }
 
 export async function importTree(): Promise<TreeNode | null> {

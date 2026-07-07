@@ -1,8 +1,6 @@
 import { writable, get } from "svelte/store";
 import type { TreeNode, CompletionsMap } from "../types";
 import { calculateProgressMap } from "../utils/treeUtils";
-import { derived } from "svelte/store";
-import { calculateLayout } from "../utils/treeLayout";
 import { completions } from "./completionStore";
 
 export const focusedNodeId = writable<string | null>(null);
@@ -12,9 +10,13 @@ export const canUndo = writable(false);
 export const progressMap = writable(new Map<string, number>());
 export const favoritesFilter = writable(false);
 
-tree.subscribe((t) => {
-  progressMap.set(calculateProgressMap(t));
-});
+/** Recalculate progress map from current tree. Call after progress-affecting mutations. */
+export function recalcProgress(): void {
+  progressMap.set(calculateProgressMap(get(tree)));
+}
+
+/** Lazily recalculate once at init */
+recalcProgress();
 
 interface HistoryEntry {
   tree: TreeNode;
@@ -56,6 +58,7 @@ export function undo(): void {
     completions.set(previous.completions);
   }
   canUndo.set(history.length > 0);
+  recalcProgress();
 }
 
 export function mutateTree(callback: (tree: TreeNode) => TreeNode) {
@@ -69,8 +72,6 @@ export function resetTree(): void {
   canUndo.set(false);
   focusedNodeId.set(null);
   draggedNodeId.set(null);
+  recalcProgress();
 }
 
-export const layoutMap = derived(tree, ($tree) => {
-  return calculateLayout($tree);
-});

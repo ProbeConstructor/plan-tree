@@ -7,9 +7,6 @@
   import { pickAndResizeImage } from "../../lib/resizeImage";
   import { getNodeView } from "./nodeView";
   import { useDrag } from "./useDrag";
-  import { useNodeEditing } from "./useNodeEditing";
-  import { useNodeExpansion } from "./useNodeExpansion";
-  import { useNodeDetails } from "./useNodeDetails";
   import type { TreeViewNode } from "../../types";
   import { COLUMN_WIDTH } from "../../constants/layout";
   import { openModal } from "../../stores/modalStore";
@@ -34,20 +31,21 @@
   let detailsOpen = false;
 
   $: view = getNodeView(node, $progressMap.get(node.id) ?? 0, $focusedNodeId);
-  $: editingApi = useNodeEditing(node, {
-    getEditing: () => editing,
-    setEditing: (v) => (editing = v),
-    getTempTitle: () => tempTitle,
-    setTempTitle: (v) => (tempTitle = v),
-  });
-  $: details = useNodeDetails({
-    getDetailsOpen: () => detailsOpen,
-    setDetailsOpen: (v) => (detailsOpen = v),
-  });
-  $: drag = useDrag(node, {
-    setDragOver: (v) => (dragOver = v),
-  });
-  $: expansion = useNodeExpansion(node);
+
+  // Guard: only re-create drag handlers when the node actually changes identity.
+  // Immutable tree updates create new references for ALL ancestors on every mutation.
+  let lastNodeId: string | undefined;
+  let drag: ReturnType<typeof useDrag>;
+  $: if (lastNodeId !== node.id) {
+    lastNodeId = node.id;
+    drag = useDrag(node, {
+      setDragOver: (v) => (dragOver = v),
+    });
+  }
+
+  function toggleDetails() {
+    detailsOpen = !detailsOpen;
+  }
 
   onMount(() => {
     resizeObserver = new ResizeObserver(() => {
@@ -72,6 +70,27 @@
     resizeObserver.disconnect();
     unregisterNodeMeasurement(node.id);
   });
+
+  function countDescendants(n: TreeNode): number {
+    return n.children.reduce((sum, c) => sum + 1 + countDescendants(c), 0);
+  }
+
+  function confirmDelete() {
+    if (layout.isRoot) return;
+    const descendants = countDescendants(node);
+    const parts = [`¿Eliminar "${node.title}"`];
+    if (descendants > 0) {
+      parts.push(` y ${descendants} ${descendants === 1 ? "subnodo" : "subnodos"}`);
+    }
+    parts.push("? Esta acción no se puede deshacer.");
+    openModal(ConfirmModal, {
+      title: "Eliminar nodo",
+      message: parts.join(""),
+      confirmLabel: "Eliminar",
+      danger: true,
+      onConfirm: () => actions.removeNode(node),
+    });
+  }
 
   function extractToProject() {
     if (layout.isRoot) return;
@@ -136,18 +155,18 @@
     bind:detailsOpen
     {dragOver}
     isRoot={layout.isRoot}
-    onStartEditing={editingApi.startEditing}
-    onSaveTitle={editingApi.saveTitle}
-    focusOnMount={editingApi.focusOnMount}
-    onToggleDetails={details.toggleDetails}
-    onToggle={expansion.toggle}
+    onStartEditing={() => actions.startEditing(node.title, (v) => (tempTitle = v), (v) => (editing = v))}
+    onSaveTitle={() => actions.saveTitle(node, () => tempTitle, (v) => (editing = v))}
+    focusOnMount={(el: HTMLInputElement) => actions.focusOnMount(el)}
+    onToggleDetails={toggleDetails}
+    onToggle={() => actions.toggleExpand(node)}
     onExtract={extractToProject}
     onAddChild={async () => {
       const newId = actions.addChild(node, layout.depth);
       await tick();
       document.getElementById(newId)?.scrollIntoView({ behavior: "smooth", block: "center", inline: "center" });
     }}
-    onDelete={() => actions.removeNode(node)}
+    onDelete={confirmDelete}
     onFocus={() => actions.toggleFocus(node)}
     onFavorite={() => actions.toggleFavorite(node)}
     onStatus={(e: Event) => actions.setStatus(node, e)}

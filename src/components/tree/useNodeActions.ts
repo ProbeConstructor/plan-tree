@@ -1,5 +1,5 @@
 import type { TreeNode } from "../../types";
-import { snapshot, mutateTree, focusedNodeId } from "../../stores/treeStore";
+import { snapshot, mutateTree, focusedNodeId, recalcProgress } from "../../stores/treeStore";
 
 import { updateNode, getDefaultTitle, deleteNode } from "../../utils/treeUtils";
 
@@ -24,12 +24,14 @@ export function addChild(node: TreeNode, depth: number) {
       ],
     })),
   );
+  recalcProgress();
   return newId;
 }
 
 export function removeNode(node: TreeNode) {
   snapshot();
   mutateTree((t) => deleteNode(t, node.id));
+  recalcProgress();
 }
 
 export function toggleFocus(node: TreeNode) {
@@ -52,6 +54,7 @@ export function setStatus(node: TreeNode, event: Event) {
       status: value as "todo" | "doing" | "done",
     })),
   );
+  recalcProgress();
 }
 
 export function setPriority(node: TreeNode, event: Event) {
@@ -98,5 +101,39 @@ export function removeIcon(node: TreeNode) {
   snapshot();
   mutateTree((t) =>
     updateNode(t, node.id, (n) => ({ ...n, icon: undefined })),
+  );
+}
+
+// ── editing (merged from useNodeEditing.ts) ──
+
+export function startEditing(title: string, setTempTitle: (v: string) => void, setEditing: (v: boolean) => void) {
+  setTempTitle(title);
+  setEditing(true);
+}
+
+export function saveTitle(node: TreeNode, getTempTitle: () => string, setEditing: (v: boolean) => void) {
+  setEditing(false);
+  if (getTempTitle() === node.title) return;
+  snapshot();
+  mutateTree((tree) =>
+    updateNode(tree, node.id, (n) => ({
+      ...n,
+      title: getTempTitle(),
+    })),
+  );
+}
+
+export function focusOnMount(el: HTMLInputElement) {
+  el.focus();
+}
+
+// ── expansion (inlined from useNodeExpansion.ts) ──
+
+export function toggleExpand(node: TreeNode) {
+  mutateTree((tree) =>
+    updateNode(tree, node.id, (n) => ({
+      ...n,
+      expanded: !n.expanded,
+    })),
   );
 }

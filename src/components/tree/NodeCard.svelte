@@ -446,17 +446,20 @@
     border-radius: 4px;
     line-height: 1;
     flex-shrink: 0;
-    opacity: 0.5;
-    transition: opacity 0.15s;
+    opacity: 0.75;
+    transition: opacity 0.15s, border-color 0.15s, background 0.15s;
+    border-color: rgba(255, 255, 255, 0.08);
   }
 
   .star-btn:hover {
     opacity: 1;
     background: #2a2f37;
+    border-color: rgba(255, 255, 255, 0.15);
   }
 
   .star-btn.favorited {
     opacity: 1;
+    border-color: transparent;
   }
 
   .recurrence-badge {

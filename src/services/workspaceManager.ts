@@ -1,5 +1,5 @@
 import { get } from "svelte/store";
-import { tree, resetTree, defaultTree } from "../stores/treeStore";
+import { tree, resetTree, defaultTree, recalcProgress } from "../stores/treeStore";
 import { completions } from "../stores/completionStore";
 import { projects, activeProject } from "../stores/workspaceStore";
 import { activeProfile } from "../stores/profileStore";
@@ -71,6 +71,9 @@ export async function loadCurrentProject(): Promise<void> {
   if (project) {
     tree.set(project.tree);
     completions.set(project.completions);
+    recalcProgress();
+    // 🛡️ Sincronizar contador de nodos para la guarda de datos vacíos
+    autoSave.syncNodeCount(name, project.tree);
     // 📸 Forzar snapshot inicial para que el mes actual tenga datos
     progressSnapshot.capture(name, project.tree);
   } else {

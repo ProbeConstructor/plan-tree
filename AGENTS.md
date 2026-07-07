@@ -16,7 +16,7 @@ npm run build               # frontend build only; tauri build wraps it
 - **Single-window Tauri v2** app with Svelte 5 in `<div id="app">`.
 - Frontend entry: `src/main.ts` — calls `mount(App, ...)` (Svelte 5 API).
 - Backend entry: `src-tauri/src/lib.rs` — commands in `vault.rs`.
-- CSP is `null` in Tauri config (required for Svelte inline styles).
+- CSP with `'unsafe-inline'` for Svelte styles in Tauri config (`tauri.conf.json`).
 
 ### Encryption (vault)
 
@@ -57,6 +57,26 @@ npm run build               # frontend build only; tauri build wraps it
 - `setup_recovery` generates random 32-byte key, wraps active key with it.
 - `resetPasswordWithRecovery` decrypts all projects with old key, re-encrypts with new password.
 
+### Updater (auto-actualización)
+
+- `@tauri-apps/plugin-updater` v2 en Rust + frontend.
+- `check()` en `App.svelte` al iniciar — no blocking.
+- `Sidebar.svelte` muestra botón con versión disponible + `relaunch()`.
+- Requiere:
+  - Par de claves generado con `tauri signer generate`.
+  - `TAURI_SIGNING_PRIVATE_KEY` + `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` como env vars / GH secrets.
+  - Pubkey en `tauri.conf.json`.
+- El release workflow (`.github/workflows/release.yml`) genera y sube `latest.json` con `uploadUpdaterJson: true`.
+
+### Multi-project Progress Chart
+
+- `Progress.svelte` muestra gráfico de línea por proyecto (Progreso page).
+- `MultiProjectLineChart.svelte`: una línea colorida por proyecto, tooltip con nombre + %, leyenda con dots.
+- `ProjectSelector.svelte`: dropdown multi-select con checkboxes, select/deselect all, color picker inline.
+- `ColorPicker.svelte`: 8 colores preset + `<input type="color">` nativo.
+- `snapshotsToMultiProjectLineData()` en `chartDataUtils.ts`: carry-forward progress, proyectos sin snapshots como 0%.
+- Selección guardada por perfil en `profiles.json` (`graphSelectionByProfile` + `projectColorsByProfile`).
+
 ## Commands
 
 | Command | What |
@@ -65,8 +85,10 @@ npm run build               # frontend build only; tauri build wraps it
 | `npm run build` | `vite build` into `dist/` |
 | `npm run preview` | Preview built frontend |
 | `npm run check` | `svelte-check --tsconfig ./tsconfig.app.json && tsc -p tsconfig.node.json` |
+| `npm run test` | `vitest run` |
 | `npm exec tauri dev` | Full Tauri dev (calls `npm run dev` as beforeDevCommand) |
 | `npm exec tauri build` | Production build |
+| `npm exec tauri signer generate` | Generate updater signing keypair |
 
 ## Conventions & quirks
 
@@ -84,6 +106,15 @@ npm run build               # frontend build only; tauri build wraps it
 - `src/stores/treeStore.ts` — central tree state + undo history + derived layout.
 - `src/services/workspaceManager.ts` — project CRUD + auto-save subscription.
 - `src/utils/treeUtils.ts` — tree traversal, mutation, progress calculation, focus.
+- `src/pages/Progress.svelte` — multi-project progress chart with ProjectSelector.
+- `src/components/charts/MultiProjectLineChart.svelte` — line chart with colored project lines.
+- `src/components/charts/ProjectSelector.svelte` — multi-select + color picker per project.
+- `src/components/charts/ColorPicker.svelte` — preset colors + native picker.
+- `src/services/profileManager.ts` — profiles.json CRUD, graph selection/colors per profile.
+- `src/utils/chartDataUtils.ts` — snapshots → chart data with carry-forward.
+- `src/stores/updateStore.ts` — pendingUpdate + checkingUpdate stores for updater.
+- `src/components/Sidebar.svelte` — update button + navigation.
+- `.github/workflows/release.yml` — CI release pipeline with signing + latest.json.
 - `plan-tree.fish` — dev launcher script with the WebKit env var.
 
 ## graphify

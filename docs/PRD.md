@@ -10,9 +10,11 @@
 
 1. Zero data loss on abrupt close, meta corruption, or interrupted password reset.
 2. User can unlock, edit, and save a tree in under 2s (excluding unlock time).
-3. Distributable on Linux (AppImage) and Windows (MSI) with no known regressions.
+3. Distributable on Linux (AppImage), Windows (NSIS), and macOS (DMG) with no known regressions.
 4. Test suite covers vault operations, tree mutations, and recovery flow.
-5. CI passes typecheck + lint + build + tests before each release.
+5. CI passes typecheck + build + tests before each release.
+6. Auto-updater checks for new versions on startup, downloads and installs with one click.
+7. Multi-project progress chart shows progress lines for selected projects over time.
 
 ## 2. User Experience & Functionality
 
@@ -31,13 +33,14 @@
 | US-05 | As a user, I want to recover my vault if I forget my password using a recovery key. | 32-byte recovery key generated at setup. Reset re-encrypts all projects atomically (batch in-memory, batch write). |
 | US-06 | As a user, I want to associate a small image/icon with each tree node for visual identification. | Image stored encrypted alongside the node. Rendered as small square icon in node view. Max 64x64, PNG/JPEG. |
 | US-07 | As a user, I want the app not to break on unexpected errors. | Global error boundary captures unhandled exceptions. Friendly message with restart option. |
+| US-08 | As a user, I want to see progress of multiple projects in a single chart for comparison. | Multi-project line chart with colored lines, selectable projects, persisted selection per profile. |
+| US-09 | As a user, I want the app to check for updates automatically and install them with one click. | `check()` on startup (non-blocking), button in sidebar on new version, `downloadAndInstall()` + `relaunch()`. |
 
 **Non-Goals:**
 
 - Cloud sync / automatic backup to external services.
 - Multi-window.
 - Formal i18n (post-MVP).
-- macOS support (indefinite).
 - Team collaboration / sharing.
 - Plugins or extensions.
 
@@ -113,13 +116,14 @@ interface VaultMeta {
 - `@tauri-apps/api/window` — `onCloseRequested` event to flush pending saves before window closes.
 - `@tauri-apps/plugin-fs` — file I/O over AppData (abstracted by `projectIO.ts`).
 - `@tauri-apps/plugin-dialog` — file dialogs for export/import and image selection (abstracted by `dialogAdapter.ts` with Tauri/Browser fork).
-- `@tauri-apps/plugin-updater` — auto-updater (post-MVP).
+- `@tauri-apps/plugin-updater` — auto-updater. `check()` on startup, button in sidebar to download & install + `relaunch()`. Requires signing keypair + `latest.json` in every release.
+- `@tauri-apps/plugin-process` — `relaunch()` for updater and error recovery.
 
 ### Security & Privacy
 
 - Vault key: Argon2id(password + salt) → 256-bit AES-GCM key. Key only in Rust RAM (`VaultState(Mutex<Option<[u8;32]>>)`).
 - `.plan` files always encrypted on disk. No plaintext.
-- CSP with nonce for Svelte inline styles (no CSP `null`).
+- CSP with `'unsafe-inline'` for Svelte styles (required by Svelte), otherwise locked to `'self'`. `connect-src` includes `https://api.github.com` + `https://github.com` for updater checks.
 - Input sanitization with DOMPurify on node titles and icons (data URIs).
 - Single-instance lock prevents concurrent writes.
 - Tauri capabilities scoped to `BaseDirectory.AppData`.
@@ -146,7 +150,8 @@ interface VaultMeta {
 |-------|----------|----------|
 | **MVP** | Integrity fixes (meta checksum, schema versioning, close guard, single-instance, CSP, error boundary) + image icons per node | Tests pass, typecheck clean, Linux build succeeds |
 | **v1.0** | Windows build + auto-updater + CI pipeline | Windows build + GitHub Actions green |
-| **v1.1** | i18n (Svelte i18n library) | EN + ES translations, language switcher |
+| **v1.1** | Multi-project progress chart + updater signing + release automation + macOS build | Chart with project selector, color picker, persisted selection; GitHub Actions release flow produces `latest.json` for updates |
+| **v1.2** | i18n (Svelte i18n library) | EN + ES translations, language switcher |
 | **v2.0** | TBD (sync, mobile, etc.) | — |
 
 ### Technical Risks
@@ -158,4 +163,5 @@ interface VaultMeta {
 | Abrupt close during auto-save | Data loss on last change | `AutoSaveStrategy.flush()` in `close-requested` handler, debounce 2s with 3 retries, backup single-instance lock. |
 | Base64 images bloat .plan file size | UX degradation | 50KB encoded limit. Validation on upload. |
 | No tests → undetected regressions | Unpredictable quality | Test suite in CI before release. Critical coverage: vault, tree mutations, recovery. |
-| CSP null → XSS in node titles | Local session hijack | CSP with nonce. DOMPurify on all inputs. |
+| CSP `'unsafe-inline'` → XSS in node titles | Local session hijack | CSP locks script-src to `'self'` exclusively. DOMPurify on all inputs. |
+| Updater signing key lost → no updates deliverable | Delivery blocked | Private key stored as GitHub secret + local env. Backup keyfile in password manager. |

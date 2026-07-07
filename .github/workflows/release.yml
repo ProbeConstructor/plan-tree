@@ -68,4 +68,6 @@ jobs:
 
             ## Novedades
             _Insertá las novedades de esta versión_
-          releaseDraft: false
+          uploadUpdaterJson: true
+          uploadUpdaterSignatures: true
+          releaseDraft: true

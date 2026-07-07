@@ -1,21 +1,35 @@
 <script lang="ts">
-  import { activeProject } from "../stores/workspaceStore";
+  import { get } from "svelte/store";
+  import { projects, activeProject } from "../stores/workspaceStore";
+  import { activeProfile } from "../stores/profileStore";
   import { progressSnapshot } from "../services/progressSnapshotService";
+  import {
+    getProjectColors,
+    saveProjectColor,
+    getGraphSelection,
+    saveGraphSelection,
+  } from "../services/profileManager";
   import type { Snapshot } from "../types";
   import {
-    snapshotsToDailyLineData,
     snapshotsToDailyGroupedByWeek,
+    snapshotsToMultiProjectLineData,
     snapshotToDonutData,
     snapshotToStats,
   } from "../utils/chartDataUtils";
-  import LineChart from "../components/charts/LineChart.svelte";
+  import MultiProjectLineChart from "../components/charts/MultiProjectLineChart.svelte";
   import BarChart from "../components/charts/BarChart.svelte";
   import DonutChart from "../components/charts/DonutChart.svelte";
   import StatsCards from "../components/charts/StatsCards.svelte";
+  import ProjectSelector from "../components/charts/ProjectSelector.svelte";
 
   const MONTHS = [
     "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
     "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre",
+  ];
+
+  const DEFAULT_PALETTE = [
+    "#4caf50", "#2196f3", "#ff9800", "#f44336",
+    "#9c27b0", "#e91e63", "#00bcd4", "#cddc39",
   ];
 
   let currentYear = $state(new Date().getFullYear());
@@ -24,13 +38,102 @@
   let loading = $state(false);
   let error = $state<string | null>(null);
 
+  // Multi-project state
+  let selectedProjects = $state<string[]>([]);
+  let projectColors = $state<Record<string, string>>({});
+  let multiSnapshots = $state<Record<string, Snapshot[]>>({});
+  let loadingMulti = $state(true);
+  let initialized = $state(false);
+
   let monthYear = $derived(`${MONTHS[currentMonth]} ${currentYear}`);
 
-  let lineData = $derived(snapshotsToDailyLineData(snapshots));
   let dailyBarData = $derived(snapshotsToDailyGroupedByWeek(snapshots));
   let donutData = $derived(snapshotToDonutData(snapshots));
   let stats = $derived(snapshotToStats(snapshots));
   let isEmpty = $derived(snapshots.length === 0 && !loading && !error);
+
+  // Datos del gráfico multi-proyecto
+  let multiProjectData = $derived(snapshotsToMultiProjectLineData(multiSnapshots));
+
+  // Opciones para el ProjectSelector (puro derivado, sin mutaciones)
+  let selectorProjects = $derived(
+    $projects.map((name) => ({
+      name,
+      color: projectColors[name] ?? DEFAULT_PALETTE[$projects.indexOf(name) % DEFAULT_PALETTE.length],
+      selected: selectedProjects.includes(name),
+    })),
+  );
+
+  // Inicializar: restaurar selección guardada o auto-seleccionar proyecto activo
+  async function initSelection() {
+    const profile = get(activeProfile);
+    if (!profile) return;
+
+    try {
+      const saved = await getGraphSelection(profile);
+      const colors = await getProjectColors(profile);
+      projectColors = colors;
+
+      // Asignar color por defecto a proyectos que no tengan uno
+      const used = new Set(Object.values(colors));
+      const toAssign: Record<string, string> = {};
+      for (const p of $projects) {
+        if (!(p in colors)) {
+          const free = DEFAULT_PALETTE.find((c) => !used.has(c));
+          toAssign[p] = free ?? DEFAULT_PALETTE[$projects.indexOf(p) % DEFAULT_PALETTE.length];
+          used.add(toAssign[p]);
+        }
+      }
+      if (Object.keys(toAssign).length > 0) {
+        projectColors = { ...projectColors, ...toAssign };
+        for (const [p, c] of Object.entries(toAssign)) {
+          saveProjectColor(profile, p, c);
+        }
+      }
+
+      if (saved) {
+        selectedProjects = saved.filter((p) => $projects.includes(p));
+      }
+
+      // Si no hay selección (primera vez o todos los proyectos guardados fueron borrados)
+      if (selectedProjects.length === 0) {
+        const current = $activeProject;
+        if (current) selectedProjects = [current];
+        // Persistir esta selección inicial
+        await saveGraphSelection(profile, selectedProjects);
+      }
+    } catch (err) {
+      console.error("Error al cargar selección de proyectos:", err);
+    }
+
+    initialized = true;
+  }
+
+  // Manejar cambio de selección desde el ProjectSelector
+  async function onSelectionChange(selected: string[]) {
+    selectedProjects = selected;
+
+    const profile = get(activeProfile);
+    if (profile) {
+      saveGraphSelection(profile, selected); // fire-and-forget
+    }
+
+    // reloadKey++ triggers the effect to reload snapshots
+    reloadKey++;
+  }
+
+  // Manejar cambio de color desde el ProjectSelector
+  async function onColorChange(project: string, color: string) {
+    projectColors = { ...projectColors, [project]: color };
+
+    const profile = get(activeProfile);
+    if (profile) {
+      saveProjectColor(profile, project, color); // fire-and-forget
+    }
+  }
+
+  // Reload key para forzar recarga de snapshots multi-proyecto
+  let reloadKey = $state(0);
 
   function prevMonth() {
     if (currentMonth === 0) {
@@ -56,6 +159,7 @@
     currentMonth = now.getMonth();
   }
 
+  // Cargar snapshots del proyecto activo (para BarChart / DonutChart / StatsCards)
   async function fetchSnapshots() {
     const project = $activeProject;
     if (!project) return;
@@ -73,13 +177,58 @@
     }
   }
 
-  // Cargar al montar y al cambiar mes/año
+  // Cargar snapshots para los proyectos seleccionados (gráfico multi-proyecto)
+  async function loadMultiProjectSnapshots() {
+    const toLoad = selectedProjects;
+    if (toLoad.length === 0) {
+      multiSnapshots = {};
+      loadingMulti = false;
+      return;
+    }
+
+    loadingMulti = true;
+    try {
+      const entries = await Promise.all(
+        toLoad.map(async (project) => {
+          const shots = await progressSnapshot.loadSnapshots(project, currentYear, currentMonth);
+          return [project, shots] as const;
+        }),
+      );
+      multiSnapshots = Object.fromEntries(entries);
+    } catch (err) {
+      console.error("Error al cargar snapshots multi-proyecto:", err);
+      multiSnapshots = {};
+    } finally {
+      loadingMulti = false;
+    }
+  }
+
+  // Efecto para init (solo una vez)
   $effect(() => {
-    // Leer las reactivas para que Svelte trackee dependencias
+    void $activeProfile;
+    void $projects;
+
+    if ($activeProfile && $projects.length > 0 && !initialized) {
+      initSelection();
+    }
+  });
+
+  // Efecto para recargar snapshots cuando cambia mes o proyecto activo
+  $effect(() => {
     void currentYear;
     void currentMonth;
     void $activeProject;
     fetchSnapshots();
+  });
+
+  // Efecto para recargar snapshots multi-proyecto cuando cambia selección o mes
+  $effect(() => {
+    void currentYear;
+    void currentMonth;
+    void reloadKey;
+    if (initialized) {
+      loadMultiProjectSnapshots();
+    }
   });
 </script>
 
@@ -106,7 +255,30 @@
 
     <div class="charts-grid">
       <div class="chart-block">
-        <LineChart data={lineData} title="Progreso diario" />
+        <div class="chart-header">
+          <span class="chart-title">Progreso diario</span>
+          <ProjectSelector
+            projects={selectorProjects}
+            onSelectionChange={onSelectionChange}
+            onColorChange={onColorChange}
+          />
+        </div>
+
+        {#if selectedProjects.length === 0}
+          <div class="empty-chart">
+            <p>Seleccioná proyectos para ver</p>
+          </div>
+        {:else if loadingMulti}
+          <div class="empty-chart">
+            <p>Cargando datos...</p>
+          </div>
+        {:else}
+          <MultiProjectLineChart
+            datasets={multiProjectData.datasets}
+            labels={multiProjectData.labels}
+            title=""
+          />
+        {/if}
       </div>
       <div class="chart-block">
         <BarChart
@@ -186,6 +358,28 @@
     border: 1px solid #262b33;
     border-radius: 12px;
     padding: 18px;
+  }
+
+  .chart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+
+  .chart-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #e7e9ee;
+  }
+
+  .empty-chart {
+    height: 260px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #6b7280;
+    font-size: 14px;
   }
 
   .state-msg {

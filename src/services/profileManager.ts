@@ -8,6 +8,8 @@ interface ProfilesFile {
   profiles: string[];
   lastProfile: string | null;
   lastProjectByProfile: Record<string, string>;
+  projectColorsByProfile: Record<string, Record<string, string>>;
+  graphSelectionByProfile: Record<string, string[]>;
 }
 
 async function fsModule() {
@@ -22,7 +24,7 @@ async function readProfilesFile(): Promise<ProfilesFile> {
   });
 
   if (!fileExists) {
-    return { profiles: [], lastProfile: null, lastProjectByProfile: {} };
+    return { profiles: [], lastProfile: null, lastProjectByProfile: {}, projectColorsByProfile: {}, graphSelectionByProfile: {} };
   }
 
   const text = await readTextFile(PROFILES_FILE, {
@@ -31,11 +33,13 @@ async function readProfilesFile(): Promise<ProfilesFile> {
 
   const data = JSON.parse(text) as Partial<ProfilesFile>;
 
-  // por si el archivo es de antes de que existiera este campo
+  // por si el archivo es de antes de que existieran estos campos
   return {
     profiles: data.profiles ?? [],
     lastProfile: data.lastProfile ?? null,
     lastProjectByProfile: data.lastProjectByProfile ?? {},
+    projectColorsByProfile: data.projectColorsByProfile ?? {},
+    graphSelectionByProfile: data.graphSelectionByProfile ?? {},
   };
 }
 
@@ -131,6 +135,8 @@ export async function deleteProfile(name: string): Promise<void> {
   const data = await readProfilesFile();
   data.profiles = data.profiles.filter((p) => p !== name);
   delete data.lastProjectByProfile[name];
+  delete data.projectColorsByProfile[name];
+  delete data.graphSelectionByProfile[name];
   if (data.lastProfile === name) {
     data.lastProfile = null;
   }
@@ -154,5 +160,45 @@ export async function setLastProject(
 ): Promise<void> {
   const data = await readProfilesFile();
   data.lastProjectByProfile[profileName] = projectName;
+  await writeProfilesFile(data);
+}
+
+/** Colores asignados a cada proyecto para ESTE perfil. */
+export async function getProjectColors(
+  profile: string,
+): Promise<Record<string, string>> {
+  const data = await readProfilesFile();
+  return data.projectColorsByProfile[profile] ?? {};
+}
+
+/** Guarda el color de un proyecto para ESTE perfil. */
+export async function saveProjectColor(
+  profile: string,
+  project: string,
+  color: string,
+): Promise<void> {
+  const data = await readProfilesFile();
+  if (!data.projectColorsByProfile[profile]) {
+    data.projectColorsByProfile[profile] = {};
+  }
+  data.projectColorsByProfile[profile][project] = color;
+  await writeProfilesFile(data);
+}
+
+/** Proyectos seleccionados en el gráfico multi-proyecto para ESTE perfil (null si primera vez). */
+export async function getGraphSelection(
+  profile: string,
+): Promise<string[] | null> {
+  const data = await readProfilesFile();
+  return data.graphSelectionByProfile[profile] ?? null;
+}
+
+/** Persiste los proyectos seleccionados en el gráfico multi-proyecto. */
+export async function saveGraphSelection(
+  profile: string,
+  selected: string[],
+): Promise<void> {
+  const data = await readProfilesFile();
+  data.graphSelectionByProfile[profile] = selected;
   await writeProfilesFile(data);
 }

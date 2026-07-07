@@ -1,7 +1,7 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
   "productName": "plan-tree",
-  "version": "1.1.2",
+  "version": "1.1.3",
   "identifier": "dev.tyto.plan-tree",
   "build": {
     "frontendDist": "../dist",
@@ -35,7 +35,7 @@
   "plugins": {
     "updater": {
       "endpoints": ["https://github.com/ProbeConstructor/plan-tree/releases/latest/download/latest.json"],
-      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEY1N0EwNEUzRjZCMjI0OTAKUldTUUpMTDI0d1I2OWYzbytHVXNZSUNKWkl6eDYxaUFJdFo5ckZpalUzL1dkb0gwR25pblZCSU8K"
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEFDNEY4QzVGMkFBNjgzQTkKUldTcGc2WXFYNHhQckdRTkUzYnZOeUpzejhHRVEyNTdoN3NrN2ZHWjNncVI2Zlp6RzhjVkJ6TzIK"
     }
   },
   "bundle": {

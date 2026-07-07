@@ -24,6 +24,66 @@ export function snapshotsToDailyLineData(
 }
 
 /**
+ * Convierte snapshots de múltiples proyectos en datos para el gráfico
+ * de progreso diario multi-proyecto.
+ *
+ * Cada proyecto se convierte en una serie diaria con carry-forward:
+ * si no hay snapshot un día, se mantiene el último valor conocido.
+ * Proyectos sin snapshots en el mes se muestran como línea plana en 0%.
+ */
+export function snapshotsToMultiProjectLineData(
+  allSnapshots: Record<string, Snapshot[]>,
+): {
+  labels: number[];
+  datasets: { project: string; data: number[] }[];
+} {
+  const projectNames = Object.keys(allSnapshots);
+  if (projectNames.length === 0) return { labels: [], datasets: [] };
+
+  // Determinar mes/año del primer timestamp disponible
+  const allTimestamps = Object.values(allSnapshots).flat();
+  let year: number;
+  let month: number;
+
+  if (allTimestamps.length > 0) {
+    const firstTs = new Date(allTimestamps[0].timestamp);
+    year = firstTs.getFullYear();
+    month = firstTs.getMonth();
+  } else {
+    const now = new Date();
+    year = now.getFullYear();
+    month = now.getMonth();
+  }
+
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const labels = Array.from({ length: daysInMonth }, (_, i) => i + 1);
+
+  const datasets = projectNames.map((project) => {
+    const snaps = allSnapshots[project] ?? [];
+    const byDay = new Map<number, Snapshot>();
+
+    for (const s of snaps) {
+      const d = new Date(s.timestamp);
+      if (d.getFullYear() === year && d.getMonth() === month) {
+        byDay.set(d.getDate(), s); // último del día pisa anteriores
+      }
+    }
+
+    // Carry-forward: si un día no tiene snapshot, mantener el último valor
+    let lastProgress = 0;
+    const data = labels.map((day) => {
+      const snap = byDay.get(day);
+      if (snap) lastProgress = snap.globalProgress;
+      return lastProgress;
+    });
+
+    return { project, data };
+  });
+
+  return { labels, datasets };
+}
+
+/**
  * Día de la semana (0=lun..6=dom) consistente con calendarUtils.
  */
 function jsDayToMonday0(date: Date): number {

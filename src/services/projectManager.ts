@@ -4,6 +4,7 @@ import { encryptProject, decryptProject } from "./projectCrypto";
 import { exportTree as exportDialog, importTree as importDialog } from "./dialogAdapter";
 import { validateSafeName } from "../utils/validation";
 import { progressSnapshot } from "./progressSnapshotService";
+import { writeTextFile, mkdir } from "./fsAdapter";
 
 let migrated = false;
 
@@ -43,14 +44,10 @@ export async function loadFromDisk(): Promise<TreeNode | null> {
 
 export async function saveToDisk(data: TreeNode): Promise<void> {
   try {
-    const { writeTextFile, mkdir, BaseDirectory } =
-      await import("@tauri-apps/plugin-fs");
     try {
-      await mkdir("", { baseDir: BaseDirectory.AppData, recursive: true });
+      await mkdir("", { recursive: true });
     } catch {}
-    await writeTextFile("plan-tree.json", JSON.stringify(data), {
-      baseDir: BaseDirectory.AppData,
-    });
+    await writeTextFile("plan-tree.json", JSON.stringify(data));
   } catch (err) {
     console.error("No se pudo guardar plan-tree.json en disco:", err);
   }

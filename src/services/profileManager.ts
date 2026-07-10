@@ -1,120 +1,50 @@
 import { get } from "svelte/store";
 import { profiles, activeProfile } from "../stores/profileStore";
 import { validateSafeName } from "../utils/validation";
+import type { TagDefinition } from "../types";
+import { profileData } from "./profileDataStore";
+import { mkdir } from "./fsAdapter";
 
-const PROFILES_FILE = "profiles.json";
+// Re-export path utils so existing imports from profileManager still work
+export { profileDir, activeProfileDir } from "../utils/pathUtils";
 
-interface ProfilesFile {
-  profiles: string[];
-  lastProfile: string | null;
-  lastProjectByProfile: Record<string, string>;
-  projectColorsByProfile: Record<string, Record<string, string>>;
-  graphSelectionByProfile: Record<string, string[]>;
-}
-
-async function fsModule() {
-  return import("@tauri-apps/plugin-fs");
-}
-
-async function readProfilesFile(): Promise<ProfilesFile> {
-  const { readTextFile, exists, BaseDirectory } = await fsModule();
-
-  const fileExists = await exists(PROFILES_FILE, {
-    baseDir: BaseDirectory.AppData,
-  });
-
-  if (!fileExists) {
-    return { profiles: [], lastProfile: null, lastProjectByProfile: {}, projectColorsByProfile: {}, graphSelectionByProfile: {} };
-  }
-
-  const text = await readTextFile(PROFILES_FILE, {
-    baseDir: BaseDirectory.AppData,
-  });
-
-  const data = JSON.parse(text) as Partial<ProfilesFile>;
-
-  // por si el archivo es de antes de que existieran estos campos
-  return {
-    profiles: data.profiles ?? [],
-    lastProfile: data.lastProfile ?? null,
-    lastProjectByProfile: data.lastProjectByProfile ?? {},
-    projectColorsByProfile: data.projectColorsByProfile ?? {},
-    graphSelectionByProfile: data.graphSelectionByProfile ?? {},
-  };
-}
-
-async function writeProfilesFile(data: ProfilesFile): Promise<void> {
-  const { writeTextFile, BaseDirectory } = await fsModule();
-
-  await writeTextFile(PROFILES_FILE, JSON.stringify(data), {
-    baseDir: BaseDirectory.AppData,
-  });
-}
-
-/**
- * Carpeta base de un perfil. Lo usan vaultMeta.ts y projectManager.ts
- * para construir rutas como `${profileDir(name)}/vault.meta` o
- * `${profileDir(name)}/projects/...`.
- */
-export function profileDir(name: string): string {
-  return `profiles/${name}`;
-}
-
-/** Igual que profileDir, pero usando el perfil ACTIVO. Lanza si no hay ninguno. */
-export function activeProfileDir(): string {
-  const name = get(activeProfile);
-  if (!name) {
-    throw new Error("No hay perfil activo todavía.");
-  }
-  return profileDir(name);
-}
+const MAX_PROFILES = 10;
 
 export async function refreshProfiles(): Promise<void> {
-  const data = await readProfilesFile();
-  profiles.set(data.profiles);
+  const list = await profileData.listProfiles();
+  profiles.set(list);
 }
 
 export async function restoreLastProfile(): Promise<void> {
-  const data = await readProfilesFile();
-  if (data.lastProfile && data.profiles.includes(data.lastProfile)) {
-    activeProfile.set(data.lastProfile);
+  const list = await profileData.listProfiles();
+  const last = await profileData.getLastProfile();
+  if (last && list.includes(last)) {
+    activeProfile.set(last);
   }
 }
-
-const MAX_PROFILES = 10;
 
 export async function createProfile(name: string): Promise<void> {
   validateSafeName(name, "Perfil");
 
-  const { mkdir, BaseDirectory } = await fsModule();
+  const list = await profileData.listProfiles();
 
-  const data = await readProfilesFile();
-
-  if (data.profiles.includes(name)) {
+  if (list.includes(name)) {
     throw new Error(`Ya existe un perfil llamado "${name}".`);
   }
 
-  if (data.profiles.length >= MAX_PROFILES) {
+  if (list.length >= MAX_PROFILES) {
     throw new Error(
       `Ya hay ${MAX_PROFILES} perfiles. Borra alguno antes de crear otro.`,
     );
   }
 
-  await mkdir(`${profileDir(name)}/projects`, {
-    baseDir: BaseDirectory.AppData,
-    recursive: true,
-  });
-
-  data.profiles.push(name);
-  await writeProfilesFile(data);
+  await mkdir(`profiles/${name}/projects`, { recursive: true });
+  await profileData.createProfile(name);
   await refreshProfiles();
 }
 
 export async function selectProfile(name: string): Promise<void> {
-  const data = await readProfilesFile();
-  data.lastProfile = name;
-  await writeProfilesFile(data);
-
+  await profileData.setLastProfile(name);
   activeProfile.set(name);
 }
 
@@ -125,23 +55,7 @@ export function clearActiveProfile(): void {
 
 /** Borra un perfil completo: su carpeta en disco + sus entradas en profiles.json. */
 export async function deleteProfile(name: string): Promise<void> {
-  const { remove, BaseDirectory } = await fsModule();
-
-  await remove(profileDir(name), {
-    baseDir: BaseDirectory.AppData,
-    recursive: true,
-  });
-
-  const data = await readProfilesFile();
-  data.profiles = data.profiles.filter((p) => p !== name);
-  delete data.lastProjectByProfile[name];
-  delete data.projectColorsByProfile[name];
-  delete data.graphSelectionByProfile[name];
-  if (data.lastProfile === name) {
-    data.lastProfile = null;
-  }
-
-  await writeProfilesFile(data);
+  await profileData.deleteProfile(name);
   await refreshProfiles();
 }
 
@@ -149,8 +63,7 @@ export async function deleteProfile(name: string): Promise<void> {
 export async function getLastProject(
   profileName: string,
 ): Promise<string | null> {
-  const data = await readProfilesFile();
-  return data.lastProjectByProfile[profileName] ?? null;
+  return profileData.getLastProject(profileName);
 }
 
 /** Recuerda cuál fue el último proyecto abierto por ESTE perfil. */
@@ -158,17 +71,14 @@ export async function setLastProject(
   profileName: string,
   projectName: string,
 ): Promise<void> {
-  const data = await readProfilesFile();
-  data.lastProjectByProfile[profileName] = projectName;
-  await writeProfilesFile(data);
+  await profileData.setLastProject(profileName, projectName);
 }
 
 /** Colores asignados a cada proyecto para ESTE perfil. */
 export async function getProjectColors(
   profile: string,
 ): Promise<Record<string, string>> {
-  const data = await readProfilesFile();
-  return data.projectColorsByProfile[profile] ?? {};
+  return profileData.getProjectColors(profile);
 }
 
 /** Guarda el color de un proyecto para ESTE perfil. */
@@ -177,20 +87,14 @@ export async function saveProjectColor(
   project: string,
   color: string,
 ): Promise<void> {
-  const data = await readProfilesFile();
-  if (!data.projectColorsByProfile[profile]) {
-    data.projectColorsByProfile[profile] = {};
-  }
-  data.projectColorsByProfile[profile][project] = color;
-  await writeProfilesFile(data);
+  await profileData.saveProjectColor(profile, project, color);
 }
 
-/** Proyectos seleccionados en el gráfico multi-proyecto para ESTE perfil (null si primera vez). */
+/** Proyectos seleccionados en el gráfico multi-proyecto para ESTE perfil. */
 export async function getGraphSelection(
   profile: string,
 ): Promise<string[] | null> {
-  const data = await readProfilesFile();
-  return data.graphSelectionByProfile[profile] ?? null;
+  return profileData.getGraphSelection(profile);
 }
 
 /** Persiste los proyectos seleccionados en el gráfico multi-proyecto. */
@@ -198,7 +102,34 @@ export async function saveGraphSelection(
   profile: string,
   selected: string[],
 ): Promise<void> {
-  const data = await readProfilesFile();
-  data.graphSelectionByProfile[profile] = selected;
-  await writeProfilesFile(data);
+  await profileData.saveGraphSelection(profile, selected);
+}
+
+/** Obtiene las definiciones de tags para ESTE perfil. */
+export async function getTagDefs(profile: string): Promise<TagDefinition[]> {
+  return profileData.getTagDefs(profile);
+}
+
+/** Guarda las definiciones de tags para ESTE perfil. */
+export async function saveTagDefs(
+  profile: string,
+  defs: TagDefinition[],
+): Promise<void> {
+  await profileData.saveTagDefs(profile, defs);
+}
+
+/** Layout de paneles guardado para ESTE perfil. */
+export async function getPanelLayout(
+  profile: string,
+): Promise<{ rightView: string | null; splitPosition: number } | null> {
+  return profileData.getPanelLayout(profile);
+}
+
+/** Persiste el layout de paneles para ESTE perfil. */
+export async function savePanelLayout(
+  profile: string,
+  rightView: string | null,
+  splitPosition: number,
+): Promise<void> {
+  await profileData.savePanelLayout(profile, rightView, splitPosition);
 }

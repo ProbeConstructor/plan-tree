@@ -30,6 +30,13 @@ pub fn run() {
       }
     }))
     .setup(|app| {
+      // 🖼️ Set window icon (Tauri v2: no config property, must be set in code)
+      if let Some(window) = app.get_webview_window("main") {
+        let icon = tauri::image::Image::from_bytes(include_bytes!("../icons/icon.png"))
+          .expect("failed to load window icon");
+        let _ = window.set_icon(icon);
+      }
+
       if cfg!(debug_assertions) {
         app.handle().plugin(
           tauri_plugin_log::Builder::default()

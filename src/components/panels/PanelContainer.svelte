@@ -5,15 +5,25 @@
 
   let leftPanel: HTMLDivElement;
   let rightPanel: HTMLDivElement;
+  let focusHighlight = $state<"left" | "right" | null>(null);
+  let fadeTimer: ReturnType<typeof setTimeout> | null = null;
+
+  function triggerHighlight(which: "left" | "right") {
+    if (fadeTimer) clearTimeout(fadeTimer);
+    focusHighlight = which;
+    fadeTimer = setTimeout(() => { focusHighlight = null; }, 2000);
+  }
 
   function focusLeft() {
     panelLayout.focusPanel("left");
     leftPanel?.focus();
+    triggerHighlight("left");
   }
 
   function focusRight() {
     panelLayout.focusPanel("right");
     rightPanel?.focus();
+    triggerHighlight("right");
   }
 </script>
 
@@ -21,6 +31,7 @@
   <div
     class="panel"
     class:focused={$panelLayout.rightView === null || $panelLayout.focused === "left"}
+    class:highlight={focusHighlight === "left"}
     style:flex={$panelLayout.rightView !== null ? `0 0 ${$panelLayout.splitPosition}%` : '1'}
     bind:this={leftPanel}
     tabindex="-1"
@@ -38,6 +49,7 @@
       class="panel panel-right"
       style:flex="1 1 0"
       class:focused={$panelLayout.focused === "right"}
+      class:highlight={focusHighlight === "right"}
       bind:this={rightPanel}
       tabindex="-1"
       on:click={focusRight}
@@ -70,6 +82,7 @@
     position: relative;
     min-width: 0;
     border: 1px solid transparent;
+    transition: border-color 0.3s ease;
   }
 
   .panel-right {
@@ -77,6 +90,10 @@
   }
 
   .panel.focused {
+    /* no persistent visual — handled by .highlight */
+  }
+
+  .panel.highlight {
     border-color: #22c55e;
   }
 

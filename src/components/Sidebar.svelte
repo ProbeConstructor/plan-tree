@@ -11,13 +11,13 @@
   import NewProjectModal from "../modals/NewProjectModal.svelte";
   import RenameProjectModal from "../modals/RenameProjectModal.svelte";
   import ConfirmModal from "../modals/ConfirmModal.svelte";
-  import { pendingUpdate, checkingUpdate, upToDate, checkForUpdates } from "../stores/updateStore";
+  import { pendingUpdate, checkingUpdate, upToDate, updateError, checkForUpdates } from "../stores/updateStore";
   import { autoSave } from "../services/workspaceManager";
   import { relaunch } from "@tauri-apps/plugin-process";
   import { tagDefs, tagFilter } from "../stores/tagStore";
   import TagManagerModal from "../modals/TagManagerModal.svelte";
 
-  let updateError = $state("");
+  let installError = $state("");
 
   function handleKeydown(event: KeyboardEvent) {
     const isUndo = (event.ctrlKey || event.metaKey) && event.key === "z";
@@ -150,9 +150,9 @@
     {#if $pendingUpdate}
       <button
         class="update-btn"
-        disabled={updateError !== ""}
+        disabled={installError !== ""}
         on:click={async () => {
-          updateError = "";
+          installError = "";
           try {
             // 🛡️ Flushear datos pendientes antes de actualizar
             await autoSave.flush();
@@ -160,14 +160,14 @@
             await relaunch();
           } catch (e) {
             console.error("Update failed:", e);
-            updateError = "Error al actualizar";
+            installError = "Error al actualizar";
           }
         }}
       >
-        {updateError ? "❌ Error al actualizar" : `⬇️ Actualizar a v${$pendingUpdate.version}`}
+        {installError ? "❌ Error al actualizar" : `⬇️ Actualizar a v${$pendingUpdate.version}`}
       </button>
-      {#if updateError}
-        <button class="update-btn" on:click={() => { updateError = ""; checkForUpdates(); }}>
+      {#if installError}
+        <button class="update-btn" on:click={() => { installError = ""; checkForUpdates(); }}>
           🔄 Reintentar
         </button>
       {/if}
@@ -176,6 +176,13 @@
     {:else if $upToDate}
       <button class="update-btn up-to-date" disabled>
         ✨ Última versión — la crème de la crème
+      </button>
+    {:else if $updateError}
+      <button class="update-btn update-error" disabled>
+        ❌ {$updateError}
+      </button>
+      <button class="update-btn" on:click={checkForUpdates}>
+        🔄 Reintentar
       </button>
     {:else}
       <button class="update-btn" on:click={checkForUpdates}>
@@ -319,6 +326,14 @@
     background: rgba(34, 197, 94, 0.1) !important;
     border-color: #22c55e !important;
     color: #22c55e !important;
+    cursor: default !important;
+    font-size: 12px;
+  }
+
+  .update-btn.update-error {
+    background: rgba(239, 68, 68, 0.1) !important;
+    border-color: #ef4444 !important;
+    color: #ef4444 !important;
     cursor: default !important;
     font-size: 12px;
   }

@@ -1,8 +1,8 @@
 <script lang="ts">
   import Modal from "../components/Modal.svelte";
   import { closeModal } from "../stores/modalStore";
-  import { tree, snapshot, mutateTree } from "../stores/treeStore";
-  import { updateNode } from "../utils/treeUtils";
+  import { tree } from "../stores/treeStore";
+  import { setRecurrence, clearRecurrence as clearRecurrenceCommand } from "../commands/treeCommands";
   import type { RecurrenceRule, RecurrenceType } from "../types";
 
   let { nodeId }: { nodeId: string } = $props();
@@ -48,37 +48,24 @@
   }
 
   function save() {
-    snapshot();
-
-    mutateTree((t) =>
-      updateNode(t, nodeId, (n) => ({
-        ...n,
-        recurrence: enabled
-          ? ({
-              type: recType,
-              interval: Math.max(1, interval),
-              ...(recType === "weekly" && daysOfWeek.length > 0
-                ? { daysOfWeek }
-                : {}),
-              ...(endDate ? { endDate } : {}),
-            } as RecurrenceRule)
-          : undefined,
-      })),
+    setRecurrence(
+      nodeId,
+      enabled
+        ? ({
+            type: recType,
+            interval: Math.max(1, interval),
+            ...(recType === "weekly" && daysOfWeek.length > 0
+              ? { daysOfWeek }
+              : {}),
+            ...(endDate ? { endDate } : {}),
+          } as RecurrenceRule)
+        : undefined,
     );
-
     closeModal();
   }
 
   function clearRecurrence() {
-    snapshot();
-
-    mutateTree((t) =>
-      updateNode(t, nodeId, (n) => ({
-        ...n,
-        recurrence: undefined,
-      })),
-    );
-
+    clearRecurrenceCommand(nodeId);
     closeModal();
   }
 </script>

@@ -46,7 +46,10 @@
               <span class="result-snippet">{result.matchSnippet}</span>
             {/if}
             <span class="result-field">
-              {result.matchField === "title" ? "Título" : "Comentario"}
+              {#if result.matchField === "tag"}
+                <span class="tag-dot" style="background: {result.matchTagColor}"></span>
+              {/if}
+              {result.matchField === "title" ? "Título" : result.matchField === "tag" ? "Tag" : "Comentario"}
             </span>
           </button>
         </li>

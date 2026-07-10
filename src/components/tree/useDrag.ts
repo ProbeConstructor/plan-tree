@@ -1,7 +1,7 @@
 import { get } from "svelte/store";
-import { snapshot, draggedNodeId, mutateTree, recalcProgress } from "../../stores/treeStore";
+import { draggedNodeId } from "../../stores/treeStore";
 import type { TreeNode } from "../../types";
-import { moveNode } from "../../utils/treeUtils";
+import { moveNodeCommand } from "../../commands/treeCommands";
 
 export function useDrag(
   node: TreeNode,
@@ -34,9 +34,7 @@ export function useDrag(
     const draggedId = get(draggedNodeId);
     draggedNodeId.set(null);
     if (!draggedId || draggedId === node.id) return;
-    snapshot();
-    mutateTree((t) => moveNode(t, draggedId, node.id));
-    recalcProgress();
+    moveNodeCommand(draggedId, node.id);
   }
 
   function handleDragEnd() {

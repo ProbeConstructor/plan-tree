@@ -149,9 +149,10 @@ interface VaultMeta {
 | Phase | Features | Criteria |
 |-------|----------|----------|
 | **MVP** | Integrity fixes (meta checksum, schema versioning, close guard, single-instance, CSP, error boundary) + image icons per node | Tests pass, typecheck clean, Linux build succeeds |
-| **v1.0** | Windows build + auto-updater + CI pipeline | Windows build + GitHub Actions green |
-| **v1.1** | Multi-project progress chart + updater signing + release automation + macOS build | Chart with project selector, color picker, persisted selection; GitHub Actions release flow produces `latest.json` for updates |
-| **v1.2** | i18n (Svelte i18n library) | EN + ES translations, language switcher |
+| **v1.0** | **Hardening & tests**: vault.meta versioning + unified error handler + auto-save bypass + test infrastructure | Test suite covers vault, tree-mutation, recovery flow. vault.meta con `formatVersion` real. Un solo error handler global. Auto-save guard con bypass explícito. |
+| **v1.1** | Windows build + auto-updater + CI pipeline | Windows build + GitHub Actions green |
+| **v1.2** | Multi-project progress chart + updater signing + release automation + macOS build | Chart with project selector, color picker, persisted selection; GitHub Actions release flow produces `latest.json` for updates |
+| **v1.3** | i18n (Svelte i18n library) | EN + ES translations, language switcher |
 | **v2.0** | TBD (sync, mobile, etc.) | — |
 
 ### Technical Risks
@@ -165,3 +166,6 @@ interface VaultMeta {
 | No tests → undetected regressions | Unpredictable quality | Test suite in CI before release. Critical coverage: vault, tree mutations, recovery. |
 | CSP `'unsafe-inline'` → XSS in node titles | Local session hijack | CSP locks script-src to `'self'` exclusively. DOMPurify on all inputs. |
 | Updater signing key lost → no updates deliverable | Delivery blocked | Private key stored as GitHub secret + local env. Backup keyfile in password manager. |
+| Auto-save guard false positive (node count ≤1 blocks save) → legitimate tree clear cannot save | Data loss or user confusion | Visual indicator when save is blocked + explicit bypass ("Guardar igual"). Never silently refuse. |
+| Two overlapping global error handlers (`main.ts` + `ErrorBoundary.svelte`) → unpredictable error recovery | Silent failures or double error overlay | Unify into single handler at `ErrorBoundary` level. `main.ts` registers boundary-safe fallback only. |
+| vault.meta `version` field exists but is not used for migration logic → heuristic workarounds like `unlock_no_length_check` | Fragile upgrades, schema drift on future changes | `formatVersion` read by Rust at unlock to decide which validations apply. Migration path for legacy meta without version. |

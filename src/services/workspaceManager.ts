@@ -18,6 +18,8 @@ import {
 import { getLastProject, setLastProject } from "./profileManager";
 import { AutoSaveStrategy } from "./autoSaveStrategy";
 import { progressSnapshot } from "./progressSnapshotService";
+import { loadTags, cleanStaleTagRefs } from "../stores/tagStore";
+import { panelLayout } from "../stores/panelStore";
 
 import type { TreeNode, ProjectData } from "../types";
 
@@ -68,10 +70,26 @@ export async function loadCurrentProject(): Promise<void> {
   const name = get(activeProject);
   const project = name ? await loadProject(name) : null;
 
+  // Load tag definitions for current profile
+  const profile = get(activeProfile);
+  if (profile) {
+    await loadTags(profile);
+
+    // Restore panel layout for this profile
+    await panelLayout.loadFromProfile(profile);
+  }
+
   if (project) {
     tree.set(project.tree);
     completions.set(project.completions);
     recalcProgress();
+
+    // Clean stale tag refs on load
+    const cleaned = cleanStaleTagRefs(project.tree);
+    if (cleaned !== project.tree) {
+      tree.set(cleaned);
+    }
+
     // 🛡️ Sincronizar contador de nodos para la guarda de datos vacíos
     autoSave.syncNodeCount(name, project.tree);
     // 📸 Forzar snapshot inicial para que el mes actual tenga datos
@@ -170,3 +188,5 @@ completions.subscribe((value) => {
 
   autoSave.schedule(project, { tree: get(tree), completions: value });
 });
+
+

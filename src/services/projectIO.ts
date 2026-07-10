@@ -1,12 +1,11 @@
-import { activeProfileDir } from "./profileManager";
+import { activeProfileDir } from "../utils/pathUtils";
+import {
+  readTextFile, writeTextFile, mkdir, readDir, remove, rename, exists,
+} from "./fsAdapter";
 
 const PROJECT_EXTENSION = ".plan";
 const PROGRESS_EXTENSION = ".progress.plan";
 const LEGACY_FILE = "plan-tree.json";
-
-async function fs() {
-  return import("@tauri-apps/plugin-fs");
-}
 
 function projectsDir(): string {
   return `${activeProfileDir()}/projects`;
@@ -20,82 +19,52 @@ export async function writeFile(
   name: string,
   encrypted: string,
 ): Promise<void> {
-  const { writeTextFile, mkdir, BaseDirectory } = await fs();
-
-  await mkdir(projectsDir(), {
-    baseDir: BaseDirectory.AppData,
-    recursive: true,
-  });
-
-  await writeTextFile(projectPath(name), encrypted, {
-    baseDir: BaseDirectory.AppData,
-  });
+  await mkdir(projectsDir(), { recursive: true });
+  await writeTextFile(projectPath(name), encrypted);
 }
 
 export async function readFile(name: string): Promise<string | null> {
   try {
-    const { readTextFile, BaseDirectory } = await fs();
-
-    return await readTextFile(projectPath(name), {
-      baseDir: BaseDirectory.AppData,
-    });
+    return await readTextFile(projectPath(name));
   } catch {
     return null;
   }
 }
 
 export async function listFiles(): Promise<string[]> {
-  const { readDir, BaseDirectory } = await fs();
-
-  const entries = await readDir(projectsDir(), {
-    baseDir: BaseDirectory.AppData,
-  });
+  const entries = await readDir(projectsDir());
 
   return entries
     .filter(
-      (e) =>
+      (e: { name?: string }) =>
         e.name?.endsWith(PROJECT_EXTENSION) &&
         !e.name?.endsWith(PROGRESS_EXTENSION),
     )
-    .map((e) => e.name!.replace(PROJECT_EXTENSION, ""))
+    .map((e: { name?: string }) => e.name!.replace(PROJECT_EXTENSION, ""))
     .sort();
 }
 
 export async function removeFile(name: string): Promise<void> {
-  const { remove, BaseDirectory } = await fs();
-
-  await remove(projectPath(name), {
-    baseDir: BaseDirectory.AppData,
-  });
+  await remove(projectPath(name));
 }
 
 export async function renameFile(
   oldName: string,
   newName: string,
 ): Promise<void> {
-  const { rename, BaseDirectory } = await fs();
-
-  await rename(projectPath(oldName), projectPath(newName), {
-    oldPathBaseDir: BaseDirectory.AppData,
-    newPathBaseDir: BaseDirectory.AppData,
-  });
+  await rename(projectPath(oldName), projectPath(newName));
 }
 
 export async function legacyExists(): Promise<boolean> {
-  const { exists, BaseDirectory } = await fs();
-  return exists(LEGACY_FILE, { baseDir: BaseDirectory.AppData });
+  return exists(LEGACY_FILE);
 }
 
 export async function readLegacy(): Promise<string | null> {
   try {
-    const { readTextFile, exists, BaseDirectory } = await fs();
-
     const fileExists = await legacyExists();
     if (!fileExists) return null;
 
-    return await readTextFile(LEGACY_FILE, {
-      baseDir: BaseDirectory.AppData,
-    });
+    return await readTextFile(LEGACY_FILE);
   } catch {
     return null;
   }
@@ -103,9 +72,7 @@ export async function readLegacy(): Promise<string | null> {
 
 export async function deleteLegacy(): Promise<void> {
   try {
-    const { remove, BaseDirectory } = await fs();
-
-    await remove(LEGACY_FILE, { baseDir: BaseDirectory.AppData });
+    await remove(LEGACY_FILE);
   } catch {
     // si falla, no es crítico — el archivo legacy se ignora
   }

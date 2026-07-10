@@ -3,6 +3,13 @@
 > **Encrypted tree-task organizer** — tus tareas, tu árbol, tu cifrado. Nada sale de tu máquina.
 
 <p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="src-tauri/icons/icon.png">
+    <img src="src-tauri/icons/icon.png" alt="Plan Tree" width="120">
+  </picture>
+</p>
+
+<p align="center">
   <img src="https://img.shields.io/badge/Tauri-v2.11-ffc131?logo=tauri&logoColor=white" alt="Tauri v2">
   <img src="https://img.shields.io/badge/Svelte-5-ff3e00?logo=svelte&logoColor=white" alt="Svelte 5">
   <img src="https://img.shields.io/badge/TypeScript-6.0-3178c6?logo=typescript&logoColor=white" alt="TypeScript">
@@ -30,12 +37,18 @@ No hay servidores, no hay telemetría, no hay cuenta de usuario. Solo vos, tu pa
 | 👤 **Múltiples profiles** | Perfiles aislados con su propio vault. Cada uno con proyectos independientes |
 | 📁 **Proyectos ilimitados** | Cada proyecto es un archivo `.plan` cifrado individualmente |
 | 🔑 **Recuperación** | Recovery key de 32 bytes por si olvidás la contraseña |
-| 💾 **Auto-save** | Guardado automático con 2s de debounce + 3 retries con backoff |
+| 💾 **Auto-save** | Guardado automático con cola serializada + 3 retries con backoff |
 | ↩️ **Undo** | Hasta 50 snapshots inmutables del árbol completo |
 | 📈 **Progreso multi-proyecto** | Gráfico de líneas comparativo entre proyectos, con selector y colores custom |
-| 🔄 **Auto-updater** | Las actualizaciones se firman con clave privada y se sirven via GitHub Releases |
+| 🏷️ **Tags por nodo** | Cápsulas visuales, popover de asignación, filtro desde la barra lateral |
+| ♻️ **Tareas recurrentes** | Configurá recurrencia diaria, semanal, mensual o custom |
+| 💬 **Notas markdown** | Editor con preview, sintaxis markdown, por nodo |
+| ⭐ **Favoritos** | Marcá nodos como favoritos con filtro rápido |
+| 🎯 **Focus mode** | Aislá un nodo y su subárbol para concentrarte |
 | 🖼️ **Iconos por nodo** | Imagen cuadrada chica para identificar visualmente cada tarea |
+| 📐 **Panel dividido** | Tree + dashboard/calendar/progress side by side |
 | 📤 **Export/Import** | Árboles completos exportables a markdown |
+| 🔄 **Auto-updater** | Las actualizaciones se firman con clave privada y se sirven via GitHub Releases |
 | 🛡️ **Error boundary** | Captura global de errores inesperados sin perder data |
 
 ---

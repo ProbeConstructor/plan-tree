@@ -1,9 +1,12 @@
 <script lang="ts">
-  import { getNodeType, isOverdue } from "../../utils/treeUtils";
-  import { isValidIconDataUri } from "../../utils/validation";
+  import { getNodeType } from "../../utils/treeUtils";
   import { draggedNodeId, focusedNodeId } from "../../stores/treeStore";
-  import RecurrenceConfigModal from "../RecurrenceConfigModal.svelte";
-  import { openModal } from "../../stores/modalStore";
+  import { tagDefs } from "../../stores/tagStore";
+  import TagCapsules from "./TagCapsules.svelte";
+  import TagPopover from "./TagPopover.svelte";
+  import CommentPopover from "./CommentPopover.svelte";
+  import NodeTitleControls from "./NodeTitleControls.svelte";
+  import NodeDetailsPanel from "./NodeDetailsPanel.svelte";
 
   let {
     node,
@@ -38,10 +41,10 @@
     onOpenDetailsModal,
     onFavorite,
   } = $props();
-  import CommentPopover from "./CommentPopover.svelte";
 
   let cardElement: HTMLDivElement;
   let showCommentPopover = $state(false);
+  let showTagPopover = $state(false);
 
   import { tick } from "svelte";
 
@@ -93,6 +96,7 @@
     >
       {#if editing}
         <input
+          class="title-input"
           bind:value={tempTitle}
           onTempTitleChange={(value: string) => {
             tempTitle = value;
@@ -108,8 +112,17 @@
           }}
         />
       {:else}
+        <NodeTitleControls
+          {node}
+          {progress}
+          {detailsOpen}
+          bind:commentOpen={showCommentPopover}
+          bind:tagOpen={showTagPopover}
+          onFavorite={onFavorite}
+        />
+
         <div
-          class="title-block"
+          class="title-text"
           tabindex="0"
           role="button"
           ondblclick={(e) => {
@@ -118,7 +131,6 @@
           }}
           onkeydown={(e: KeyboardEvent) => {
             e.stopPropagation();
-
             if (e.key === "Enter" || e.key === " ") {
               e.preventDefault();
               onStartEditing();
@@ -133,55 +145,11 @@
             {path} · {node.title}
           </strong>
         </div>
+
+        {#if !editing && (node.tags ?? []).length > 0}
+          <TagCapsules tags={node.tags} tagDefs={$tagDefs} />
+        {/if}
       {/if}
-
-      {#if isValidIconDataUri(node.icon)}
-        <img src={node.icon} alt="icon" class="node-icon" />
-      {/if}
-
-      <button
-        class="star-btn"
-        class:fav={node.favorite}
-        onclick={(e: MouseEvent) => {
-          e.stopPropagation();
-          onFavorite?.();
-        }}
-        title={node.favorite ? 'Quitar de favoritos' : 'Marcar como favorito'}
-      >
-        {node.favorite ? '⭐' : '☆'}
-      </button>
-
-      <button
-        class="recurrence-badge"
-        class:active={!!node.recurrence}
-        onclick={(e: MouseEvent) => {
-          e.stopPropagation();
-          openModal(RecurrenceConfigModal, { nodeId: node.id });
-        }}
-        title={node.recurrence ? 'Repetición configurada' : 'Configurar repetición'}
-      >
-        ♻️
-      </button>
-
-      <button
-        class="comment-btn"
-        class:has-comments={node.comments}
-        onclick={(e: MouseEvent) => {
-          e.stopPropagation();
-          showCommentPopover = !showCommentPopover;
-        }}
-        title="Comentarios"
-      >
-        💬
-      </button>
-
-      <span class="progress-pct">
-        {progress}%
-      </span>
-
-      <span class="chevron">
-        {detailsOpen ? "▴" : "▾"}
-      </span>
     </div>
 
     {#if showCommentPopover}
@@ -197,76 +165,35 @@
       </div>
     {/if}
 
+    {#if showTagPopover}
+      <div class="popover-anchor">
+        <TagPopover
+          nodeTags={node.tags ?? []}
+          nodeId={node.id}
+          onClose={() => (showTagPopover = false)}
+        />
+      </div>
+    {/if}
+
     {#if detailsOpen}
-      <div class="bar">
-        <div
-          class="bar-fill"
-          style="width:{progress}%;background:{progressColor};"
-        ></div>
-      </div>
-
-      <div class="controls">
-        <select
-          class="pill status-{node.status}"
-          value={node.status}
-          onchange={onStatus}
-        >
-          <option value="todo">📋 to do</option>
-          <option value="doing">🚧 doing</option>
-          <option value="done">✅ done</option>
-        </select>
-
-        <select
-          class="pill"
-          style="--accent:{accent}"
-          value={node.priority}
-          onchange={onPriority}
-        >
-          <option value="low">💤 low</option>
-          <option value="medium">📌 medium</option>
-          <option value="high">🔥 high</option>
-          <option value="critical">🚨 critical</option>
-        </select>
-
-        <input
-          type="date"
-          class="pill date-input"
-          value={node.startDate}
-          onchange={onStartDate}
-        />
-
-        <input
-          type="date"
-          class="pill date-input"
-          class:overdue={isOverdue(node)}
-          value={node.dueDate ?? ""}
-          onchange={onDueDate}
-        />
-        <div class="image-controls">
-          {#if isValidIconDataUri(node.icon)}
-            <img src={node.icon} alt="preview" class="icon-preview" />
-            <button class="icon-btn danger" onclick={() => onRemoveIcon?.()}>🗑️</button>
-          {/if}
-          <button class="icon-btn" onclick={() => onPickImage?.()}>🖼️</button>
-        </div>
-        {#if !isRoot}
-          <button
-            class="icon-btn"
-            onclick={onExtract}
-            title="extraer a nuevo proyecto">📤</button
-          >
-        {/if}
-        <button
-          class="icon-btn"
-          class:active={$focusedNodeId === node.id}
-          onclick={onFocus}
-        >
-          🎯
-        </button>
-        <button class="icon-btn" onclick={onAddChild}> ＋ </button>
-        <button class="icon-btn" onclick={onOpenDetailsModal}> 📝 </button>
-        <button class="icon-btn danger" onclick={onDelete}> 🗑️ </button>
-      </div>
+      <NodeDetailsPanel
+        {node}
+        {progress}
+        {progressColor}
+        {accent}
+        {isRoot}
+        {onStatus}
+        {onPriority}
+        {onStartDate}
+        {onDueDate}
+        {onExtract}
+        {onFocus}
+        {onAddChild}
+        {onOpenDetailsModal}
+        {onDelete}
+        {onPickImage}
+        {onRemoveIcon}
+      />
     {/if}
   </div>
 </div>
@@ -309,11 +236,6 @@
     box-shadow: 0 0 14px rgba(250, 204, 21, 0.35);
   }
 
-  .node {
-    position: absolute;
-    z-index: 1;
-  }
-
   .toggle,
   .grip {
     flex-shrink: 0;
@@ -335,6 +257,10 @@
   }
 
   .title-input {
+    flex: 1;
+    min-width: 0;
+    width: 100%;
+    box-sizing: border-box;
     background: #0f1115;
     border: 1px solid var(--accent);
     color: white;
@@ -342,155 +268,26 @@
     padding: 2px 6px;
   }
 
-  .bar {
-    width: 150px;
-    height: 6px;
-    background: #0f1115;
-    border-radius: 4px;
-    overflow: hidden;
-  }
-
-  .bar-fill {
-    height: 100%;
-  }
-
-  .controls {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
-  .actions {
-    display: flex;
-    gap: 6px;
-  }
-
   .title-row {
     display: flex;
-    align-items: flex-start;
-    gap: 8px;
     cursor: pointer;
     width: 100%;
   }
-
-  .title-block {
-    display: flex;
+  .title-row:not(.editing) {
     flex-direction: column;
+    gap: 4px;
+  }
 
-    flex: 1;
-    min-width: 0;
+
+  .title-text {
+    width: 100%;
   }
 
   .title {
     display: block;
-
     white-space: normal;
     overflow-wrap: anywhere;
     word-break: break-word;
-  }
-
-  .node-icon {
-    width: 32px;
-    height: 32px;
-    border-radius: 4px;
-    object-fit: cover;
-    flex-shrink: 0;
-  }
-
-  .progress-pct {
-    flex-shrink: 0;
-    margin-left: auto;
-    font-size: 11px;
-  }
-
-  .image-controls {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-  }
-
-  .icon-preview {
-    width: 48px;
-    height: 48px;
-    border-radius: 4px;
-    object-fit: cover;
-  }
-
-  .chevron {
-    flex-shrink: 0;
-  }
-
-  .comment-btn {
-    background: none;
-    border: 1px solid transparent;
-    cursor: pointer;
-    font-size: 12px;
-    padding: 1px 4px;
-    border-radius: 4px;
-    line-height: 1;
-    flex-shrink: 0;
-    opacity: 0.5;
-    transition: opacity 0.15s;
-  }
-
-  .comment-btn:hover {
-    opacity: 1;
-    background: #2a2f37;
-  }
-
-  .star-btn {
-    background: none;
-    border: 1px solid transparent;
-    cursor: pointer;
-    font-size: 16px;
-    padding: 1px 4px;
-    border-radius: 4px;
-    line-height: 1;
-    flex-shrink: 0;
-    opacity: 0.75;
-    transition: opacity 0.15s, border-color 0.15s, background 0.15s;
-    border-color: rgba(255, 255, 255, 0.08);
-  }
-
-  .star-btn:hover {
-    opacity: 1;
-    background: #2a2f37;
-    border-color: rgba(255, 255, 255, 0.15);
-  }
-
-  .star-btn.favorited {
-    opacity: 1;
-    border-color: transparent;
-  }
-
-  .recurrence-badge {
-    background: none;
-    border: 1px solid transparent;
-    cursor: pointer;
-    font-size: 14px;
-    padding: 1px 4px;
-    border-radius: 4px;
-    line-height: 1;
-    flex-shrink: 0;
-    opacity: 0.5;
-    transition: opacity 0.15s, border-color 0.15s, background 0.15s;
-  }
-
-  .recurrence-badge:hover {
-    opacity: 1;
-    background: #2a2f37;
-    border-color: #2a2f37;
-  }
-
-  .recurrence-badge.active {
-    opacity: 1;
-    border-color: #facc15;
-    background: rgba(250, 204, 21, 0.1);
-  }
-
-  .comment-btn.has-comments {
-    opacity: 1;
-    border-color: #3b82f6;
-    background: rgba(59, 130, 246, 0.1);
   }
 
   .popover-anchor {

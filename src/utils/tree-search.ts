@@ -1,10 +1,11 @@
-import type { TreeNode } from "../types";
+import type { TreeNode, TagDefinition } from "../types";
 
 export type SearchResult = {
   id: string;
   title: string;
-  matchField: "title" | "comments";
+  matchField: "title" | "comments" | "tag";
   matchSnippet?: string;
+  matchTagColor?: string;
 };
 
 function getMatchSnippet(text: string, query: string): string {
@@ -19,11 +20,23 @@ function getMatchSnippet(text: string, query: string): string {
   return snippet;
 }
 
-export function searchNodes(tree: TreeNode, query: string): SearchResult[] {
+export function searchNodes(
+  tree: TreeNode,
+  query: string,
+  tagDefs?: TagDefinition[],
+): SearchResult[] {
   const q = query.toLowerCase().trim();
   if (!q) return [];
 
   const results: SearchResult[] = [];
+
+  // Build a map from tag ID → TagDefinition for fast lookup
+  const tagDefMap = new Map<string, TagDefinition>();
+  if (tagDefs) {
+    for (const def of tagDefs) {
+      tagDefMap.set(def.id, def);
+    }
+  }
 
   function walk(node: TreeNode) {
     const titleMatch = node.title.toLowerCase().includes(q);
@@ -36,6 +49,25 @@ export function searchNodes(tree: TreeNode, query: string): SearchResult[] {
       if (!results.some((r) => r.id === node.id)) {
         const snippet = getMatchSnippet(node.comments, q);
         results.push({ id: node.id, title: node.title, matchField: "comments", matchSnippet: snippet });
+      }
+    }
+
+    // Tag name matching
+    if (node.tags && tagDefMap.size > 0) {
+      if (!results.some((r) => r.id === node.id)) {
+        for (const tagId of node.tags) {
+          const tagDef = tagDefMap.get(tagId);
+          if (tagDef && tagDef.name.toLowerCase().includes(q)) {
+            results.push({
+              id: node.id,
+              title: node.title,
+              matchField: "tag",
+              matchSnippet: tagDef.name,
+              matchTagColor: tagDef.color,
+            });
+            break;
+          }
+        }
       }
     }
 

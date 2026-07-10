@@ -3,7 +3,7 @@
   import { focusedNodeId, progressMap } from "../../stores/treeStore";
   import type { TreeNode } from "../../types";
   import { extractNodeToNewProject } from "../../services/projectSplitter";
-  import * as actions from "./useNodeActions";
+  import * as commands from "../../commands/treeCommands";
   import { pickAndResizeImage } from "../../lib/resizeImage";
   import { getNodeView } from "./nodeView";
   import { useDrag } from "./useDrag";
@@ -12,16 +12,18 @@
   import { openModal } from "../../stores/modalStore";
   import NodeDetailModal from "../../modals/NodeDetailModal.svelte";
   import ConfirmModal from "../../modals/ConfirmModal.svelte";
-  import {
-    registerNodeMeasurement,
-    unregisterNodeMeasurement,
-  } from "../../stores/nodeMeasurementsStore";
   import { onMount, tick } from "svelte";
   import { onDestroy } from "svelte";
 
   export let node: TreeNode;
   export let layout: TreeViewNode;
   export let top = 0;
+  export let registerMeasurement:
+    | ((nodeId: string, depth: number, width: number, height: number) => void)
+    | undefined = undefined;
+  export let unregisterMeasurement:
+    | ((nodeId: string) => void)
+    | undefined = undefined;
 
   let nodeElement: HTMLDivElement;
   let resizeObserver: ResizeObserver;
@@ -50,7 +52,7 @@
   onMount(() => {
     resizeObserver = new ResizeObserver(() => {
       if (!nodeElement) return;
-      registerNodeMeasurement(
+      registerMeasurement?.(
         node.id,
         layout.depth,
         nodeElement.offsetWidth,
@@ -58,7 +60,7 @@
       );
     });
     resizeObserver.observe(nodeElement);
-    registerNodeMeasurement(
+    registerMeasurement?.(
       node.id,
       layout.depth,
       nodeElement.offsetWidth,
@@ -68,7 +70,7 @@
 
   onDestroy(() => {
     resizeObserver.disconnect();
-    unregisterNodeMeasurement(node.id);
+    unregisterMeasurement?.(node.id);
   });
 
   function countDescendants(n: TreeNode): number {
@@ -88,7 +90,7 @@
       message: parts.join(""),
       confirmLabel: "Eliminar",
       danger: true,
-      onConfirm: () => actions.removeNode(node),
+      onConfirm: () => commands.removeNode(node.id),
     });
   }
 
@@ -105,15 +107,15 @@
 
   async function handlePickImage(node: TreeNode) {
     const dataUri = await pickAndResizeImage();
-    if (dataUri) actions.setIcon(node, dataUri);
+    if (dataUri) commands.setIcon(node.id, dataUri);
   }
 
   function openDetailsModal() {
     openModal(NodeDetailModal, { nodeId: node.id });
   }
 
-  function handleHeightChange(height: number) {
-    registerNodeMeasurement(
+  function handleHeightChange(_height: number) {
+    registerMeasurement?.(
       node.id,
       layout.depth,
       nodeElement.offsetWidth,
@@ -155,27 +157,27 @@
     bind:detailsOpen
     {dragOver}
     isRoot={layout.isRoot}
-    onStartEditing={() => actions.startEditing(node.title, (v) => (tempTitle = v), (v) => (editing = v))}
-    onSaveTitle={() => actions.saveTitle(node, () => tempTitle, (v) => (editing = v))}
-    focusOnMount={(el: HTMLInputElement) => actions.focusOnMount(el)}
+    onStartEditing={() => { tempTitle = node.title; editing = true; }}
+    onSaveTitle={() => { editing = false; if (tempTitle === node.title) return; commands.saveTitle(node.id, tempTitle); }}
+    focusOnMount={(el: HTMLInputElement) => el.focus()}
     onToggleDetails={toggleDetails}
-    onToggle={() => actions.toggleExpand(node)}
+    onToggle={() => commands.toggleExpand(node.id)}
     onExtract={extractToProject}
     onAddChild={async () => {
-      const newId = actions.addChild(node, layout.depth);
+      const newId = commands.addChild(node.id, layout.depth);
       await tick();
       document.getElementById(newId)?.scrollIntoView({ behavior: "smooth", block: "center", inline: "center" });
     }}
     onDelete={confirmDelete}
-    onFocus={() => actions.toggleFocus(node)}
-    onFavorite={() => actions.toggleFavorite(node)}
-    onStatus={(e: Event) => actions.setStatus(node, e)}
-    onPriority={(e: Event) => actions.setPriority(node, e)}
-    onStartDate={(e: Event) => actions.setStartDate(node, e)}
-    onDueDate={(e: Event) => actions.setDueDate(node, e)}
+    onFocus={() => commands.toggleFocus(node.id)}
+    onFavorite={() => commands.toggleFavorite(node.id)}
+    onStatus={(e: Event) => commands.setStatus(node.id, (e.target as HTMLSelectElement).value as "todo" | "doing" | "done")}
+    onPriority={(e: Event) => commands.setPriority(node.id, (e.target as HTMLSelectElement).value as "low" | "medium" | "high")}
+    onStartDate={(e: Event) => commands.setStartDate(node.id, (e.target as HTMLInputElement).value)}
+    onDueDate={(e: Event) => commands.setDueDate(node.id, (e.target as HTMLInputElement).value || undefined)}
     onHeightChange={handleHeightChange}
     onPickImage={() => handlePickImage(node)}
-    onRemoveIcon={() => actions.removeIcon(node)}
+    onRemoveIcon={() => commands.removeIcon(node.id)}
     onOpenDetailsModal={openDetailsModal}
   />
 </div>

@@ -3,6 +3,7 @@
   import { refreshProfiles } from "../services/profileManager";
   import { deleteProfileWithAuth } from "../services/userManager";
   import { onMount } from "svelte";
+  import Logo from "./Logo.svelte";
 
   export let onBack: () => void;
 
@@ -57,7 +58,10 @@
 </script>
 
 <div class="user-manager">
-  <h1>🌳 Plan Tree</h1>
+  <div class="manager-header">
+    <Logo size={200} />
+    <h1>Plan Tree</h1>
+  </div>
   <p class="hint">Administrar usuarios</p>
 
   {#if $profiles.length === 0}
@@ -102,12 +106,22 @@
 
 <style>
   .user-manager {
-    max-width: 360px;
-    margin: 80px auto;
+    max-width: 400px;
+    margin: 60px auto;
     display: flex;
     flex-direction: column;
     gap: 14px;
     text-align: center;
+  }
+  .manager-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    justify-content: center;
+  }
+  .manager-header h1 {
+    font-size: 28px;
+    margin: 0;
   }
   .hint {
     font-size: 13px;

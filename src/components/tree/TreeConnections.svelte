@@ -2,11 +2,17 @@
   import type { TreeViewNode } from "../../types";
   import Connection from "./Connection.svelte";
   import { buildConnectionPoints } from "./connectionGeometry";
-  import { nodeMeasurements } from "../../stores/nodeMeasurementsStore";
+  import type { NodeMeasurement } from "../../stores/nodeMeasurementsStore";
 
-  let { nodes, rowOffsets } = $props();
-
-  $nodeMeasurements;
+  let {
+    nodes,
+    rowOffsets,
+    measurements,
+  }: {
+    nodes: TreeViewNode[];
+    rowOffsets: Map<number, number>;
+    measurements: Map<string, NodeMeasurement>;
+  } = $props();
 
   const connections = $derived.by(() => {
     const result = [];
@@ -20,12 +26,7 @@
         if (!childLayout) continue;
 
         result.push(
-          buildConnectionPoints(
-            parent,
-            childLayout,
-            rowOffsets,
-            $nodeMeasurements,
-          ),
+          buildConnectionPoints(parent, childLayout, rowOffsets, measurements),
         );
       }
     }
@@ -35,16 +36,14 @@
 </script>
 
 <svg class="connections">
-  <svg class="connections">
-    {#each connections as connection}
-      <Connection
-        x1={connection.x1}
-        y1={connection.y1}
-        x2={connection.x2}
-        y2={connection.y2}
-      />
-    {/each}
-  </svg>
+  {#each connections as connection}
+    <Connection
+      x1={connection.x1}
+      y1={connection.y1}
+      x2={connection.x2}
+      y2={connection.y2}
+    />
+  {/each}
 </svg>
 
 <style>

@@ -4,16 +4,23 @@ export function buildVisibleTree(
   root: TreeNode,
   rowOffsets: Map<number, number>,
   favoriteIds?: Set<string>,
+  tagFilterIds?: Set<string>,
 ): TreeViewNode[] {
   const viewNodes: TreeViewNode[] = [];
 
+  const hasFavFilter = favoriteIds && favoriteIds.size > 0;
+  const hasTagFilter = tagFilterIds && tagFilterIds.size > 0;
+
   // Precompute which nodes are visible in filter mode
   const visibleInFilter = new Set<string>();
-  if (favoriteIds && favoriteIds.size > 0) {
+  if (hasFavFilter || hasTagFilter) {
     function markVisible(node: TreeNode): boolean {
-      const isFav = favoriteIds!.has(node.id);
-      const hasFavDescendant = (node.children ?? []).some(markVisible);
-      if (isFav || hasFavDescendant) {
+      const matchesFav = !hasFavFilter || favoriteIds!.has(node.id);
+      const matchesTag = !hasTagFilter || (node.tags ?? []).every(t => tagFilterIds!.has(t));
+      const passesLocal = matchesFav && matchesTag;
+
+      const hasVisibleDescendant = (node.children ?? []).some(markVisible);
+      if (passesLocal || hasVisibleDescendant) {
         visibleInFilter.add(node.id);
         return true;
       }
@@ -23,7 +30,7 @@ export function buildVisibleTree(
   }
 
   function isVisible(node: TreeNode): boolean {
-    if (!favoriteIds || favoriteIds.size === 0) return true;
+    if (!hasFavFilter && !hasTagFilter) return true;
     return visibleInFilter.has(node.id);
   }
 
@@ -44,16 +51,16 @@ export function buildVisibleTree(
       x: 0,
       y: depth,
     });
-    if (!node.expanded && !favoriteIds) {
+    if (!node.expanded && !hasFavFilter && !hasTagFilter) {
       return;
     }
     (node.children ?? []).forEach((child, index) => {
-      if (favoriteIds && !isVisible(child)) return;
-      // Force-expand ancestors of favorites
-      const childExpanded = favoriteIds && node.expanded === false
+      if ((hasFavFilter || hasTagFilter) && !isVisible(child)) return;
+      // Force-expand ancestors of favorites/tags
+      const childExpanded = (hasFavFilter || hasTagFilter) && node.expanded === false
         ? visibleInFilter.has(child.id)
         : node.expanded;
-      if (!childExpanded && !favoriteIds) return;
+      if (!childExpanded && !hasFavFilter && !hasTagFilter) return;
       buildView(child, depth + 1, `${path}.${index + 1}`, false, node.id);
     });
   }

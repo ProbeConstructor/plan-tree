@@ -1,6 +1,7 @@
 import type { TreeNode, Snapshot } from "../types";
 import { encryptText, decryptText } from "./vaultManager";
-import { activeProfileDir } from "./profileManager";
+import { activeProfileDir } from "../utils/pathUtils";
+import { readTextFile, writeTextFile, mkdir, rename, remove } from "./fsAdapter";
 import {
   calculateGlobalProgress,
   getDirectBranches,
@@ -76,10 +77,7 @@ class ProgressSnapshotService {
       // Leer snapshots existentes
       let snapshots: Snapshot[] = [];
       try {
-        const { readTextFile, BaseDirectory } = await import("@tauri-apps/plugin-fs");
-        const raw = await readTextFile(progressPath(project), {
-          baseDir: BaseDirectory.AppData,
-        });
+        const raw = await readTextFile(progressPath(project));
         const decrypted = await decryptText(raw);
         const parsed = JSON.parse(decrypted);
         if (Array.isArray(parsed)) snapshots = parsed;
@@ -92,11 +90,8 @@ class ProgressSnapshotService {
 
       // Escribir
       const encrypted = await encryptText(JSON.stringify(snapshots));
-      const { writeTextFile, mkdir, BaseDirectory } = await import("@tauri-apps/plugin-fs");
-      await mkdir(projectsDir(), { baseDir: BaseDirectory.AppData, recursive: true });
-      await writeTextFile(progressPath(project), encrypted, {
-        baseDir: BaseDirectory.AppData,
-      });
+      await mkdir(projectsDir(), { recursive: true });
+      await writeTextFile(progressPath(project), encrypted);
     });
   }
 
@@ -110,10 +105,7 @@ class ProgressSnapshotService {
     month: number,
   ): Promise<Snapshot[]> {
     try {
-      const { readTextFile, BaseDirectory } = await import("@tauri-apps/plugin-fs");
-      const raw = await readTextFile(progressPath(project), {
-        baseDir: BaseDirectory.AppData,
-      });
+      const raw = await readTextFile(progressPath(project));
       const decrypted = await decryptText(raw);
       const all: Snapshot[] = JSON.parse(decrypted);
       return all.filter((s) => {
@@ -128,11 +120,7 @@ class ProgressSnapshotService {
   /** Renombra el archivo de progreso. No falla si no existe. */
   async renameProject(oldName: string, newName: string): Promise<void> {
     try {
-      const { rename, BaseDirectory } = await import("@tauri-apps/plugin-fs");
-      await rename(progressPath(oldName), progressPath(newName), {
-        oldPathBaseDir: BaseDirectory.AppData,
-        newPathBaseDir: BaseDirectory.AppData,
-      });
+      await rename(progressPath(oldName), progressPath(newName));
     } catch {
       // Si el archivo viejo no existe, no es error
     }
@@ -141,8 +129,7 @@ class ProgressSnapshotService {
   /** Elimina el archivo de progreso. No falla si no existe. */
   async deleteProject(name: string): Promise<void> {
     try {
-      const { remove, BaseDirectory } = await import("@tauri-apps/plugin-fs");
-      await remove(progressPath(name), { baseDir: BaseDirectory.AppData });
+      await remove(progressPath(name));
     } catch {
       // Si no existe, no es error
     }

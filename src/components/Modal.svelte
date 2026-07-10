@@ -60,11 +60,18 @@
 }
 
 .modal{
+  display:flex;
+  flex-direction:column;
   width:420px;
+  min-width:420px;
+  min-height:300px;
+  max-width:90vw;
+  max-height:85vh;
+  resize:both;
+  overflow:hidden;
   background:#1a1d24;
   border:1px solid #2a2f37;
   border-radius:12px;
-  overflow:hidden;
 }
 
 header{
@@ -76,6 +83,10 @@ header{
 }
 
 section{
+  flex:1;
+  min-height:0;
+  display:flex;
+  flex-direction:column;
   padding:18px;
 }
 

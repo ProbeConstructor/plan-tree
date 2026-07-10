@@ -16,8 +16,9 @@
 
 <script lang="ts">
   import { closeModal } from "../stores/modalStore";
-  import { tree, snapshot, mutateTree } from "../stores/treeStore";
-  import { findNode, updateNode } from "../utils/treeUtils";
+  import { tree } from "../stores/treeStore";
+  import { findNode } from "../utils/treeUtils";
+  import { updateNodeDetails } from "../commands/treeCommands";
   import Modal from "../components/Modal.svelte";
   import EasyMDE from "easymde";
   import "easymde/dist/easymde.min.css";
@@ -120,17 +121,7 @@
       comments !== (node.comments ?? "");
 
     if (hasChanges) {
-      snapshot();
-      mutateTree((t) =>
-        updateNode(t, nodeId, (n) => ({
-          ...n,
-          startDate,
-          dueDate: dueDate || undefined,
-          status,
-          priority,
-          comments: comments || undefined,
-        })),
-      );
+      updateNodeDetails(nodeId, { startDate, dueDate: dueDate || undefined, status, priority, comments: comments || undefined });
     }
 
     closeModal();
@@ -144,58 +135,60 @@
       <button class="btn" onclick={closeModal}>Cerrar</button>
     </div>
   {:else}
-    <!-- Title (read only) -->
-    <div class="field">
-      <span class="field-label">Título</span>
-      <span class="readonly-title">{node.title}</span>
-    </div>
+    <div class="modal-content">
+      <!-- Title (read only) -->
+      <div class="field">
+        <span class="field-label">Título</span>
+        <span class="readonly-title">{node.title}</span>
+      </div>
 
-    <!-- startDate -->
-    <div class="field">
-      <label for="nd-start">Fecha de inicio</label>
-      <input id="nd-start" type="date" bind:value={startDate} />
-    </div>
+      <!-- startDate -->
+      <div class="field">
+        <label for="nd-start">Fecha de inicio</label>
+        <input id="nd-start" type="date" bind:value={startDate} />
+      </div>
 
-    <!-- dueDate -->
-    <div class="field">
-      <label for="nd-due">Fecha de vencimiento</label>
-      <input id="nd-due" type="date" bind:value={dueDate} />
-    </div>
+      <!-- dueDate -->
+      <div class="field">
+        <label for="nd-due">Fecha de vencimiento</label>
+        <input id="nd-due" type="date" bind:value={dueDate} />
+      </div>
 
-    <!-- Status -->
-    <div class="field">
-      <label for="nd-status">Estado</label>
-      <select id="nd-status" bind:value={status}>
-        <option value="todo">Por hacer</option>
-        <option value="doing">En progreso</option>
-        <option value="done">Completado</option>
-      </select>
-    </div>
+      <!-- Status -->
+      <div class="field">
+        <label for="nd-status">Estado</label>
+        <select id="nd-status" bind:value={status}>
+          <option value="todo">Por hacer</option>
+          <option value="doing">En progreso</option>
+          <option value="done">Completado</option>
+        </select>
+      </div>
 
-    <!-- Priority -->
-    <div class="field">
-      <label for="nd-priority">Prioridad</label>
-      <select id="nd-priority" bind:value={priority}>
-        <option value="low">Baja</option>
-        <option value="medium">Media</option>
-        <option value="high">Alta</option>
-        <option value="critical">Crítica</option>
-      </select>
-    </div>
+      <!-- Priority -->
+      <div class="field">
+        <label for="nd-priority">Prioridad</label>
+        <select id="nd-priority" bind:value={priority}>
+          <option value="low">Baja</option>
+          <option value="medium">Media</option>
+          <option value="high">Alta</option>
+          <option value="critical">Crítica</option>
+        </select>
+      </div>
 
-    <!-- Comments (Markdown) -->
-    <div class="field">
-      <label for="nd-comments">Comentarios</label>
-      <textarea id="nd-comments" bind:this={textarea} class="mde-textarea"></textarea>
-    </div>
+      <!-- Comments (Markdown) — flex-grows -->
+      <div class="field comments-field">
+        <label for="nd-comments">Comentarios</label>
+        <textarea id="nd-comments" bind:this={textarea} class="mde-textarea"></textarea>
+      </div>
 
-    {#if error}
-      <p class="error">{error}</p>
-    {/if}
+      {#if error}
+        <p class="error">{error}</p>
+      {/if}
 
-    <div class="buttons">
-      <button class="btn" onclick={closeModal}>Cancelar</button>
-      <button class="btn primary" onclick={save}>Guardar</button>
+      <div class="buttons">
+        <button class="btn" onclick={closeModal}>Cancelar</button>
+        <button class="btn primary" onclick={save}>Guardar</button>
+      </div>
     </div>
   {/if}
 </Modal>
@@ -263,11 +256,30 @@
     border: none;
   }
 
+  .modal-content {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+  }
+
+  .comments-field {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
   :global(.EasyMDEContainer) {
     width: 100%;
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
   }
 
   :global(.editor-toolbar) {
+    flex-shrink: 0;
     background: #0f1115;
     border: 1px solid #2a2f37;
     border-bottom: none;
@@ -289,11 +301,17 @@
   }
 
   :global(.CodeMirror) {
+    flex: 1;
+    min-height: 0;
+    height: auto;
     background: #0f1115;
     color: #e5e7eb;
     border: 1px solid #2a2f37;
     border-radius: 0 0 4px 4px;
-    min-height: 120px;
+  }
+
+  :global(.CodeMirror-scroll) {
+    min-height: auto !important;
   }
 
   :global(.CodeMirror-cursor) {

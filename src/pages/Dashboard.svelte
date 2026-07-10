@@ -2,8 +2,10 @@
 
 import { tree } from "../stores/treeStore";
 import { completions } from "../stores/completionStore";
-import { currentView } from "../stores/viewStore";
+import { panelLayout } from "../stores/panelStore";
 import type { VirtualInstance } from "../types";
+import { tagDefs } from "../stores/tagStore";
+import { countNodesWithTag } from "../stores/tagStore";
 
 function isVirtualEntry(entry: unknown): entry is VirtualInstance {
     return typeof entry === "object" && entry !== null && "isVirtual" in entry;
@@ -37,7 +39,7 @@ function focusAndScroll(id:string){
     const nodeId = id.includes("::") ? id.split("::")[0] : id;
 
     tree.update(t=>setFocus(t, nodeId));
-    currentView.set("tree");
+    panelLayout.update(p => ({ ...p, leftView: "tree", focused: "left" }));
 
     document
         .getElementById(nodeId)
@@ -130,6 +132,27 @@ function focusAndScroll(id:string){
               {getStatusEmoji(fav.status)}
               {fav.title}
             </button>
+          </li>
+        {/each}
+      </ul>
+    {/if}
+  </div>
+
+  <div class="summary-block">
+    <h2>🏷️ Etiquetas</h2>
+
+    {#if $tagDefs.length === 0}
+      <p class="empty">
+        Sin etiquetas todavía — crealas desde un nodo
+      </p>
+    {:else}
+      <ul class="tag-count-list">
+        {#each $tagDefs as tag (tag.id)}
+          {@const count = countNodesWithTag($tree, tag.id)}
+          <li>
+            <span class="tag-dot" style="background: {tag.color}"></span>
+            <span class="tag-name">{tag.name}</span>
+            <span class="tag-count">{count}</span>
           </li>
         {/each}
       </ul>
@@ -290,5 +313,36 @@ function focusAndScroll(id:string){
 
 .link-item.overdue{
     color:#ef4444;
+}
+
+.tag-count-list{
+    list-style:none;
+    padding:0;
+    margin:0;
+}
+
+.tag-count-list li{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    margin-bottom:6px;
+}
+
+.tag-dot{
+    width:10px;
+    height:10px;
+    border-radius:50%;
+    flex-shrink:0;
+}
+
+.tag-name{
+    flex:1;
+    color:#d6dae2;
+    font-size:14px;
+}
+
+.tag-count{
+    color:#6b7280;
+    font-size:13px;
 }
 </style>

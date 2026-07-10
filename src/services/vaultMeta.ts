@@ -5,8 +5,9 @@ import {
   encryptText,
   decryptText,
 } from "./vaultManager";
-import { activeProfileDir } from "./profileManager";
+import { activeProfileDir } from "../utils/pathUtils";
 import { sha256Hex, sortedJson } from "../lib/checksum";
+import { readTextFile, writeTextFile, exists } from "./fsAdapter";
 
 const VAULT_META_FILENAME = "vault.meta";
 const CHECK_VALUE = "plan-tree-ok";
@@ -20,10 +21,6 @@ export interface VaultMeta {
 
 // Internal type without checksum for serialization.
 type VaultMetaContent = Omit<VaultMeta, "checksum">;
-
-async function fsModule() {
-  return import("@tauri-apps/plugin-fs");
-}
 
 /** Ruta del vault.meta DENTRO del perfil activo. */
 function vaultMetaPath(): string {
@@ -52,10 +49,7 @@ async function verifyMetaChecksum(meta: VaultMeta): Promise<void> {
 }
 
 export async function readVaultMeta(): Promise<VaultMeta> {
-  const { readTextFile, BaseDirectory } = await fsModule();
-  const text = await readTextFile(vaultMetaPath(), {
-    baseDir: BaseDirectory.AppData,
-  });
+  const text = await readTextFile(vaultMetaPath());
   const meta: VaultMeta = JSON.parse(text);
   await verifyMetaChecksum(meta);
   return meta;
@@ -63,24 +57,18 @@ export async function readVaultMeta(): Promise<VaultMeta> {
 
 /** Write meta, auto-computing checksum. Drops any stale checksum first. */
 export async function writeVaultMeta(meta: VaultMeta): Promise<void> {
-  const { writeTextFile, BaseDirectory } = await fsModule();
   const { checksum: _stale, ...content } = meta;
   const checksum = await computeMetaChecksum(content as VaultMetaContent);
   const enriched: VaultMeta = { ...content, checksum };
-  await writeTextFile(vaultMetaPath(), JSON.stringify(enriched), {
-    baseDir: BaseDirectory.AppData,
-  });
+  await writeTextFile(vaultMetaPath(), JSON.stringify(enriched));
 }
 
 export async function vaultExists(): Promise<boolean> {
-  const { exists, BaseDirectory } = await fsModule();
-  return exists(vaultMetaPath(), { baseDir: BaseDirectory.AppData });
+  return exists(vaultMetaPath());
 }
 
 /** Primera vez que se abre la app: esta contraseña SE CONVIERTE en la maestra. */
 export async function createVault(password: string): Promise<void> {
-  const { writeTextFile, BaseDirectory } = await fsModule();
-
   const salt = await generateSalt();
   await unlockVault(password, salt);
 
@@ -89,18 +77,12 @@ export async function createVault(password: string): Promise<void> {
   const checksum = await computeMetaChecksum(content);
   const meta: VaultMeta = { ...content, checksum };
 
-  await writeTextFile(vaultMetaPath(), JSON.stringify(meta), {
-    baseDir: BaseDirectory.AppData,
-  });
+  await writeTextFile(vaultMetaPath(), JSON.stringify(meta));
 }
 
 /** Intenta desbloquear con una contraseña existente. true = correcta. */
 export async function tryUnlockVault(password: string): Promise<boolean> {
-  const { readTextFile, BaseDirectory } = await fsModule();
-
-  const text = await readTextFile(vaultMetaPath(), {
-    baseDir: BaseDirectory.AppData,
-  });
+  const text = await readTextFile(vaultMetaPath());
   const meta: VaultMeta = JSON.parse(text);
 
   // verify integrity BEFORE using the data
@@ -120,11 +102,7 @@ export async function tryUnlockVault(password: string): Promise<boolean> {
 /** Como `tryUnlockVault`, pero saltea la validación de largo mínimo.
  * Solo para borrar perfiles creados antes de que existiera esa validación. */
 export async function tryUnlockVaultNoLengthCheck(password: string): Promise<boolean> {
-  const { readTextFile, BaseDirectory } = await fsModule();
-
-  const text = await readTextFile(vaultMetaPath(), {
-    baseDir: BaseDirectory.AppData,
-  });
+  const text = await readTextFile(vaultMetaPath());
   const meta: VaultMeta = JSON.parse(text);
 
   // verify integrity BEFORE using the data

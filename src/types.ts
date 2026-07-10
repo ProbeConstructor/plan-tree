@@ -1,3 +1,9 @@
+export interface TagDefinition {
+  id: string;
+  name: string;
+  color: string;
+}
+
 export type TreeNode = {
   id: string;
   title: string;
@@ -24,6 +30,9 @@ export type TreeNode = {
 
   // ♻️ recurrencia
   recurrence?: RecurrenceRule;
+
+  // 🏷️ tags (array of TagDefinition IDs)
+  tags?: string[];
 };
 
 export interface Project {

@@ -7,25 +7,20 @@
   import UserManager from "./components/UserManager.svelte";
   import { isAuthenticated, session } from "./services/sessionOrchestrator";
   import { activeProfile } from "./stores/profileStore";
-  import { clearActiveProfile } from "./services/profileManager";
   import Sidebar from "./components/Sidebar.svelte";
-  import Dashboard from "./pages/Dashboard.svelte";
-  import Calendar from "./pages/Calendar.svelte";
-  import Progress from "./pages/Progress.svelte";
-  import { currentView } from "./stores/viewStore";
+  import PanelContainer from "./components/panels/PanelContainer.svelte";
   import ModalHost from "./components/ModalHost.svelte";
   import RecoveryBanner from "./components/RecoveryBanner.svelte";
-  import TreeCanvas from "./components/tree/TreeCanvas.svelte";
   import { autoSave } from "./services/workspaceManager";
 
   import { onMount } from "svelte";
   import { getCurrentWindow } from "@tauri-apps/api/window";
   import { listen } from "@tauri-apps/api/event";
   import ErrorBoundary from "./components/ErrorBoundary.svelte";
-  import { check } from "@tauri-apps/plugin-updater";
-  import { pendingUpdate, checkingUpdate } from "./stores/updateStore";
+  import { checkForUpdates } from "./stores/updateStore";
   import NodeSearch from "./components/tree/NodeSearch.svelte";
   import { openModal } from "./stores/modalStore";
+  import { panelLayout } from "./stores/panelStore";
 
   let appReady = false;
   let workspaceInitialized = false;
@@ -66,24 +61,11 @@
       }
 
       // 🔄 Check for updates (non-blocking)
-      checkForUpdates();
+      checkForUpdatesHandler();
     };
 
-    async function checkForUpdates() {
-      try {
-        checkingUpdate.set(true);
-        const update = await check();
-        if (update) {
-          pendingUpdate.set({
-            version: update.version,
-            downloadAndInstall: () => update.downloadAndInstall(),
-          });
-        }
-      } catch {
-        // Silencio — fallo en check de updates no bloquea la app
-      } finally {
-        checkingUpdate.set(false);
-      }
+    async function checkForUpdatesHandler() {
+      await checkForUpdates();
     }
 
     const cleanups: (() => void)[] = [];
@@ -102,23 +84,6 @@
     workspaceInitialized = true;
     session.initializeApp();
   }
-
-  async function switchUser() {
-    await session.logout();
-    clearActiveProfile();
-  }
-
-  let content: HTMLElement;
-  let scrolling = false;
-
-  function keyboardScroll(delta: number) {
-    if (scrolling) return;
-    scrolling = true;
-    requestAnimationFrame(() => {
-      content.scrollTop += delta;
-      scrolling = false;
-    });
-  }
 </script>
 
 <svelte:window
@@ -126,14 +91,6 @@
     if (e.ctrlKey && e.key === "f") {
       e.preventDefault();
       openModal(NodeSearch, {});
-    }
-    if (e.key === "ArrowDown") {
-      e.preventDefault();
-      keyboardScroll(80);
-    }
-    if (e.key === "ArrowUp") {
-      e.preventDefault();
-      keyboardScroll(-80);
     }
   }}
 />
@@ -151,29 +108,27 @@
     {:else}
       <main class="layout">
         <Sidebar />
-        <section class="content" bind:this={content}>
-          <div class="user-bar">
-            <span class="current-user">👤 {$activeProfile}</span>
-            <button class="switch-user-btn" on:click={switchUser}
-              >Cambiar de usuario</button
-            >
+        <section class="content">
+          <div class="topbar">
+            <span class="topbar-user">👤 {$activeProfile}</span>
+            <div class="topbar-tabs">
+              {#if $panelLayout.rightView !== null}
+                <div class="right-tab">
+                  <span class="right-tab-label">
+                    {$panelLayout.rightView === "tree" ? "🌳 Árbol" : $panelLayout.rightView === "dashboard" ? "📊 Resumen" : $panelLayout.rightView === "calendar" ? "📅 Calendario" : "📈 Gráficos"}
+                  </span>
+                  <button
+                    class="right-tab-close"
+                    on:click={() => panelLayout.closeSplit()}
+                    title="Cerrar panel"
+                  >✕</button>
+                </div>
+              {/if}
+            </div>
           </div>
 
           <RecoveryBanner />
-          {#if $currentView === "tree"}
-            <div id="tree-anchor"></div>
-            <div class="tree-viewport">
-              <div class="tree-canvas">
-                <TreeCanvas />
-              </div>
-            </div>
-          {:else if $currentView === "calendar"}
-            <Calendar />
-          {:else if $currentView === "progress"}
-            <Progress />
-          {:else}
-            <Dashboard />
-          {/if}
+          <PanelContainer />
         </section>
 
         <ModalHost />
@@ -194,11 +149,6 @@
       sans-serif;
     overflow-x: auto;
   }
-  .tree-viewport {
-    position: relative;
-    width: 100%;
-    height: 100%;
-  }
   .layout {
     display: flex;
     height: 100vh;
@@ -207,7 +157,9 @@
 
   .content {
     flex: 1;
-    overflow: auto;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
     padding: 24px;
   }
 
@@ -217,20 +169,50 @@
     color: #6b7280;
   }
 
-  .user-bar {
+  .topbar {
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    margin-bottom: 16px;
+    justify-content: space-between;
+    padding: 0 0 12px 0;
     font-size: 13px;
     color: #9aa1ab;
+    flex-shrink: 0;
   }
-  .switch-user-btn {
-    background: none;
+
+  .topbar-tabs {
+    display: flex;
+    align-items: flex-end;
+    align-self: stretch;
+  }
+
+  .right-tab {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 10px;
+    background: #1a1d24;
+    border: 1px solid #2a2f37;
+    border-bottom: none;
+    border-radius: 6px 6px 0 0;
+    font-size: 12px;
+    color: #e7e9ee;
+    margin-bottom: -12px;
+    align-self: flex-end;
+  }
+
+  .right-tab-close {
+    background: transparent;
     border: none;
     color: #6b7280;
-    text-decoration: underline;
     cursor: pointer;
     font-size: 12px;
+    padding: 1px 4px;
+    border-radius: 4px;
+    line-height: 1;
+  }
+
+  .right-tab-close:hover {
+    background: #2a2f37;
+    color: white;
   }
 </style>

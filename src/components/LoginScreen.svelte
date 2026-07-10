@@ -8,6 +8,7 @@
   } from "../services/profileManager";
   import { activeProfile, profiles } from "../stores/profileStore";
   import { get } from "svelte/store";
+  import Logo from "./Logo.svelte";
   import { ask } from "@tauri-apps/plugin-dialog";
 
   type Mode = "login" | "recover";
@@ -146,7 +147,10 @@
 </script>
 
 <div class="login-screen">
-  <h1>🌳 Plan Tree</h1>
+  <div class="login-header">
+    <Logo size={200} />
+    <h1>Plan Tree</h1>
+  </div>
 
   {#if mode === "login"}
     <input
@@ -234,16 +238,28 @@
       {/if}
     {/if}
   {/if}
+
+  <p class="version-badge">v{__APP_VERSION__}</p>
 </div>
 
 <style>
   .login-screen {
-    max-width: 320px;
-    margin: 80px auto;
+    max-width: 400px;
+    margin: 60px auto;
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 20px;
     text-align: center;
+  }
+  .login-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    justify-content: center;
+  }
+  .login-header h1 {
+    font-size: 28px;
+    margin: 0;
   }
   .hint {
     font-size: 13px;
@@ -282,6 +298,13 @@
     flex-direction: column;
     gap: 10px;
   }
+  .version-badge {
+    font-size: 11px;
+    color: #4b5563;
+    margin: 40px 0 0 0;
+    text-align: left;
+  }
+
   .recovery-key {
     background: #1a1d24;
     border: 1px solid #facc15;

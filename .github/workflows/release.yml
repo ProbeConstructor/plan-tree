@@ -17,18 +17,19 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
+            const tag = context.ref.replace('refs/tags/', '');
             const { data } = await github.rest.repos.createRelease({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              tag_name: context.ref.replace('refs/tags/', ''),
-              name: context.ref.replace('refs/tags/', ''),
+              tag_name: tag,
+              name: tag,
               body: [
-                '### Plan Tree ' + context.ref.replace('refs/tags/', ''),
+                '### Plan Tree ' + tag,
                 '',
                 'Descargá el asset correspondiente a tu sistema operativo:',
                 '',
                 '- **Linux**: `.AppImage` (portable)',
-                '- **Windows**: `.exe` (instalador)',
+                '- **Windows**: `.exe` (installer)',
                 '- **macOS**: `.dmg` (app)',
               ].join('\n'),
               draft: true,

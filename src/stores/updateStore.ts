@@ -11,19 +11,30 @@ export const upToDate = writable(false);
 export const updateError = writable("");
 
 function isDevMode(): boolean {
-  return window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
+  // In production Tauri builds, __TAURI_INTERNALS__ is injected by the runtime.
+  // In Vite dev server (npm run dev), it does not exist.
+  // Previous check used hostname === "localhost" which broke on Linux because
+  // WebKitGTK serves production builds from tauri://localhost (hostname = "localhost").
+  return !(window as any).__TAURI_INTERNALS__;
 }
 
 export async function checkForUpdates() {
+  // Reset previous state before checking
+  upToDate.set(false);
+  updateError.set("");
+  pendingUpdate.set(null);
+
   if (isDevMode()) {
-    // Updater no funciona en dev mode (no hay bundle real)
+    // Simulate a quick check in dev mode so the UI still works
+    checkingUpdate.set(true);
+    await new Promise(r => setTimeout(r, 800));
+    checkingUpdate.set(false);
+    upToDate.set(true);
     return;
   }
 
   try {
     checkingUpdate.set(true);
-    upToDate.set(false);
-    updateError.set("");
     const { check } = await import("@tauri-apps/plugin-updater");
     const update = await check();
     if (update) {
@@ -33,6 +44,8 @@ export async function checkForUpdates() {
       });
     } else {
       upToDate.set(true);
+      // Auto-reset after 5s so user can re-check
+      setTimeout(() => upToDate.set(false), 5000);
     }
   } catch (e) {
     console.error("Update check failed:", e);

@@ -4,6 +4,7 @@ import {
 } from "./fsAdapter";
 
 const PROJECT_EXTENSION = ".plan";
+const BACKUP_EXTENSION = ".plan.bak";
 const PROGRESS_EXTENSION = ".progress.plan";
 const LEGACY_FILE = "plan-tree.json";
 
@@ -38,7 +39,8 @@ export async function listFiles(): Promise<string[]> {
     .filter(
       (e: { name?: string }) =>
         e.name?.endsWith(PROJECT_EXTENSION) &&
-        !e.name?.endsWith(PROGRESS_EXTENSION),
+        !e.name?.endsWith(PROGRESS_EXTENSION) &&
+        !e.name?.endsWith(BACKUP_EXTENSION),
     )
     .map((e: { name?: string }) => e.name!.replace(PROJECT_EXTENSION, ""))
     .sort();
@@ -46,6 +48,10 @@ export async function listFiles(): Promise<string[]> {
 
 export async function removeFile(name: string): Promise<void> {
   await remove(projectPath(name));
+  // Also remove backup if it exists
+  try {
+    await remove(backupPath(name));
+  } catch {}
 }
 
 export async function renameFile(
@@ -75,5 +81,39 @@ export async function deleteLegacy(): Promise<void> {
     await remove(LEGACY_FILE);
   } catch {
     // si falla, no es crítico — el archivo legacy se ignora
+  }
+}
+
+// ── Backup system ─────────────────────────────────────────────
+
+function backupPath(name: string): string {
+  return `${projectsDir()}/${name}${BACKUP_EXTENSION}`;
+}
+
+/**
+ * Snapshot the current .plan file to .plan.bak before overwriting.
+ * Best-effort: if the source doesn't exist or read fails, skip silently.
+ * If the backup fails, the write still proceeds (backup is a safety net, not a gate).
+ */
+export async function backupBeforeWrite(name: string): Promise<void> {
+  try {
+    const src = projectPath(name);
+    const data = await readTextFile(src);
+    if (!data) return; // no existing file to backup (first save)
+    await writeTextFile(backupPath(name), data);
+  } catch {
+    // backup failed — don't block the write
+  }
+}
+
+/**
+ * Read the .plan.bak file for a project.
+ * Returns null if the backup doesn't exist or can't be read.
+ */
+export async function readBackup(name: string): Promise<string | null> {
+  try {
+    return await readTextFile(backupPath(name));
+  } catch {
+    return null;
   }
 }

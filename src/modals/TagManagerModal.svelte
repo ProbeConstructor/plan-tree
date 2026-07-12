@@ -9,6 +9,7 @@
   import { TAG_PALETTE } from "../stores/tagStore";
   import ConfirmModal from "./ConfirmModal.svelte";
   import { openModal } from "../stores/modalStore";
+  import { _ } from "svelte-i18n";
 
   let defs = $state(get(tagDefs));
   let treeVal = $state(get(tree));
@@ -48,11 +49,11 @@
   function confirmDelete(def: { id: string; name: string }) {
     const count = countNodesWithTag(treeVal, def.id);
     openModal(ConfirmModal, {
-      title: "Eliminar tag",
+      title: $_("modal.tagManager.deleteTitle"),
       message: count > 0
-        ? `¿Eliminar "${def.name}"? Se quitará de ${count} nodo${count > 1 ? "s" : ""}.`
-        : `¿Eliminar "${def.name}"?`,
-      confirmLabel: "Eliminar",
+        ? $_("modal.tagManager.deleteConfirmCount", { values: { name: def.name, count: String(count) } })
+        : $_("modal.tagManager.deleteConfirm", { values: { name: def.name } }),
+      confirmLabel: $_("modal.confirm.delete"),
       danger: true,
       onConfirm: async () => {
         // Remove from all nodes first
@@ -65,10 +66,10 @@
   }
 </script>
 
-<Modal title="Administrar tags">
+<Modal title={$_("modal.tagManager.title")}>
   <div class="tag-list">
     {#if defs.length === 0}
-      <p class="empty">No hay etiquetas creadas todavía.</p>
+      <p class="empty">{$_("modal.tagManager.empty")}</p>
     {:else}
       {#each defs as def (def.id)}
         {@const nodeCount = countNodesWithTag(treeVal, def.id)}
@@ -102,7 +103,7 @@
 
           <span class="node-count">{nodeCount}</span>
 
-          <button class="delete-btn" onclick={() => confirmDelete(def)} title="Eliminar tag">
+          <button class="delete-btn" onclick={() => confirmDelete(def)} title={$_("modal.tagManager.deleteTitle")}>
             🗑️
           </button>
         </div>

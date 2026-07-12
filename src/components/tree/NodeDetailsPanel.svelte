@@ -1,8 +1,13 @@
 <script lang="ts">
+  import { getContext } from "svelte";
   import { isOverdue } from "../../utils/treeUtils";
   import { isValidIconDataUri } from "../../utils/validation";
-  import { focusedNodeId } from "../../stores/treeStore";
-  import type { TreeNode } from "../../types";
+  import { getPanelInstance } from "../../stores/panelRegistry";
+  import type { PanelId, TreeNode } from "../../types";
+
+  const panelId: PanelId = getContext("panelId") ?? "left";
+  const instance = getPanelInstance(panelId);
+  const focusedNodeId = instance.focusedNodeId;
 
   let {
     node,
@@ -49,42 +54,46 @@
 </div>
 
 <div class="controls">
-  <select
-    class="pill status-{node.status}"
-    value={node.status}
-    onchange={onStatus}
-  >
-    <option value="todo">📋 to do</option>
-    <option value="doing">🚧 doing</option>
-    <option value="done">✅ done</option>
-  </select>
+  <div class="select-row">
+    <select
+      class="pill status-{node.status}"
+      value={node.status}
+      onchange={onStatus}
+    >
+      <option value="todo">📋 to do</option>
+      <option value="doing">🚧 doing</option>
+      <option value="done">✅ done</option>
+    </select>
 
-  <select
-    class="pill"
-    style="--accent:{accent}"
-    value={node.priority}
-    onchange={onPriority}
-  >
-    <option value="low">💤 low</option>
-    <option value="medium">📌 medium</option>
-    <option value="high">🔥 high</option>
-    <option value="critical">🚨 critical</option>
-  </select>
+    <select
+      class="pill"
+      style="--accent:{accent}"
+      value={node.priority}
+      onchange={onPriority}
+    >
+      <option value="low">💤 low</option>
+      <option value="medium">📌 medium</option>
+      <option value="high">🔥 high</option>
+      <option value="critical">🚨 critical</option>
+    </select>
+  </div>
 
-  <input
-    type="date"
-    class="pill date-input"
-    value={node.startDate}
-    onchange={onStartDate}
-  />
+  <div class="date-row">
+    <input
+      type="date"
+      class="pill date-input"
+      value={node.startDate}
+      onchange={onStartDate}
+    />
+    <input
+      type="date"
+      class="pill date-input"
+      class:overdue={isOverdue(node)}
+      value={node.dueDate ?? ""}
+      onchange={onDueDate}
+    />
+  </div>
 
-  <input
-    type="date"
-    class="pill date-input"
-    class:overdue={isOverdue(node)}
-    value={node.dueDate ?? ""}
-    onchange={onDueDate}
-  />
   <div class="image-controls">
     {#if isValidIconDataUri(node.icon)}
       <img src={node.icon} alt="preview" class="icon-preview" />
@@ -92,23 +101,26 @@
     {/if}
     <button class="icon-btn" onclick={() => onPickImage?.()}>🖼️</button>
   </div>
-  {#if !isRoot}
+
+  <div class="action-grid">
+    {#if !isRoot}
+      <button
+        class="icon-btn"
+        onclick={onExtract}
+        title="extraer a nuevo proyecto">📤</button
+      >
+    {/if}
     <button
       class="icon-btn"
-      onclick={onExtract}
-      title="extraer a nuevo proyecto">📤</button
+      class:active={$focusedNodeId === node.id}
+      onclick={onFocus}
     >
-  {/if}
-  <button
-    class="icon-btn"
-    class:active={$focusedNodeId === node.id}
-    onclick={onFocus}
-  >
-    🎯
-  </button>
-  <button class="icon-btn" onclick={onAddChild}> ＋ </button>
-  <button class="icon-btn" onclick={onOpenDetailsModal}> 📝 </button>
-  <button class="icon-btn danger" onclick={onDelete}> 🗑️ </button>
+      🎯
+    </button>
+    <button class="icon-btn" onclick={onAddChild}> ＋ </button>
+    <button class="icon-btn" onclick={onOpenDetailsModal}> 📝 </button>
+    <button class="icon-btn danger" onclick={onDelete}> 🗑️ </button>
+  </div>
 </div>
 
 <style>
@@ -127,12 +139,32 @@
   .controls {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 6px;
+  }
+
+  .select-row {
+    display: flex;
+    gap: 6px;
+  }
+
+  .select-row select {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .date-row {
+    display: flex;
+    gap: 6px;
+  }
+
+  .date-row input {
+    flex: 1;
+    min-width: 0;
   }
 
   .image-controls {
     display: flex;
-    gap: 8px;
+    gap: 6px;
     align-items: center;
   }
 
@@ -141,5 +173,45 @@
     height: 48px;
     border-radius: 4px;
     object-fit: cover;
+  }
+
+  .icon-btn {
+    width: 36px;
+    height: 36px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #1f2329;
+    color: #e7e9ee;
+    border: 1px solid #30363d;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    padding: 0;
+    flex-shrink: 0;
+  }
+
+  .icon-btn:hover {
+    background: #2b3138;
+  }
+
+  .icon-btn.active {
+    background: rgba(250, 204, 21, 0.15);
+    border-color: #facc15;
+  }
+
+  .icon-btn.danger {
+    color: #ef4444;
+  }
+
+  .icon-btn.danger:hover {
+    background: rgba(239, 68, 68, 0.15);
+    border-color: #ef4444;
+  }
+
+  .action-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
   }
 </style>

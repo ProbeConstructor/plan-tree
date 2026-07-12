@@ -8,6 +8,8 @@
   } from "../services/profileManager";
   import { activeProfile, profiles } from "../stores/profileStore";
   import { get } from "svelte/store";
+  import { t } from "svelte-i18n";
+  import { setLanguage, currentLanguage } from "../stores/languageStore";
   import Logo from "./Logo.svelte";
   import { ask } from "@tauri-apps/plugin-dialog";
 
@@ -15,43 +17,32 @@
 
   let mode: Mode = "login";
 
-  // si ya había un perfil usado antes (restoreLastProfile), lo precargamos
   let username = $activeProfile ?? "";
   let password = "";
   let error = "";
   let loading = false;
 
-  // --- modo recuperación ---
+  // --- recovery mode ---
   let recoveryKeyInput = "";
   let newPassword = "";
   let newRecoveryKeyResult = "";
 
-  /**
-   * Si el usuario YA existe, solo lo selecciona. Si es nuevo, pide
-   * confirmación explícita antes de crear la cuenta (evita que un
-   * typo en el nombre cree perfiles fantasma sin querer). Los errores
-   * reales (nombre inválido, límite de perfiles alcanzado) SÍ se
-   * propagan — antes se tragaban junto con el caso "ya existía".
-   */
   async function ensureProfileSelected(name: string): Promise<void> {
     await refreshProfiles();
     const exists = get(profiles).includes(name);
 
     if (!exists) {
-      /*const wantsToCreate = confirm(
-        `No existe un usuario "${name}". ¿Crear una cuenta nueva con ese nombre?`,
-      );*/
       const confirmed = await ask(
-        `No existe un usuario "${name}". ¿Crear una cuenta nueva con ese nombre?`,
+        get(t)("login.confirmCreateMessage", { values: { name } }),
         {
-          title: "Confirmar acción crítica",
-          kind: "warning", // Puede ser 'info', 'warning', 'error'
-          okLabel: "Sí, crear",
-          cancelLabel: "No, cancelar",
+          title: get(t)("login.confirmCreateTitle"),
+          kind: "warning",
+          okLabel: get(t)("login.confirmCreateOk"),
+          cancelLabel: get(t)("login.confirmCreateCancel"),
         },
       );
       if (!confirmed) {
-        throw new Error("Creación cancelada.");
+        throw new Error(get(t)("login.creationCancelled"));
       }
       await createProfile(name);
     }
@@ -64,11 +55,11 @@
 
     const name = username.trim();
     if (!name) {
-      error = "Ingresa tu usuario";
+      error = get(t)("login.usernameRequired");
       return;
     }
     if (password.length < 4) {
-      error = "La contraseña debe tener al menos 4 caracteres";
+      error = get(t)("login.passwordTooShort");
       return;
     }
 
@@ -83,13 +74,13 @@
     }
 
     const pwd = password;
-    password = ""; // no dejar la contraseña en memoria más de lo necesario
+    password = "";
 
     try {
       const ok = await session.login(pwd);
 
       if (!ok) {
-        error = "Usuario o contraseña incorrectos";
+        error = get(t)("login.invalidCredentials");
       }
     } catch (e) {
       error = e instanceof Error ? e.message : String(e);
@@ -116,15 +107,15 @@
 
     const name = username.trim();
     if (!name) {
-      error = "Ingresa tu usuario";
+      error = get(t)("login.usernameRequired");
       return;
     }
     if (!recoveryKeyInput.trim()) {
-      error = "Ingresa tu clave de recuperación";
+      error = get(t)("login.recoveryKeyIncorrect");
       return;
     }
     if (newPassword.length < 4) {
-      error = "La contraseña nueva es muy corta";
+      error = get(t)("login.passwordTooShort");
       return;
     }
 
@@ -139,7 +130,7 @@
       newRecoveryKeyResult = newKey;
     } catch (e) {
       error =
-        e instanceof Error ? e.message : "Clave de recuperación incorrecta";
+        e instanceof Error ? e.message : get(t)("login.recoveryKeyIncorrect");
     }
 
     loading = false;
@@ -155,34 +146,33 @@
   {#if mode === "login"}
     <input
       type="text"
-      placeholder="Usuario"
+      placeholder={$t('login.username.placeholder')}
       maxlength="32"
       bind:value={username}
       disabled={loading}
     />
     <input
       type="password"
-      placeholder="Contraseña"
+      placeholder={$t('login.password.placeholder')}
       bind:value={password}
       disabled={loading}
-      on:keydown={(e) => e.key === "Enter" && submit()}
+      onkeydown={(e) => e.key === "Enter" && submit()}
     />
 
     <p class="hint">
-      Si es la primera vez con este usuario, la contraseña que ingreses ahora se
-      vuelve tu contraseña maestra. Guárdala bien.
+      {$t('login.firstTimeHint')}
     </p>
 
-    <button on:click={submit} disabled={loading}>
-      {loading ? "..." : "Entrar"}
+    <button onclick={submit} disabled={loading}>
+      {loading ? "..." : $t('login.submit')}
     </button>
 
-    <button class="link-btn" on:click={goToRecover} disabled={loading}>
-      ¿Olvidaste tu contraseña?
+    <button class="link-btn" onclick={goToRecover} disabled={loading}>
+      {$t('login.forgotPassword')}
     </button>
 
-    <button class="link-btn" on:click={onManageUsers} disabled={loading}>
-      Administrar usuarios
+    <button class="link-btn" onclick={onManageUsers} disabled={loading}>
+      {$t('login.manageUsers')}
     </button>
 
     {#if error}
@@ -192,45 +182,43 @@
     {#if newRecoveryKeyResult}
       <div class="recovery-result">
         <p class="hint">
-          ✅ Contraseña actualizada. Esta es tu clave de recuperación
-          <strong>nueva</strong> — la anterior ya no sirve. Guárdala en un lugar
-          seguro, no se puede volver a mostrar:
+          {$t('login.passwordUpdated')}
         </p>
         <code class="recovery-key">{newRecoveryKeyResult}</code>
-        <button on:click={backToLogin}>Listo, ya la guardé</button>
+        <button onclick={backToLogin}>{$t('login.recoveryKeySaved')}</button>
       </div>
     {:else}
       <p class="hint">
-        Ingresa tu usuario, tu clave de recuperación, y una contraseña nueva.
+        {$t('login.recoveryHint')}
       </p>
 
       <input
         type="text"
-        placeholder="Usuario"
+        placeholder={$t('login.username.placeholder')}
         maxlength="32"
         bind:value={username}
         disabled={loading}
       />
       <input
         type="text"
-        placeholder="Clave de recuperación"
+        placeholder={$t('login.recovery.placeholder')}
         bind:value={recoveryKeyInput}
         disabled={loading}
       />
       <input
         type="password"
-        placeholder="Contraseña nueva"
+        placeholder={$t('login.newPassword.placeholder')}
         bind:value={newPassword}
         disabled={loading}
-        on:keydown={(e) => e.key === "Enter" && submitRecovery()}
+        onkeydown={(e) => e.key === "Enter" && submitRecovery()}
       />
 
-      <button on:click={submitRecovery} disabled={loading}>
-        {loading ? "Recifrando proyectos..." : "Restablecer contraseña"}
+      <button onclick={submitRecovery} disabled={loading}>
+        {loading ? $t('login.reencrypting') : $t('login.resetPassword')}
       </button>
 
-      <button class="link-btn" on:click={backToLogin} disabled={loading}>
-        Volver
+      <button class="link-btn" onclick={backToLogin} disabled={loading}>
+        {$t('login.back')}
       </button>
 
       {#if error}
@@ -238,6 +226,11 @@
       {/if}
     {/if}
   {/if}
+
+  <select class="lang-select" value={$currentLanguage} onchange={(e) => setLanguage((e.target as HTMLSelectElement).value)}>
+    <option value="es">🇪🇸 Español</option>
+    <option value="en">🇺🇸 English</option>
+  </select>
 
   <p class="version-badge">v{__APP_VERSION__}</p>
 </div>
@@ -314,5 +307,16 @@
     font-size: 13px;
     word-break: break-all;
     user-select: all;
+  }
+
+  .lang-select {
+    background: #1a1d24;
+    border: 1px solid #2a2f37;
+    color: #e7e9ee;
+    border-radius: 6px;
+    padding: 8px;
+    cursor: pointer;
+    font-size: 13px;
+    text-align: center;
   }
 </style>

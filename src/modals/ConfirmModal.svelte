@@ -1,10 +1,11 @@
 <script lang="ts">
 import Modal from "../components/Modal.svelte";
 import { closeModal } from "../stores/modalStore";
+import { _ } from "svelte-i18n";
 
 export let title = "";
 export let message = "";
-export let confirmLabel = "Eliminar";
+export let confirmLabel = $_("modal.confirm.delete");
 export let danger = true;
 export let showCancel = true;
 export let onConfirm: () => Promise<void> | void;
@@ -28,7 +29,7 @@ function cancelAction() {
 <div class="buttons">
     {#if showCancel}
         <button on:click={cancelAction}>
-            Cancelar
+            {$_("modal.confirm.cancel")}
         </button>
     {/if}
 

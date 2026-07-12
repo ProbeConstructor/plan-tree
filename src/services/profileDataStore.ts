@@ -6,22 +6,26 @@ const PROFILES_FILE = "profiles.json";
 interface ProfilesFile {
   profiles: string[];
   lastProfile: string | null;
+  language: string;
   lastProjectByProfile: Record<string, string>;
   projectColorsByProfile: Record<string, Record<string, string>>;
   graphSelectionByProfile: Record<string, string[]>;
   tagsByProfile: Record<string, TagDefinition[]>;
   panelLayoutByProfile: Record<string, { rightView: string | null; splitPosition: number }>;
+  panelProjectsByProfile: Record<string, { left: string; right: string | null }>;
 }
 
 function defaultData(): ProfilesFile {
   return {
     profiles: [],
     lastProfile: null,
+    language: "es",
     lastProjectByProfile: {},
     projectColorsByProfile: {},
     graphSelectionByProfile: {},
     tagsByProfile: {},
     panelLayoutByProfile: {},
+    panelProjectsByProfile: {},
   };
 }
 
@@ -96,6 +100,25 @@ class ProfileDataStore {
       this.dirty = true;
       await this.flush();
     });
+  }
+
+  async getLanguage(): Promise<string> {
+    const data = await this.load();
+    return data.language ?? "es";
+  }
+
+  async setLanguage(lang: string): Promise<void> {
+    return this.serialized(async () => {
+      const data = await this.load();
+      data.language = lang;
+      this.dirty = true;
+      await this.flush();
+    });
+  }
+
+  async hasProfiles(): Promise<boolean> {
+    const data = await this.load();
+    return data.profiles.length > 0;
   }
 
   async createProfile(name: string): Promise<void> {
@@ -191,19 +214,49 @@ class ProfileDataStore {
 
   async getPanelLayout(
     profile: string,
-  ): Promise<{ rightView: string | null; splitPosition: number } | null> {
+  ): Promise<{
+    rightView: string | null;
+    splitPosition: number;
+    leftProject: string | null;
+    rightProject: string | null;
+  } | null> {
     const data = await this.load();
-    return data.panelLayoutByProfile[profile] ?? null;
+    const layout = data.panelLayoutByProfile[profile] ?? null;
+    const projects = data.panelProjectsByProfile[profile] ?? null;
+
+    // Backward compat: migrate from lastProjectByProfile if no panelProjects
+    if (layout && !projects) {
+      const lastProject = data.lastProjectByProfile[profile] ?? null;
+      if (lastProject) {
+        data.panelProjectsByProfile[profile] = { left: lastProject, right: null };
+        this.dirty = true;
+        // flush will happen on next serialized write
+      }
+    }
+
+    const proj = data.panelProjectsByProfile[profile];
+    return layout
+      ? {
+          ...layout,
+          leftProject: proj?.left ?? null,
+          rightProject: proj?.right ?? null,
+        }
+      : null;
   }
 
   async savePanelLayout(
     profile: string,
     rightView: string | null,
     splitPosition: number,
+    leftProject: string | null,
+    rightProject: string | null,
   ): Promise<void> {
     return this.serialized(async () => {
       const data = await this.load();
       data.panelLayoutByProfile[profile] = { rightView, splitPosition };
+      if (leftProject) {
+        data.panelProjectsByProfile[profile] = { left: leftProject, right: rightProject };
+      }
       this.dirty = true;
       await this.flush();
     });

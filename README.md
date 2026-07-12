@@ -1,6 +1,6 @@
 # Plan Tree 🌳
 
-> **Encrypted tree-task organizer** — tus tareas, tu árbol, tu cifrado. Nada sale de tu máquina.
+> **Your tasks. Your tree. Your data. Nothing leaves your machine.**
 
 <p align="center">
   <picture>
@@ -16,44 +16,132 @@
   <img src="https://img.shields.io/badge/Rust-🦀-DEA584?logo=rust&logoColor=white" alt="Rust">
   <img src="https://img.shields.io/github/license/ProbeConstructor/plan-tree" alt="License">
   <img src="https://img.shields.io/badge/status-active-success" alt="Status">
+  <img src="https://img.shields.io/github/downloads/ProbeConstructor/plan-tree/total" alt="Downloads">
 </p>
 
 ---
 
-## ¿Qué es esto?
+## What is Plan Tree?
 
-Plan Tree es una app de escritorio **100% offline, 100% local** para organizar tareas en forma de árbol. Cada proyecto es un archivo `.plan` cifrado con **AES-256-GCM**, derivado con **Argon2id**. La clave vive **exclusivamente en memoria en Rust** — ni el frontend la ve, ni se serializa, ni se va a la nube.
+Plan Tree is a desktop app for organizing tasks as a tree. It runs entirely offline — no accounts, no servers, no telemetry. Your data stays on your machine, encrypted with military-grade algorithms.
 
-No hay servidores, no hay telemetría, no hay cuenta de usuario. Solo vos, tu password, y tu árbol.
+Break down complex projects into smaller pieces, visualize your progress, and never worry about where your data goes.
+
+<!-- TODO: Add screenshot of the main tree view here -->
 
 ---
 
-## ✨ Features
+## Philosophy
+
+- **Offline first**: No internet required. Everything runs locally.
+- **No accounts**: No sign-ups, no email, no cloud. Just you and your password.
+- **No telemetry**: We don't track you. Period.
+- **Your data, your format**: Every project is a single `.plan` file you can backup, move, or delete.
+- **Transparent encryption**: AES-256-GCM + Argon2id. The key lives only in memory, never touches JavaScript.
+
+---
+
+## Highlights
 
 | | |
 |---|---|
-| 🌲 **Árbol interactivo** | Layout auto-mático (Reingold-Tilford), conexiones SVG, navegación sin drag |
-| 🔐 **Cifrado de verdad** | AES-256-GCM + Argon2id. Key derivation y cipher en Rust. Nunca toca JS |
-| 👤 **Múltiples profiles** | Perfiles aislados con su propio vault. Cada uno con proyectos independientes |
-| 📁 **Proyectos ilimitados** | Cada proyecto es un archivo `.plan` cifrado individualmente |
-| 🔑 **Recuperación** | Recovery key de 32 bytes por si olvidás la contraseña |
-| 💾 **Auto-save** | Guardado automático con cola serializada + 3 retries con backoff |
-| ↩️ **Undo** | Hasta 50 snapshots inmutables del árbol completo |
-| 📈 **Progreso multi-proyecto** | Gráfico de líneas comparativo entre proyectos, con selector y colores custom |
-| 🏷️ **Tags por nodo** | Cápsulas visuales, popover de asignación, filtro desde la barra lateral |
-| ♻️ **Tareas recurrentes** | Configurá recurrencia diaria, semanal, mensual o custom |
-| 💬 **Notas markdown** | Editor con preview, sintaxis markdown, por nodo |
-| ⭐ **Favoritos** | Marcá nodos como favoritos con filtro rápido |
-| 🎯 **Focus mode** | Aislá un nodo y su subárbol para concentrarte |
-| 🖼️ **Iconos por nodo** | Imagen cuadrada chica para identificar visualmente cada tarea |
-| 📐 **Panel dividido** | Tree + dashboard/calendar/progress side by side |
-| 📤 **Export/Import** | Árboles completos exportables a markdown |
-| 🔄 **Auto-updater** | Las actualizaciones se firman con clave privada y se sirven via GitHub Releases |
-| 🛡️ **Error boundary** | Captura global de errores inesperados sin perder data |
+| 🌲 **Interactive tree** | Auto-layout with SVG connections. Navigate without dragging. |
+| 🔐 **Real encryption** | AES-256-GCM + Argon2id. Key derivation in Rust. Never leaves memory. |
+| 👤 **Multiple profiles** | Isolated vaults per user. Each profile has its own projects. |
+| 📈 **Progress tracking** | Multi-project line charts with custom colors and selectors. |
+| 💾 **Auto-save + undo** | Automatic saving with 50 snapshot undo history. |
+| 🔄 **Auto-updater** | Signed updates via GitHub Releases. No manual downloads needed. |
+
+<!-- TODO: Add screenshots of encryption flow, profiles, and progress charts here -->
 
 ---
 
-## 🏗️ Architecture
+## Who is this for?
+
+- **Developers** who want to break down features without cloud dependencies
+- **Students** organizing thesis, coursework, or side projects
+- **Writers** structuring chapters, research, or content calendars
+- **Anyone** who values privacy and wants to own their task data
+
+---
+
+## Download
+
+Get the latest version from [GitHub Releases](https://github.com/ProbeConstructor/plan-tree/releases/latest):
+
+| Platform | Format |
+|----------|--------|
+| Linux | `.AppImage` (portable) |
+| Windows | `.exe` (installer) |
+| macOS | `.dmg` (app) |
+
+---
+
+## Comparison
+
+| Feature | Plan Tree | Traditional Task Managers |
+|---------|-----------|---------------------------|
+| Offline | ✅ 100% | ❌ Usually cloud-based |
+| Encryption | ✅ AES-256-GCM | ❌ None or basic |
+| No account | ✅ None needed | ❌ Email required |
+| No telemetry | ✅ Zero tracking | ❌ Usually included |
+| Data format | ✅ Single `.plan` file | ❌ Proprietary database |
+| Multi-profile | ✅ Isolated vaults | ⚠️ Basic or none |
+| Auto-save | ✅ With undo history | ⚠️ Depends on sync |
+| Tree visualization | ✅ Interactive | ❌ Flat lists only |
+| Self-hosted | ✅ Desktop app | ❌ SaaS only |
+
+---
+
+## All Features
+
+| | |
+|---|---|
+| 🌲 **Interactive tree** | Auto-layout (Reingold-Tilford), SVG connections, keyboard navigation |
+| 🔐 **AES-256-GCM encryption** | Argon2id key derivation, key in Rust memory only |
+| 👤 **Multiple profiles** | Isolated vaults with independent projects |
+| 📁 **Unlimited projects** | Each project is an individual `.plan` file |
+| 🔑 **Recovery key** | 32-byte recovery key for forgotten passwords |
+| 💾 **Auto-save** | Serialized save queue with 3 retries and backoff |
+| ↩️ **50-step undo** | Immutable snapshots of the entire tree |
+| 📈 **Multi-project progress** | Comparative line charts with custom selectors and colors |
+| 🏷️ **Node tags** | Visual capsules, assignment popover, sidebar filtering |
+| ♻️ **Recurring tasks** | Daily, weekly, monthly, or custom recurrence |
+| 💬 **Markdown notes** | Editor with preview, per-node |
+| ⭐ **Favorites** | Mark nodes as favorites with quick filter |
+| 🎯 **Focus mode** | Isolate a node and its subtree |
+| 🖼️ **Node icons** | Small square image for visual identification |
+| 📐 **Split panel** | Tree + dashboard/calendar/progress side by side |
+| 📤 **Export/Import** | Full tree export to markdown |
+| 🔄 **Auto-updater** | Signed with private key, served via GitHub Releases |
+| 🛡️ **Error boundary** | Global error capture without data loss |
+| 🌐 **Bilingual** | English and Spanish with instant switching |
+
+<!-- TODO: Add screenshots of key features here -->
+
+---
+
+## Roadmap
+
+### Completed
+
+- ✅ Offline-first encrypted task management
+- ✅ Multi-profile support
+- ✅ Auto-save with undo
+- ✅ Progress visualization
+- ✅ Auto-updater
+- ✅ Bilingual support (EN/ES)
+
+### Under evaluation
+
+- 🔌 **Plugin system** — Extensible architecture for custom integrations
+- ⌨️ **Command palette** — Keyboard-driven navigation and actions
+- 📱 **Mobile companion** — Read-only viewer for on-the-go access
+- 🔗 **Import/export formats** — JSON, CSV, and Markdown compatibility
+
+---
+
+## Architecture
 
 ```
 ┌─────────────────────────────────────────────────────┐
@@ -69,8 +157,8 @@ No hay servidores, no hay telemetría, no hay cuenta de usuario. Solo vos, tu pa
 │  Rust Backend (Tauri v2)                             │
 │  ┌─────────────────────────────┐                    │
 │  │  VaultState                 │                    │
-│  │  Mutex<Option<[u8; 32]>>    │  ← clave en RAM    │
-│  │  nunca serializada          │                    │
+│  │  Mutex<Option<[u8; 32]>>    │  ← key in RAM     │
+│  │  never serialized           │                    │
 │  └─────────────────────────────┘                    │
 │  vault.rs: unlock/lock/encrypt/decrypt               │
 │  Argon2id → 256-bit key → AES-256-GCM                │
@@ -79,12 +167,12 @@ No hay servidores, no hay telemetría, no hay cuenta de usuario. Solo vos, tu pa
 ┌──────────────────────▼──────────────────────────────┐
 │  File System (AppData)                               │
 │  profiles/<name>/vault.meta                          │
-│  profiles/<name>/projects/<name>.plan  ← cifrados    │
+│  profiles/<name>/projects/<name>.plan  ← encrypted   │
 │  profiles.json                                       │
 └─────────────────────────────────────────────────────┘
 ```
 
-### 🔐 Crypto flow
+### Encryption flow
 
 ```
 Password + Salt → Argon2id → 256-bit key (Rust RAM only)
@@ -96,49 +184,7 @@ Password + Salt → Argon2id → 256-bit key (Rust RAM only)
 
 ---
 
-## 📦 Build targets
-
-| Platform | Format |
-|----------|--------|
-| Linux | `.AppImage` |
-| Windows | `.exe` (NSIS installer) |
-| macOS | `.dmg` |
-
----
-
-## 🚀 Quick start
-
-```sh
-npm install
-npm exec tauri dev          # requires WEBKIT_DISABLE_DMABUF_RENDERER=1 on Linux
-npm run check               # typecheck: svelte-check + tsc
-npm test                    # vitest
-npm run build               # producción (frontend)
-```
-
-### Release build
-
-```sh
-# Requiere clave de firma para el updater
-export TAURI_SIGNING_PRIVATE_KEY=$(cat /path/to/private-key)
-export TAURI_SIGNING_PRIVATE_KEY_PASSWORD="your-password"
-
-npm exec tauri build
-```
-
----
-
-## 🧪 Tests
-
-```sh
-npm test                    # vitest (tests de árbol, vault, utilidades)
-npm run check               # svelte-check + tsc
-npm run audit               # npm audit + cargo audit
-```
-
----
-
-## 🛠️ Tech stack
+## Tech stack
 
 | Layer | Tech |
 |-------|------|
@@ -149,14 +195,44 @@ npm run audit               # npm audit + cargo audit
 | Charts | Chart.js |
 | Editor | EasyMDE (markdown) |
 | Sanitization | DOMPurify |
+| i18n | svelte-i18n |
 | CI | GitHub Actions (Linux, Windows, macOS) |
 | Updates | tauri-plugin-updater + signed releases |
 
 ---
 
-## 🤝 Contributing
+## Getting started
 
-PRs bienvenidas. El proyecto usa [conventional commits](https://www.conventionalcommits.org/), TypeScript estricto, y Svelte 5 runes.
+### Development
+
+```sh
+npm install
+npm exec tauri dev          # requires WEBKIT_DISABLE_DMABUF_RENDERER=1 on Linux
+```
+
+### Production build
+
+```sh
+# Requires signing key for auto-updater
+export TAURI_SIGNING_PRIVATE_KEY=$(cat /path/to/private-key)
+export TAURI_SIGNING_PRIVATE_KEY_PASSWORD="your-password"
+
+npm exec tauri build
+```
+
+### Testing
+
+```sh
+npm test                    # vitest (tree, vault, utilities)
+npm run check               # svelte-check + tsc
+npm run audit               # npm audit + cargo audit
+```
+
+---
+
+## Contributing
+
+PRs welcome. The project uses [conventional commits](https://www.conventionalcommits.org/), strict TypeScript, and Svelte 5 runes.
 
 ```sh
 git clone https://github.com/ProbeConstructor/plan-tree
@@ -167,6 +243,6 @@ npm exec tauri dev
 
 ---
 
-## 📄 License
+## License
 
-GPL-3.0-only — porque tu data es tuya.
+GPL-3.0-only — because your data is yours.

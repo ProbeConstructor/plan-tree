@@ -1,4 +1,6 @@
 import type { TreeNode } from "../types";
+import { get } from "svelte/store";
+import { t } from "svelte-i18n";
 
 export function getPriorityColor(priority: string): string {
   switch (priority) {
@@ -68,20 +70,8 @@ export function getNodeType(depth: number): string {
 }
 
 export function getDefaultTitle(depth: number): string {
-  switch (depth) {
-    case 0:
-      return "Usuario";
-    case 1:
-      return "Nuevo sueño";
-    case 2:
-      return "Nueva meta";
-    case 3:
-      return "Nuevo objetivo";
-    case 4:
-      return "Nueva tarea";
-    default:
-      return "Nueva subtarea";
-  }
+  const key = `tree.defaults.depth${Math.min(depth, 5)}`;
+  return get(t)(key);
 }
 
 export function isOverdue(node: TreeNode): boolean {

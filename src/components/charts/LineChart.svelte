@@ -11,6 +11,7 @@
     Legend,
     Filler,
   } from "chart.js";
+  import { _ } from "svelte-i18n";
 
   Chart.register(
     LineController,
@@ -30,7 +31,7 @@
     branches: Record<string, number>;
   }
 
-  let { data = [] as LineData[], title = "Progreso diario" }: {
+  let { data = [] as LineData[], title = "" }: {
     data?: LineData[];
     title?: string;
   } = $props();
@@ -121,7 +122,7 @@
 
 <div class="chart-container" class:empty={data.length === 0}>
   {#if data.length === 0}
-    <div class="empty-chart"><p>Sin datos para mostrar</p></div>
+    <div class="empty-chart"><p>{$_("chart.noData")}</p></div>
   {/if}
   <div class="chart-wrapper" class:hidden={data.length === 0}>
     <canvas bind:this={canvas}></canvas>

@@ -1,16 +1,34 @@
 import type { TreeNode, VirtualInstance } from "../types";
+import { get } from "svelte/store";
+import { t } from "svelte-i18n";
 
 // ---------------------------------------------------------------------------
-// Constants
+// Constants (derived from i18n)
 // ---------------------------------------------------------------------------
 
-const MONTH_NAMES: string[] = [
-  "enero", "febrero", "marzo", "abril", "mayo", "junio",
-  "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre",
+const MONTH_KEYS = [
+  "calendar.months.january",
+  "calendar.months.february",
+  "calendar.months.march",
+  "calendar.months.april",
+  "calendar.months.may",
+  "calendar.months.june",
+  "calendar.months.july",
+  "calendar.months.august",
+  "calendar.months.september",
+  "calendar.months.october",
+  "calendar.months.november",
+  "calendar.months.december",
 ];
 
-const WEEK_DAYS_SHORT: string[] = [
-  "lun", "mar", "mié", "jue", "vie", "sáb", "dom",
+const DAY_KEYS = [
+  "calendar.days.monday",
+  "calendar.days.tuesday",
+  "calendar.days.wednesday",
+  "calendar.days.thursday",
+  "calendar.days.friday",
+  "calendar.days.saturday",
+  "calendar.days.sunday",
 ];
 
 // ---------------------------------------------------------------------------
@@ -115,7 +133,7 @@ export function groupNodesByDate(
  * Month is 0-indexed.
  */
 export function formatMonthYear(year: number, month: number): string {
-  return `${MONTH_NAMES[month]} ${year}`;
+  return `${get(t)(MONTH_KEYS[month])} ${year}`;
 }
 
 // ---------------------------------------------------------------------------
@@ -126,7 +144,7 @@ export function formatMonthYear(year: number, month: number): string {
  * Returns abbreviated Spanish day names starting with Monday.
  */
 export function getWeekDays(): string[] {
-  return [...WEEK_DAYS_SHORT];
+  return DAY_KEYS.map((key) => get(t)(key));
 }
 
 // ---------------------------------------------------------------------------

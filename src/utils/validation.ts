@@ -1,5 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-only
 
+import { get } from "svelte/store";
+import { t } from "svelte-i18n";
+
 /**
  * Regex para nombres de perfil y proyecto.
  * Solo caracteres seguros para nombres de archivo/carpeta.
@@ -7,11 +10,14 @@
  */
 export const SAFE_NAME_REGEX = /^[A-Za-z0-9 _-]{1,32}$/;
 
-export const SAFE_NAME_PATTERN = "solo letras, números, espacios, - y _ (máx. 32 caracteres)";
-
 /**
- * Valida un nombre de perfil o proyecto. Lanza con mensaje claro si es inválido.
+ * Returns the translated validation pattern hint.
+ * Call as a function: getSafeNamePattern()
  */
+export function getSafeNamePattern(): string {
+  return get(t)("validation.namePattern");
+}
+
 /**
  * Regex para data URIs de imagen válidas.
  * Solo PNG y JPEG, dentro del límite de tamaño de Plan Tree (50KB encoded).
@@ -28,9 +34,13 @@ export function isValidIconDataUri(icon: string | undefined): icon is string {
 
 export function validateSafeName(name: string, label: string): void {
   if (!name || !name.trim()) {
-    throw new Error(`${label}: el nombre no puede estar vacío.`);
+    throw new Error(get(t)("validation.nameEmpty", { values: { label } }));
   }
   if (!SAFE_NAME_REGEX.test(name.trim())) {
-    throw new Error(`${label}: ${SAFE_NAME_PATTERN}.`);
+    throw new Error(
+      get(t)("validation.nameInvalid", {
+        values: { label, pattern: getSafeNamePattern() },
+      }),
+    );
   }
 }

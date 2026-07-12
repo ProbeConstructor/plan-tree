@@ -1,10 +1,12 @@
 <script lang="ts">
   import { query, results } from "../../stores/searchStore";
-  import { tree } from "../../stores/treeStore";
+  import { getPanelInstance } from "../../stores/panelRegistry";
+  import { getFocusedPanel } from "../../services/panelManager";
   import { setFocus } from "../../utils/treeUtils";
   import { closeModal } from "../../stores/modalStore";
   import Modal from "../Modal.svelte";
   import { onMount, onDestroy } from "svelte";
+  import { _ } from "svelte-i18n";
 
   let inputEl: HTMLInputElement;
 
@@ -14,12 +16,14 @@
   });
 
   onDestroy(() => {
-    tree.update((t) => setFocus(t, null));
+    const inst = getPanelInstance(getFocusedPanel());
+    inst.tree.update((t) => setFocus(t, null));
     query.set("");
   });
 
   function handleSelect(id: string) {
-    tree.update((t) => setFocus(t, id));
+    const inst = getPanelInstance(getFocusedPanel());
+    inst.tree.update((t) => setFocus(t, id));
     document
       .getElementById(id)
       ?.scrollIntoView({ behavior: "smooth", block: "center", inline: "center" });
@@ -27,12 +31,12 @@
   }
 </script>
 
-<Modal title="Buscar nodos">
+<Modal title={$_("search.title")}>
   <input
     bind:this={inputEl}
     type="text"
     class="search-input"
-    placeholder="Buscar nodos..."
+    placeholder={$_("search.placeholder")}
     bind:value={$query}
   />
 
@@ -49,14 +53,14 @@
               {#if result.matchField === "tag"}
                 <span class="tag-dot" style="background: {result.matchTagColor}"></span>
               {/if}
-              {result.matchField === "title" ? "Título" : result.matchField === "tag" ? "Tag" : "Comentario"}
+              {result.matchField === "title" ? $_("search.field.title") : result.matchField === "tag" ? $_("search.field.tag") : $_("search.field.comment")}
             </span>
           </button>
         </li>
       {/each}
     </ul>
   {:else if $query.length > 0}
-    <p class="no-results">Sin resultados</p>
+    <p class="no-results">{$_("search.noResults")}</p>
   {/if}
 </Modal>
 

@@ -1,7 +1,7 @@
 <script lang="ts">
   import { get } from "svelte/store";
-  import { tree, undo, canUndo, snapshot, favoritesFilter } from "../stores/treeStore";
-  import { projects, activeProject } from "../stores/workspaceStore";
+  import { favoritesFilter } from "../stores/treeStore";
+  import { projects } from "../stores/workspaceStore";
   import { switchProject, deleteProject } from "../services/workspaceManager";
   import { exportTree, importTree } from "../services/projectManager";
   import { importTreeCommand } from "../commands/treeCommands";
@@ -16,44 +16,65 @@
   import { relaunch } from "@tauri-apps/plugin-process";
   import { tagDefs, tagFilter } from "../stores/tagStore";
   import TagManagerModal from "../modals/TagManagerModal.svelte";
+  import { getFocusedPanel, getProjectForPanel, switchPanelProject } from "../services/panelManager";
+  import { getPanelInstance } from "../stores/panelRegistry";
+  import type { PanelId } from "../types";
+  import { _ } from "svelte-i18n";
+  import { setLanguage, currentLanguage } from "../stores/languageStore";
 
   let installError = $state("");
 
+  /** Get the current focused panel's project reactively. */
+  let focusedPanel = $derived($panelLayout.focused as PanelId);
+  let focusedProject = $derived(focusedPanel === "left" ? $panelLayout.leftProject : $panelLayout.rightProject);
+
+  /** Undo operates on the focused panel's instance. */
+  function handleUndo() {
+    const inst = getPanelInstance(focusedPanel);
+    import("../stores/treeInstance").then(({ undoInstance }) => {
+      undoInstance(inst);
+    });
+  }
+
+  /** Check if undo is available for the focused panel. */
+  let focusedCanUndo = $derived.by(() => {
+    const inst = getPanelInstance(focusedPanel);
+    let val = false;
+    const unsub = inst.canUndo.subscribe(v => val = v);
+    unsub();
+    return val;
+  });
+
   function handleKeydown(event: KeyboardEvent) {
     const isUndo = (event.ctrlKey || event.metaKey) && event.key === "z";
-    if (isUndo && $canUndo) {
+    if (isUndo && focusedCanUndo) {
       event.preventDefault();
-      undo();
+      handleUndo();
     }
   }
 
   function handleExport() {
+    const inst = getPanelInstance(focusedPanel);
     openModal(ConfirmModal, {
-      title: "Exportar proyecto",
-      message:
-        "⚠️ El archivo exportado contiene los datos SIN ENCRIPTAR.\n" +
-        "Cualquiera que lo abra podrá leer su contenido.\n\n" +
-        "A continuación elegirá dónde guardarlo.",
-      confirmLabel: "Exportar",
+      title: $_("sidebar.exportTitle"),
+      message: $_("sidebar.exportWarning"),
+      confirmLabel: $_("sidebar.exportConfirm"),
       danger: true,
       onConfirm: () => {
-        // Deferred: onConfirm resuelve → confirmAction llama closeModal,
-        // y recién después se abre el diálogo nativo sin el modal encima.
-        setTimeout(() => exportTree(get(tree)), 0);
+        setTimeout(() => exportTree(get(inst.tree)), 0);
       },
     });
   }
 
   async function handleImport() {
     const imported = await importTree();
-
     if (!imported) return;
-
     importTreeCommand(imported);
   }
 
   function changeProject(event: Event) {
-    switchProject((event.target as HTMLSelectElement).value);
+    const name = (event.target as HTMLSelectElement).value;
+    switchPanelProject(focusedPanel, name);
   }
 
   function toggleTagFilter(tagId: string) {
@@ -73,7 +94,7 @@
 
 <div class="sidebar">
   <div class="scrollable-content">
-    <button on:click={() => panelLayout.setFocusedView("tree")}> 🌳 Árbol </button>
+    <button on:click={() => panelLayout.setFocusedView("tree")}> {$_("sidebar.view.tree")} </button>
 
     {#if $isTreeVisible}
       <button
@@ -81,12 +102,12 @@
         class:active={$favoritesFilter}
         on:click={() => favoritesFilter.update(v => !v)}
       >
-        {$favoritesFilter ? "⭐ Ocultar filtro" : "⭐ Solo favoritos"}
+        {$favoritesFilter ? $_("sidebar.filter.hideFavorites") : $_("sidebar.filter.favoritesOnly")}
       </button>
 
       {#if $tagDefs.length > 0}
         <div class="tag-filter-section">
-          <span class="tag-filter-label">🏷️ Etiquetas</span>
+          <span class="tag-filter-label">{$_("sidebar.tags")}</span>
           {#each $tagDefs as tag (tag.id)}
             <button
               class="filter-btn tag-toggle"
@@ -101,18 +122,18 @@
       {/if}
 
       <button class="filter-btn tag-admin-btn" on:click={() => openModal(TagManagerModal)}>
-        🏷️ Administrar tags
+        {$_("sidebar.tags.manage")}
       </button>
     {/if}
 
-    <button on:click={() => panelLayout.setFocusedView("dashboard")}> 📊 Resumen </button>
+    <button on:click={() => panelLayout.setFocusedView("dashboard")}> {$_("sidebar.view.dashboard")} </button>
 
-    <button on:click={() => panelLayout.setFocusedView("calendar")}> 📅 Calendario </button>
+    <button on:click={() => panelLayout.setFocusedView("calendar")}> {$_("sidebar.view.calendar")} </button>
 
-    <button on:click={() => panelLayout.setFocusedView("progress")}> 📈 Gráficos </button>
+    <button on:click={() => panelLayout.setFocusedView("progress")}> {$_("sidebar.view.progress")} </button>
 
     <hr />
-    <select value={$activeProject} on:change={changeProject}>
+    <select value={focusedProject ?? ''} on:change={changeProject}>
       {#each $projects as project}
         <option value={project}>
           {project}
@@ -121,29 +142,29 @@
     </select>
 
     <button on:click={() => openModal(NewProjectModal)}>
-      ➕ Nuevo proyecto
+      {$_("sidebar.project.new")}
     </button>
 
-    <button on:click={() => openModal(RenameProjectModal)}> ✏️ Renombrar </button>
+    <button on:click={() => openModal(RenameProjectModal)}> {$_("sidebar.project.rename")} </button>
 
     <button
       on:click={() =>
         openModal(ConfirmModal, {
-          title: "Eliminar proyecto",
-          message: `¿Eliminar "${$activeProject}"?`,
+          title: $_("sidebar.project.deleteTitle"),
+          message: $_("sidebar.project.deleteConfirm", { values: { name: focusedProject ?? "" } }),
           onConfirm: deleteProject,
         })}
     >
-      🗑️ Eliminar
+      {$_("sidebar.project.delete")}
     </button>
 
     <hr />
 
-    <button on:click={handleImport}> ⬆️ Importar </button>
+    <button on:click={handleImport}> {$_("sidebar.import")} </button>
 
-    <button on:click={handleExport}> ⬇️ Exportar </button>
+    <button on:click={handleExport}> {$_("sidebar.export")} </button>
 
-    <button on:click={undo} disabled={!$canUndo}> ⏪ Undo </button>
+    <button on:click={handleUndo} disabled={!focusedCanUndo}> {$_("sidebar.undo")} </button>
   </div>
 
   <div class="bottom-section">
@@ -160,37 +181,42 @@
             await relaunch();
           } catch (e) {
             console.error("Update failed:", e);
-            installError = "Error al actualizar";
+            installError = $_("sidebar.update.error");
           }
         }}
       >
-        {installError ? "❌ Error al actualizar" : `⬇️ Actualizar a v${$pendingUpdate.version}`}
+        {installError ? $_("sidebar.update.installError") : $_("sidebar.update.install", { values: { version: $pendingUpdate.version } })}
       </button>
       {#if installError}
         <button class="update-btn" on:click={() => { installError = ""; checkForUpdates(); }}>
-          🔄 Reintentar
+          {$_("sidebar.update.retry")}
         </button>
       {/if}
     {:else if $checkingUpdate}
-      <button class="update-btn" disabled> 🔄 Buscando actualizaciones… </button>
+      <button class="update-btn" disabled> {$_("sidebar.update.checking")} </button>
     {:else if $upToDate}
       <button class="update-btn up-to-date" disabled>
-        ✨ Última versión — la crème de la crème
+        {$_("sidebar.update.upToDate")}
       </button>
     {:else if $updateError}
       <button class="update-btn update-error" disabled>
         ❌ {$updateError}
       </button>
       <button class="update-btn" on:click={checkForUpdates}>
-        🔄 Reintentar
+        {$_("sidebar.update.retry")}
       </button>
     {:else}
       <button class="update-btn" on:click={checkForUpdates}>
-        🔍 Buscar actualizaciones
+        {$_("sidebar.update.search")}
       </button>
     {/if}
 
-    <button on:click={() => session.logout()}> 🔒 Bloquear </button>
+    <select class="lang-select" value={$currentLanguage} on:change={(e) => setLanguage((e.target as HTMLSelectElement).value)}>
+      <option value="es">🇪🇸 ES</option>
+      <option value="en">🇺🇸 EN</option>
+    </select>
+
+    <button on:click={() => session.logout()}> {$_("sidebar.lock")} </button>
 
     <span class="sidebar-version">v{__APP_VERSION__}</span>
   </div>
@@ -336,5 +362,17 @@
     color: #ef4444 !important;
     cursor: default !important;
     font-size: 12px;
+  }
+
+  .lang-select {
+    width: 100%;
+    box-sizing: border-box;
+    background: #1f2329;
+    color: #e5e7eb;
+    border: 1px solid #30363d;
+    border-radius: 8px;
+    padding: 8px 10px;
+    cursor: pointer;
+    font-size: 13px;
   }
 </style>

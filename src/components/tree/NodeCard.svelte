@@ -1,12 +1,19 @@
 <script lang="ts">
+  import { getContext } from "svelte";
   import { getNodeType } from "../../utils/treeUtils";
-  import { draggedNodeId, focusedNodeId } from "../../stores/treeStore";
+  import { getPanelInstance } from "../../stores/panelRegistry";
+  import type { PanelId } from "../../types";
   import { tagDefs } from "../../stores/tagStore";
   import TagCapsules from "./TagCapsules.svelte";
   import TagPopover from "./TagPopover.svelte";
   import CommentPopover from "./CommentPopover.svelte";
   import NodeTitleControls from "./NodeTitleControls.svelte";
   import NodeDetailsPanel from "./NodeDetailsPanel.svelte";
+
+  const panelId: PanelId = getContext("panelId") ?? "left";
+  const instance = getPanelInstance(panelId);
+  const draggedNodeId = instance.draggedNodeId;
+  const focusedNodeId = instance.focusedNodeId;
 
   let {
     node,

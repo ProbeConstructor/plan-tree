@@ -1,5 +1,4 @@
-import { get } from "svelte/store";
-import { draggedNodeId } from "../../stores/treeStore";
+import { get, type Writable } from "svelte/store";
 import type { TreeNode } from "../../types";
 import { moveNodeCommand } from "../../commands/treeCommands";
 
@@ -7,8 +6,10 @@ export function useDrag(
   node: TreeNode,
   {
     setDragOver,
+    draggedNodeId,
   }: {
     setDragOver: (value: boolean) => void;
+    draggedNodeId: Writable<string | null>;
   },
 ) {
   function handleDragStart(event: DragEvent) {

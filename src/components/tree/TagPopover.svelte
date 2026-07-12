@@ -1,10 +1,16 @@
 <script lang="ts">
+  import { getContext } from "svelte";
   import { onMount } from "svelte";
   import { get } from "svelte/store";
-  import type { TagDefinition } from "../../types";
+  import type { TagDefinition, PanelId } from "../../types";
   import { tagDefs, addTagDef, getNextColor, checkAutoCleanup } from "../../stores/tagStore";
-  import { tree } from "../../stores/treeStore";
+  import { getPanelInstance } from "../../stores/panelRegistry";
   import { assignTag, removeTag } from "../../commands/treeCommands";
+  import { _ } from "svelte-i18n";
+
+  const panelId: PanelId = getContext("panelId") ?? "left";
+  const instance = getPanelInstance(panelId);
+  const tree = instance.tree;
 
   let {
     nodeTags,
@@ -92,7 +98,7 @@
 
 <div class="popover" bind:this={popoverEl} role="dialog" tabindex="-1">
   <div class="popover-header">
-    <span class="label">Etiquetas</span>
+    <span class="label">{$_("tagPopover.label")}</span>
     <button class="close-btn" onclick={onClose}>✕</button>
   </div>
 
@@ -101,7 +107,7 @@
       bind:this={inputEl}
       bind:value={query}
       onkeydown={handleKeydown}
-      placeholder="Buscar o crear tag..."
+      placeholder={$_("tagPopover.placeholder")}
       class="tag-input"
     />
   </div>

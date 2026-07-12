@@ -1,6 +1,8 @@
 <script lang="ts">
-  import { tree } from "../stores/treeStore";
-  import { completions, toggle as toggleCompletion } from "../stores/completionStore";
+  import { getContext } from "svelte";
+  import type { PanelId } from "../types";
+  import { getPanelInstance } from "../stores/panelRegistry";
+  import { toggle as toggleCompletionBase } from "../stores/completionStore";
   import { openModal } from "../stores/modalStore";
   import {
     getMonthGrid,
@@ -15,6 +17,16 @@
   import type { TreeNode, VirtualInstance } from "../types";
   import { isValidIconDataUri } from "../utils/validation";
   import NodeDetailModal from "../modals/NodeDetailModal.svelte";
+  import { _ } from "svelte-i18n";
+
+  const panelId: PanelId = getContext("panelId") ?? "left";
+  const instance = getPanelInstance(panelId);
+  const tree = instance.tree;
+  const completions = instance.completions;
+
+  function toggleCompletion(nodeId: string, date: string) {
+    toggleCompletionBase(nodeId, date, panelId);
+  }
 
   const MAX_VISIBLE = 3;
 
@@ -99,7 +111,7 @@
     <button class="nav-btn" onclick={prevMonth}>◀</button>
     <h2 class="month-title">{monthYear}</h2>
     <button class="nav-btn" onclick={nextMonth}>▶</button>
-    <button class="today-btn" onclick={goToToday}>Hoy</button>
+    <button class="today-btn" onclick={goToToday}>{$_("calendar.today")}</button>
   </div>
 
   <!-- Week day headers -->
@@ -144,7 +156,7 @@
                   ></span>
                   <span class="node-title">{(entry as any).title}</span>
                   {#if eStatus === "missed"}
-                    <span class="missed-label">omitida</span>
+                    <span class="missed-label">{$_("calendar.missed")}</span>
                   {/if}
                 </button>
               {/each}
@@ -153,7 +165,7 @@
                   class="overflow-btn"
                   onclick={() => toggleExpand(dateKey)}
                 >
-                  +{overflow} más
+                  +{$_("calendar.more", { values: { count: String(overflow) } })}
                 </button>
               {/if}
               {#if expandedCells.has(dateKey)}
@@ -161,7 +173,7 @@
                   class="overflow-btn"
                   onclick={() => toggleExpand(dateKey)}
                 >
-                  Mostrar menos
+                  {$_("calendar.showLess")}
                 </button>
               {/if}
             </div>

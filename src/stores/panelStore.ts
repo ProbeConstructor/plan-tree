@@ -1,4 +1,5 @@
 import { writable, derived, get } from "svelte/store";
+import type { PanelId } from "../types";
 import { profileData } from "../services/profileDataStore";
 import { activeProfile } from "./profileStore";
 
@@ -9,6 +10,10 @@ export interface PanelLayout {
   rightView: View | null; // null = closed
   focused: "left" | "right";
   splitPosition: number; // 25–75
+
+  // Panel-scoped project bindings
+  leftProject: string | null;
+  rightProject: string | null;
 }
 
 function createPanelStore() {
@@ -17,6 +22,8 @@ function createPanelStore() {
     rightView: null,
     focused: "left",
     splitPosition: 50,
+    leftProject: null,
+    rightProject: null,
   });
 
   // ── Self-persisting panel layout ──────────────────────────
@@ -26,7 +33,13 @@ function createPanelStore() {
     if (!profile) return;
     if (saveTimer) clearTimeout(saveTimer);
     saveTimer = setTimeout(() => {
-      profileData.savePanelLayout(profile, value.rightView, value.splitPosition);
+      profileData.savePanelLayout(
+        profile,
+        value.rightView,
+        value.splitPosition,
+        value.leftProject,
+        value.rightProject,
+      );
     }, 500);
   });
 
@@ -44,10 +57,20 @@ function createPanelStore() {
       });
     },
 
+    /** Set the project for a specific panel. */
+    setPanelProject(panelId: PanelId, projectName: string | null) {
+      update((p) => {
+        if (panelId === "left") return { ...p, leftProject: projectName };
+        return { ...p, rightProject: projectName };
+      });
+    },
+
     openSplit() {
       update((p) => ({
         ...p,
         rightView: p.leftView,
+        // Right panel starts with no project — user selects it
+        rightProject: null,
       }));
     },
 
@@ -55,6 +78,7 @@ function createPanelStore() {
       update((p) => ({
         ...p,
         rightView: null,
+        rightProject: null,
         focused: "left",
       }));
     },
@@ -70,7 +94,7 @@ function createPanelStore() {
       }));
     },
 
-    /** Restore panel layout from disk for a given profile. Resets to defaults if none saved. */
+    /** Restore panel layout from disk for a given profile. */
     async loadFromProfile(profile: string): Promise<void> {
       const saved = await profileData.getPanelLayout(profile);
       if (saved) {
@@ -79,9 +103,18 @@ function createPanelStore() {
           rightView: saved.rightView as View | null,
           focused: "left" as const,
           splitPosition: saved.splitPosition ?? 50,
+          leftProject: saved.leftProject ?? null,
+          rightProject: saved.rightProject ?? null,
         });
       } else {
-        set({ leftView: "tree" as View, rightView: null, focused: "left" as const, splitPosition: 50 });
+        set({
+          leftView: "tree" as View,
+          rightView: null,
+          focused: "left" as const,
+          splitPosition: 50,
+          leftProject: null,
+          rightProject: null,
+        });
       }
     },
   };

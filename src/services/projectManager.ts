@@ -59,6 +59,7 @@ export async function createProject(
 ): Promise<void> {
   validateSafeName(name, "Proyecto");
   await ensureMigrated();
+  await IO.backupBeforeWrite(name);
   const encrypted = await encryptProject(data);
   await IO.writeFile(name, encrypted);
 }
@@ -67,6 +68,7 @@ export async function saveProject(
   name: string,
   data: ProjectData,
 ): Promise<void> {
+  await IO.backupBeforeWrite(name);
   const encrypted = await encryptProject(data);
   await IO.writeFile(name, encrypted);
 }
@@ -75,9 +77,22 @@ export async function loadProject(
   name: string,
 ): Promise<ProjectData | null> {
   await ensureMigrated();
+
+  // Try main file first
   const encrypted = await IO.readFile(name);
-  if (!encrypted) return null;
-  return decryptProject(encrypted);
+  if (encrypted) {
+    const data = await decryptProject(encrypted);
+    if (data) return data;
+  }
+
+  // Fallback: try backup file
+  const backup = await IO.readBackup(name);
+  if (backup) {
+    const data = await decryptProject(backup);
+    if (data) return data;
+  }
+
+  return null;
 }
 
 export async function listProjects(): Promise<string[]> {

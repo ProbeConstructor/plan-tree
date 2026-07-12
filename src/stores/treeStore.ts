@@ -1,77 +1,75 @@
 import { writable, get } from "svelte/store";
-import type { TreeNode, CompletionsMap } from "../types";
-import { calculateProgressMap } from "../utils/treeUtils";
-import { completions } from "./completionStore";
+import type { PanelId } from "../types";
+import {
+  getPanelInstance,
+  snapshotInstance,
+  undoInstance,
+  resetInstance,
+  recalcInstanceProgress,
+} from "./panelRegistry";
 
-export const focusedNodeId = writable<string | null>(null);
-export const tree = writable(defaultTree());
-export const draggedNodeId = writable<string | null>(null);
-export const canUndo = writable(false);
-export const progressMap = writable(new Map<string, number>());
-export const favoritesFilter = writable(false);
+// ── Default tree (used by factory and reset) ─────────────────
 
-/** Recalculate progress map from current tree. Call after progress-affecting mutations. */
-export function recalcProgress(): void {
-  progressMap.set(calculateProgressMap(get(tree)));
-}
-
-/** Lazily recalculate once at init */
-recalcProgress();
-
-interface HistoryEntry {
-  tree: TreeNode;
-  completions: CompletionsMap;
-}
-
-let history: HistoryEntry[] = [];
-const MAX_HISTORY = 50;
-
-progressMap.set(calculateProgressMap(get(tree)));
-
-export function defaultTree(): TreeNode {
+export function defaultTree() {
   return {
     id: "root",
     title: "Objetivo principal",
     expanded: true,
-    status: "todo",
-    priority: "medium",
+    status: "todo" as const,
+    priority: "medium" as const,
     startDate: new Date().toISOString().slice(0, 10),
     children: [],
   };
 }
 
-export function snapshot(): void {
-  history.push({
-    tree: structuredClone(get(tree)),
-    completions: structuredClone(get(completions)),
-  });
-  if (history.length > MAX_HISTORY) {
-    history.shift();
-  }
-  canUndo.set(true);
+// ── Backward-compatible singleton aliases ─────────────────────
+// These point to the "left" panel instance so all existing
+// imports continue to work unchanged during migration.
+
+function left() {
+  return getPanelInstance("left");
 }
 
-export function undo(): void {
-  const previous = history.pop();
-  if (previous) {
-    tree.set(previous.tree);
-    completions.set(previous.completions);
-  }
-  canUndo.set(history.length > 0);
-  recalcProgress();
+export const tree = left().tree;
+export const completions = left().completions;
+export const focusedNodeId = left().focusedNodeId;
+export const draggedNodeId = left().draggedNodeId;
+export const canUndo = left().canUndo;
+export const progressMap = left().progressMap;
+
+// Panel-independent store (not part of TreeInstance)
+export const favoritesFilter = writable(false);
+
+// ── Panel-scoped operations ──────────────────────────────────
+
+/** Snapshot the focused panel's tree (for undo). */
+export function snapshot(panelId: PanelId = "left"): void {
+  snapshotInstance(getPanelInstance(panelId));
 }
 
-export function mutateTree(callback: (tree: TreeNode) => TreeNode) {
-  tree.update(callback);
+/** Undo the focused panel's tree. */
+export function undo(panelId: PanelId = "left"): void {
+  undoInstance(getPanelInstance(panelId));
 }
 
-export function resetTree(): void {
-  tree.set(defaultTree());
-  completions.set({});
-  history = [];
-  canUndo.set(false);
-  focusedNodeId.set(null);
-  draggedNodeId.set(null);
-  recalcProgress();
+/** Mutate the tree of a specific panel. */
+export function mutateTree(
+  callback: (tree: any) => any,
+  panelId: PanelId = "left",
+): void {
+  const inst = getPanelInstance(panelId);
+  inst.tree.update(callback);
 }
 
+/** Reset a panel's tree to default. */
+export function resetTree(panelId: PanelId = "left"): void {
+  resetInstance(getPanelInstance(panelId));
+}
+
+/** Recalculate progress for a specific panel. */
+export function recalcProgress(panelId: PanelId = "left"): void {
+  recalcInstanceProgress(getPanelInstance(panelId));
+}
+
+// ── Initial progress calc ────────────────────────────────────
+recalcProgress("left");

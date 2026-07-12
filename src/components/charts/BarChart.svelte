@@ -9,6 +9,7 @@
     Tooltip,
     Legend,
   } from "chart.js";
+  import { _ } from "svelte-i18n";
 
   Chart.register(
     BarController,
@@ -27,7 +28,7 @@
     weekLabels: string[];
   }
 
-  let { data = [] as number[], labels = [] as string[], weekIndices = [] as number[], weekLabels = [] as string[], title = "Completados por día" }: {
+  let { data = [] as number[], labels = [] as string[], weekIndices = [] as number[], weekLabels = [] as string[], title = "" }: {
     data?: number[];
     labels?: string[];
     weekIndices?: number[];
@@ -107,7 +108,7 @@
         labels,
         datasets: [
           {
-            label: "Completados",
+            label: $_("chart.completedLabel"),
             data,
             backgroundColor: "#4caf50",
             borderRadius: 2,
@@ -154,9 +155,9 @@
 
 <div class="chart-container" class:empty={data.length === 0 || data.every((v) => v === 0)}>
   {#if data.length === 0}
-    <div class="empty-chart"><p>Sin datos para mostrar</p></div>
+    <div class="empty-chart"><p>{$_("chart.noData")}</p></div>
   {:else if data.every((v) => v === 0)}
-    <div class="empty-chart"><p>Sin completados este mes</p></div>
+    <div class="empty-chart"><p>{$_("chart.noCompleted")}</p></div>
   {/if}
   <div class="chart-wrapper" class:hidden={data.length === 0 || data.every((v) => v === 0)}>
     <canvas bind:this={canvas}></canvas>

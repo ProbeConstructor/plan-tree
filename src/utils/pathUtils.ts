@@ -1,4 +1,5 @@
 import { get } from "svelte/store";
+import { t } from "svelte-i18n";
 import { activeProfile } from "../stores/profileStore";
 
 /**
@@ -12,7 +13,7 @@ export function profileDir(name: string): string {
 export function activeProfileDir(): string {
   const name = get(activeProfile);
   if (!name) {
-    throw new Error("No hay perfil activo todavía.");
+    throw new Error(get(t)("validation.noActiveProfile"));
   }
   return profileDir(name);
 }

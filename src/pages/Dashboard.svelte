@@ -1,11 +1,17 @@
 <script lang="ts">
-
-import { tree } from "../stores/treeStore";
-import { completions } from "../stores/completionStore";
+import { getContext } from "svelte";
+import type { PanelId } from "../types";
+import { getPanelInstance } from "../stores/panelRegistry";
 import { panelLayout } from "../stores/panelStore";
 import type { VirtualInstance } from "../types";
 import { tagDefs } from "../stores/tagStore";
 import { countNodesWithTag } from "../stores/tagStore";
+import { _ } from "svelte-i18n";
+
+const panelId: PanelId = getContext("panelId") ?? "left";
+const instance = getPanelInstance(panelId);
+const tree = instance.tree;
+const completions = instance.completions;
 
 function isVirtualEntry(entry: unknown): entry is VirtualInstance {
     return typeof entry === "object" && entry !== null && "isVirtual" in entry;
@@ -24,16 +30,15 @@ import {
     collectFavorites
 } from "../utils/treeUtils";
 
-$: globalProgress = calculateGlobalProgress($tree);
-$: branches = getDirectBranches($tree);
-$: priorityBreakdown = getPriorityBreakdown($tree);
-$: progress = calculateGlobalProgress($tree);
-$: today = getTodayNodes($tree, $completions);
-$: priorities = getPriorityBreakdown($tree);
-$: favorites = collectFavorites($tree).slice(0, 10);
+let globalProgress = $derived(calculateGlobalProgress($tree));
+let branches = $derived(getDirectBranches($tree));
+let priorityBreakdown = $derived(getPriorityBreakdown($tree));
+let today = $derived(getTodayNodes($tree, $completions));
+let favorites = $derived(collectFavorites($tree).slice(0, 10));
 
-$: ({ overdue, upcoming } =
-    getOverdueAndUpcoming($tree, 5, $completions));
+let overdueResult = $derived(getOverdueAndUpcoming($tree, 5, $completions));
+let overdue = $derived(overdueResult.overdue);
+let upcoming = $derived(overdueResult.upcoming);
 
 function focusAndScroll(id:string){
     const nodeId = id.includes("::") ? id.split("::")[0] : id;
@@ -54,7 +59,7 @@ function focusAndScroll(id:string){
 <section class="summary">
 
   <div class="summary-block">
-    <h2>📊 Progreso global · {globalProgress}%</h2>
+    <h2>{$_("dashboard.globalProgress", { values: { pct: String(globalProgress) } })}</h2>
 
     <div class="global-bar">
       <div
@@ -83,11 +88,11 @@ function focusAndScroll(id:string){
   </div>
 
   <div class="summary-block">
-    <h2>🎯 Para hoy</h2>
+    <h2>{$_("dashboard.forToday")}</h2>
 
     {#if today.length === 0}
       <p class="empty">
-        Nada urgente todavía 🙌
+        {$_("dashboard.noUrgent")}
       </p>
     {:else}
       <ul>
@@ -114,11 +119,11 @@ function focusAndScroll(id:string){
   </div>
 
   <div class="summary-block">
-    <h2>⭐ Favoritos</h2>
+    <h2>{$_("dashboard.favorites")}</h2>
 
     {#if favorites.length === 0}
       <p class="empty">
-        Sin favoritos todavía — marcá nodos con la estrella ☆
+        {$_("dashboard.noFavorites")}
       </p>
     {:else}
       <ul>
@@ -139,11 +144,11 @@ function focusAndScroll(id:string){
   </div>
 
   <div class="summary-block">
-    <h2>🏷️ Etiquetas</h2>
+    <h2>{$_("dashboard.tags")}</h2>
 
     {#if $tagDefs.length === 0}
       <p class="empty">
-        Sin etiquetas todavía — crealas desde un nodo
+        {$_("dashboard.noTags")}
       </p>
     {:else}
       <ul class="tag-count-list">
@@ -160,7 +165,7 @@ function focusAndScroll(id:string){
   </div>
 
   <div class="summary-block">
-    <h2>🔥 Por prioridad</h2>
+    <h2>{$_("dashboard.byPriority")}</h2>
     <ul class="priority-list">
       {#each Object.entries(priorityBreakdown) as [key, val]}
         <li>
@@ -168,16 +173,16 @@ function focusAndScroll(id:string){
           {key}
           ·
           {val.done}/{val.total}
-          completados
+          {$_("dashboard.completed")}
         </li>
       {/each}
     </ul>
   </div>
   <div class="summary-block">
-    <h2>⏰ Atrasados / por vencer</h2>
+    <h2>{$_("dashboard.overdueUpcoming")}</h2>
     {#if overdue.length===0 && upcoming.length===0}
       <p class="empty">
-        Todo al día 🙌
+        {$_("dashboard.allUpToDate")}
       </p>
     {:else}
       <ul>
@@ -195,7 +200,7 @@ function focusAndScroll(id:string){
                 🔴
                 {(entry as any).title}
                 ·
-                {daysOverdue((entry as any).dueDate)}d atrasado
+                {$_("dashboard.daysOverdue", { values: { days: String(daysOverdue((entry as any).dueDate)) } })}
               {/if}
             </button>
           </li>
@@ -213,7 +218,7 @@ function focusAndScroll(id:string){
               {:else}
                 🟡
                 {(entry as any).title}
-                · vence {(entry as any).dueDate}
+                · {$_("dashboard.dueOn", { values: { date: (entry as any).dueDate } })}
               {/if}
             </button>
           </li>

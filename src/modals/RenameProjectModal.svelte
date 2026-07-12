@@ -3,8 +3,9 @@ import Modal from "../components/Modal.svelte";
 import { closeModal } from "../stores/modalStore";
 import { activeProject } from "../stores/workspaceStore";
 import { renameProject } from "../services/workspaceManager";
-import { SAFE_NAME_REGEX, SAFE_NAME_PATTERN } from "../utils/validation";
+import { SAFE_NAME_REGEX, getSafeNamePattern } from "../utils/validation";
 import { get } from "svelte/store";
+import { _ } from "svelte-i18n";
 
 let name = get(activeProject);
 let error = "";
@@ -13,11 +14,11 @@ async function rename() {
     error = "";
     const trimmed = name.trim();
     if (!trimmed) {
-        error = "El nombre no puede estar vacío.";
+        error = $_("validation.nameEmpty", { values: { label: $_("modal.rename.title") } });
         return;
     }
     if (!SAFE_NAME_REGEX.test(trimmed)) {
-        error = `Nombre inválido: ${SAFE_NAME_PATTERN}.`;
+        error = $_("validation.nameInvalid", { values: { label: $_("modal.rename.title"), pattern: getSafeNamePattern() } });
         return;
     }
 
@@ -34,7 +35,7 @@ function focus(node: HTMLInputElement) {
 }
 </script>
 
-<Modal title="Renombrar proyecto">
+<Modal title={$_("modal.rename.title")}>
 
 <input
     bind:value={name}
@@ -49,11 +50,11 @@ function focus(node: HTMLInputElement) {
 
 <div class="buttons">
     <button on:click={closeModal}>
-        Cancelar
+        {$_("modal.confirm.cancel")}
     </button>
 
     <button on:click={rename}>
-        Guardar
+        {$_("modal.rename.save")}
     </button>
 </div>
 

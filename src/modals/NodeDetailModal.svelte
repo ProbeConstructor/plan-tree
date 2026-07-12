@@ -1,4 +1,7 @@
 <script module lang="ts">
+  import { get } from "svelte/store";
+  import { t } from "svelte-i18n";
+
   /**
    * Validates that startDate is not after dueDate.
    * Returns an error message if invalid, null if valid.
@@ -8,7 +11,7 @@
     dueDate: string,
   ): string | null {
     if (startDate && dueDate && startDate > dueDate) {
-      return "La fecha de inicio debe ser anterior o igual a la fecha de vencimiento.";
+      return get(t)("modal.nodeDetail.dateError");
     }
     return null;
   }
@@ -22,6 +25,7 @@
   import Modal from "../components/Modal.svelte";
   import EasyMDE from "easymde";
   import "easymde/dist/easymde.min.css";
+  import { _ } from "svelte-i18n";
 
   let { nodeId }: { nodeId: string } = $props();
 
@@ -128,56 +132,56 @@
   }
 </script>
 
-<Modal title={node?.title ?? "Editar nodo"}>
+<Modal title={node?.title ?? $_("modal.nodeDetail.title")}>
   {#if !node}
-    <p class="text-muted">El nodo ya no existe.</p>
+    <p class="text-muted">{$_("modal.nodeDetail.noNode")}</p>
     <div class="buttons">
-      <button class="btn" onclick={closeModal}>Cerrar</button>
+      <button class="btn" onclick={closeModal}>{$_("modal.nodeDetail.close")}</button>
     </div>
   {:else}
     <div class="modal-content">
       <!-- Title (read only) -->
       <div class="field">
-        <span class="field-label">Título</span>
+        <span class="field-label">{$_("modal.nodeDetail.title")}</span>
         <span class="readonly-title">{node.title}</span>
       </div>
 
       <!-- startDate -->
       <div class="field">
-        <label for="nd-start">Fecha de inicio</label>
+        <label for="nd-start">{$_("modal.nodeDetail.startDate")}</label>
         <input id="nd-start" type="date" bind:value={startDate} />
       </div>
 
       <!-- dueDate -->
       <div class="field">
-        <label for="nd-due">Fecha de vencimiento</label>
+        <label for="nd-due">{$_("modal.nodeDetail.dueDate")}</label>
         <input id="nd-due" type="date" bind:value={dueDate} />
       </div>
 
       <!-- Status -->
       <div class="field">
-        <label for="nd-status">Estado</label>
+        <label for="nd-status">{$_("modal.nodeDetail.status")}</label>
         <select id="nd-status" bind:value={status}>
-          <option value="todo">Por hacer</option>
-          <option value="doing">En progreso</option>
-          <option value="done">Completado</option>
+          <option value="todo">{$_("modal.nodeDetail.status.todo")}</option>
+          <option value="doing">{$_("modal.nodeDetail.status.doing")}</option>
+          <option value="done">{$_("modal.nodeDetail.status.done")}</option>
         </select>
       </div>
 
       <!-- Priority -->
       <div class="field">
-        <label for="nd-priority">Prioridad</label>
+        <label for="nd-priority">{$_("modal.nodeDetail.priority")}</label>
         <select id="nd-priority" bind:value={priority}>
-          <option value="low">Baja</option>
-          <option value="medium">Media</option>
-          <option value="high">Alta</option>
-          <option value="critical">Crítica</option>
+          <option value="low">{$_("modal.nodeDetail.priority.low")}</option>
+          <option value="medium">{$_("modal.nodeDetail.priority.medium")}</option>
+          <option value="high">{$_("modal.nodeDetail.priority.high")}</option>
+          <option value="critical">{$_("modal.nodeDetail.priority.critical")}</option>
         </select>
       </div>
 
       <!-- Comments (Markdown) — flex-grows -->
       <div class="field comments-field">
-        <label for="nd-comments">Comentarios</label>
+        <label for="nd-comments">{$_("modal.nodeDetail.comments")}</label>
         <textarea id="nd-comments" bind:this={textarea} class="mde-textarea"></textarea>
       </div>
 
@@ -186,8 +190,8 @@
       {/if}
 
       <div class="buttons">
-        <button class="btn" onclick={closeModal}>Cancelar</button>
-        <button class="btn primary" onclick={save}>Guardar</button>
+        <button class="btn" onclick={closeModal}>{$_("modal.nodeDetail.cancel")}</button>
+        <button class="btn primary" onclick={save}>{$_("modal.nodeDetail.save")}</button>
       </div>
     </div>
   {/if}

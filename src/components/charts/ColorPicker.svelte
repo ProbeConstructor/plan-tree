@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { _ } from "svelte-i18n";
+
   const PALETTE = [
     "#4caf50",
     "#2196f3",
@@ -42,7 +44,7 @@
     ></button>
   {/each}
 
-  <button class="custom-btn" onclick={openCustom} title="Personalizar color">
+  <button class="custom-btn" onclick={openCustom} title={$_("colorPicker.customize")}>
     🎨
   </button>
   <input

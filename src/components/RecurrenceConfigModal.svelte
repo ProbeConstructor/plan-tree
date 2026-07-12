@@ -4,6 +4,7 @@
   import { tree } from "../stores/treeStore";
   import { setRecurrence, clearRecurrence as clearRecurrenceCommand } from "../commands/treeCommands";
   import type { RecurrenceRule, RecurrenceType } from "../types";
+  import { _ } from "svelte-i18n";
 
   let { nodeId }: { nodeId: string } = $props();
 
@@ -14,8 +15,17 @@
   let daysOfWeek = $state<number[]>([]);
   let endDate = $state("");
 
-  // Day labels: 0=Mon..6=Sun
-  const DAY_LABELS = ["lun", "mar", "mié", "jue", "vie", "sáb", "dom"];
+  // Day labels via i18n: 0=Mon..6=Sun
+  const DAY_KEYS = [
+    "calendar.days.monday",
+    "calendar.days.tuesday",
+    "calendar.days.wednesday",
+    "calendar.days.thursday",
+    "calendar.days.friday",
+    "calendar.days.saturday",
+    "calendar.days.sunday",
+  ];
+  let dayLabels = $derived(DAY_KEYS.map(k => $_(k)));
 
   // Initialize form from existing node recurrence
   $effect(() => {
@@ -70,24 +80,24 @@
   }
 </script>
 
-<Modal title="Configurar repetición">
+<Modal title={$_("modal.recurrence.title")}>
   <div class="form">
     <label class="toggle-row">
       <input type="checkbox" bind:checked={enabled} />
-      <span>Activar repetición</span>
+      <span>{$_("modal.recurrence.enable")}</span>
     </label>
 
     {#if enabled}
       <label class="field">
-        <span>Tipo</span>
+        <span>{$_("modal.recurrence.type")}</span>
         <select bind:value={recType}>
-          <option value="daily">Diaria</option>
-          <option value="weekly">Semanal</option>
+          <option value="daily">{$_("modal.recurrence.daily")}</option>
+          <option value="weekly">{$_("modal.recurrence.weekly")}</option>
         </select>
       </label>
 
       <label class="field">
-        <span>Cada</span>
+        <span>{$_("modal.recurrence.every")}</span>
         <div class="interval-row">
           <input
             type="number"
@@ -95,15 +105,15 @@
             max="365"
             bind:value={interval}
           />
-          <span>{recType === "daily" ? "día(s)" : "semana(s)"}</span>
+          <span>{recType === "daily" ? $_("modal.recurrence.days") : $_("modal.recurrence.weeks")}</span>
         </div>
       </label>
 
       {#if recType === "weekly"}
         <div class="field">
-          <span>Días</span>
+          <span>{$_("modal.recurrence.daysOfWeek")}</span>
           <div class="day-grid">
-            {#each DAY_LABELS as label, i}
+            {#each dayLabels as label, i}
               <button
                 class="day-btn"
                 class:selected={daysOfWeek.includes(i)}
@@ -117,7 +127,7 @@
       {/if}
 
       <label class="field">
-        <span>Fin (opcional)</span>
+        <span>{$_("modal.recurrence.endDate")}</span>
         <input type="date" bind:value={endDate} />
       </label>
     {/if}
@@ -125,11 +135,11 @@
     <div class="buttons">
       {#if enabled}
         <button class="btn danger" onclick={clearRecurrence}>
-          Quitar repetición
+          {$_("modal.recurrence.remove")}
         </button>
       {/if}
       <button class="btn primary" onclick={save}>
-        Guardar
+        {$_("modal.recurrence.save")}
       </button>
     </div>
   </div>

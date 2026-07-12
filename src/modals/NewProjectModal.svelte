@@ -2,7 +2,8 @@
 import Modal from "../components/Modal.svelte"
 import { closeModal } from "../stores/modalStore";
 import { createProject } from "../services/workspaceManager";
-import { SAFE_NAME_REGEX, SAFE_NAME_PATTERN } from "../utils/validation";
+import { SAFE_NAME_REGEX, getSafeNamePattern } from "../utils/validation";
+import { _ } from "svelte-i18n";
 
 let name = "";
 let error = "";
@@ -11,11 +12,11 @@ async function create() {
   error = "";
   const trimmed = name.trim();
   if (!trimmed) {
-    error = "El nombre no puede estar vacío.";
+    error = $_("validation.nameEmpty", { values: { label: $_("modal.newProject.title") } });
     return;
   }
   if (!SAFE_NAME_REGEX.test(trimmed)) {
-    error = `Nombre inválido: ${SAFE_NAME_PATTERN}.`;
+    error = $_("validation.nameInvalid", { values: { label: $_("modal.newProject.title"), pattern: getSafeNamePattern() } });
     return;
   }
 
@@ -32,10 +33,10 @@ function focusOnMount(node: HTMLInputElement) {
 }
 </script>
 
-<Modal title="Nuevo proyecto">
+<Modal title={$_("modal.newProject.title")}>
   <input
     bind:value={name}
-    placeholder="Nombre del proyecto"
+    placeholder={$_("modal.newProject.placeholder")}
     maxlength="32"
     use:focusOnMount
     on:keydown={(e) => e.key === "Enter" && create()}
@@ -47,11 +48,11 @@ function focusOnMount(node: HTMLInputElement) {
 
   <div class="buttons">
     <button on:click={closeModal}>
-      Cancelar
+      {$_("modal.confirm.cancel")}
     </button>
 
     <button on:click={create}>
-      Crear
+      {$_("modal.newProject.create")}
     </button>
   </div>
 </Modal>

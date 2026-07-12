@@ -76,6 +76,9 @@ export interface RecurrenceRule {
 
 export type CompletionsMap = Record<string, Record<string, true>>;
 
+/** Identifies which panel a store instance belongs to. */
+export type PanelId = "left" | "right";
+
 export interface ProjectData {
   tree: TreeNode;
   completions: CompletionsMap;

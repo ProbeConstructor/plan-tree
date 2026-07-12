@@ -1,5 +1,6 @@
 <script lang="ts">
 import { hasRecoverySetup, generateRecoveryKey } from "../services/recoveryManager";
+import { t } from "svelte-i18n";
 
 let recoverySetupNeeded = false;
 let showRecoveryKey = "";
@@ -21,20 +22,18 @@ async function handleGenerateRecoveryKey() {
 {#if showRecoveryKey}
           <div class="recovery-banner success">
             <p>
-              ✅ Clave de recuperación generada. Guárdala en un lugar seguro
-              <strong>ahora mismo</strong> — no se puede volver a mostrar:
+              {$t('recovery.generated')}
             </p>
             <code class="recovery-key">{showRecoveryKey}</code>
-            <button on:click={() => (showRecoveryKey = "")}>Listo, ya la guardé</button>
+            <button on:click={() => (showRecoveryKey = "")}>{$t('recovery.saved')}</button>
           </div>
         {:else if recoverySetupNeeded}
           <div class="recovery-banner warning">
             <p>
-              ⚠️ Todavía no tienes una clave de recuperación. Si olvidas tu
-              contraseña, perderás el acceso a tus proyectos para siempre.
+              {$t('recovery.missing')}
             </p>
             <button on:click={handleGenerateRecoveryKey}>
-              🔑 Generar clave de recuperación
+              {$t('recovery.generate')}
             </button>
           </div>
         {/if}

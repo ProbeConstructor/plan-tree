@@ -2,6 +2,7 @@
   import type { Snippet } from "svelte";
   import { onMount } from "svelte";
   import { autoSave } from "../services/workspaceManager";
+  import { _ } from "svelte-i18n";
 
   let {
     children,
@@ -54,11 +55,11 @@
 {#if error}
   <div class="error-overlay">
     <div class="error-card">
-      <h1>Algo salió mal</h1>
+      <h1>{$_("errorBoundary.title")}</h1>
       <p class="error-message">{error.message}</p>
 
       <button class="toggle-details" onclick={() => (showDetails = !showDetails)}>
-        {showDetails ? "Ocultar detalles" : "Ver detalles"}
+        {showDetails ? $_("errorBoundary.hideDetails") : $_("errorBoundary.showDetails")}
       </button>
 
       {#if showDetails && error.stack}
@@ -66,8 +67,8 @@
       {/if}
 
       <div class="error-actions">
-        <button class="btn-recover" onclick={recover}>Reintentar</button>
-        <button class="btn-reset" onclick={hardReset}>Recargar app</button>
+        <button class="btn-recover" onclick={recover}>{$_("errorBoundary.retry")}</button>
+        <button class="btn-reset" onclick={hardReset}>{$_("errorBoundary.reload")}</button>
       </div>
     </div>
   </div>

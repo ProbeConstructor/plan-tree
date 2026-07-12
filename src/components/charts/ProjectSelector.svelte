@@ -1,5 +1,6 @@
 <script lang="ts">
   import ColorPicker from "./ColorPicker.svelte";
+  import { _ } from "svelte-i18n";
 
   interface ProjectOption {
     name: string;
@@ -54,15 +55,15 @@
 
 <div class="selector">
   <button class="trigger" onclick={() => (open = !open)} onblur={() => setTimeout(() => (open = false), 200)}>
-    <span>Proyectos ({selectedCount})</span>
+    <span>{$_("projectSelector.projects", { values: { count: String(selectedCount) } })}</span>
     <span class="arrow">{open ? "▲" : "▼"}</span>
   </button>
 
   {#if open}
     <div class="dropdown" role="listbox" aria-multiselectable="true">
       <div class="actions">
-        <button class="action-btn" onclick={selectAll}>Todo</button>
-        <button class="action-btn" onclick={deselectAll}>Ninguno</button>
+        <button class="action-btn" onclick={selectAll}>{$_("projectSelector.all")}</button>
+        <button class="action-btn" onclick={deselectAll}>{$_("projectSelector.none")}</button>
       </div>
 
       {#each projects as project (project.name)}
@@ -84,7 +85,7 @@
                 colorPickerFor = isColorOpen ? null : project.name;
               }}
               onkeydown={(e) => e.key === 'Enter' && (colorPickerFor = isColorOpen ? null : project.name)}
-              aria-label="Cambiar color de {project.name}"
+              aria-label={$_("projectSelector.changeColor", { values: { name: project.name } })}
             ></span>
             <span class="name">{project.name}</span>
           </label>

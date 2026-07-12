@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { _ } from "svelte-i18n";
+
   let { total = 0, done = 0, progress = 0 }: {
     total?: number;
     done?: number;
@@ -8,19 +10,19 @@
 
 <div class="stats-grid">
   <div class="stat-card">
-    <span class="stat-label">Total nodos</span>
+    <span class="stat-label">{$_("chart.totalNodes")}</span>
     <span class="stat-value">{total}</span>
   </div>
   <div class="stat-card">
-    <span class="stat-label">Completados</span>
+    <span class="stat-label">{$_("chart.completed")}</span>
     <span class="stat-value done">{done}</span>
   </div>
   <div class="stat-card">
-    <span class="stat-label">Pendientes</span>
+    <span class="stat-label">{$_("chart.pending")}</span>
     <span class="stat-value pending">{total - done}</span>
   </div>
   <div class="stat-card">
-    <span class="stat-label">Progreso</span>
+    <span class="stat-label">{$_("chart.progress")}</span>
     <span class="stat-value pct">{progress}%</span>
   </div>
 </div>

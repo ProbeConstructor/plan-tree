@@ -11,6 +11,7 @@
     Legend,
     Filler,
   } from "chart.js";
+  import { _ } from "svelte-i18n";
 
   Chart.register(
     LineController,
@@ -33,7 +34,7 @@
   let {
     datasets = [] as Dataset[],
     labels = [] as number[],
-    title = "Progreso diario",
+    title = "",
   }: {
     datasets?: Dataset[];
     labels?: number[];
@@ -136,7 +137,7 @@
 <div class="chart-container" class:empty={datasets.length === 0}>
   {#if datasets.length === 0}
     <div class="empty-chart">
-      <p>Seleccioná proyectos para ver</p>
+      <p>{$_("progress.selectProjects")}</p>
     </div>
   {/if}
   <div class="chart-wrapper" class:hidden={datasets.length === 0}>

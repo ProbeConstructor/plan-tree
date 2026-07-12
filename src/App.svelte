@@ -5,6 +5,7 @@
   //import { tree } from "./stores/treeStore";
   import LoginScreen from "./components/LoginScreen.svelte";
   import UserManager from "./components/UserManager.svelte";
+  import LanguageSelector from "./components/LanguageSelector.svelte";
   import { isAuthenticated, session } from "./services/sessionOrchestrator";
   import { activeProfile } from "./stores/profileStore";
   import Sidebar from "./components/Sidebar.svelte";
@@ -21,8 +22,15 @@
   import NodeSearch from "./components/tree/NodeSearch.svelte";
   import { openModal } from "./stores/modalStore";
   import { panelLayout } from "./stores/panelStore";
+  import { loadLanguage } from "./stores/languageStore";
+  import { profileData } from "./services/profileDataStore";
+  import { _ } from "svelte-i18n";
+
+  // Initialize svelte-i18n (side-effect import)
+  import "./i18n/index.js";
 
   let appReady = false;
+  let languageSelected = false;
   let workspaceInitialized = false;
   let showUserManager = false;
 
@@ -33,10 +41,15 @@
         await session.bootstrapProfile();
       } catch (err) {
         console.error("Error en bootstrap:", err);
-        // si el bootstrap falla, igual mostramos la UI para que el
-        // usuario pueda loguearse o reintentar. No quedarse colgado
-        // en "Cargando..." eternamente.
       }
+
+      // Load saved language (defaults to "es" for existing users)
+      await loadLanguage();
+
+      // Check if any profiles exist — if not, show language selector first
+      const hasProfiles = await profileData.hasProfiles();
+      languageSelected = hasProfiles;
+
       appReady = true;
 
       try {
@@ -99,6 +112,8 @@
   {#snippet children()}
     {#if !appReady}
       <p class="loading">Cargando...</p>
+    {:else if !languageSelected}
+      <LanguageSelector on:select={() => (languageSelected = true)} />
     {:else if !$isAuthenticated}
       {#if showUserManager}
         <UserManager onBack={() => (showUserManager = false)} />
@@ -110,17 +125,20 @@
         <Sidebar />
         <section class="content">
           <div class="topbar">
-            <span class="topbar-user">👤 {$activeProfile}</span>
+            <span class="topbar-user">👤 {$activeProfile} · {$panelLayout.leftProject ?? 'Sin proyecto'}</span>
             <div class="topbar-tabs">
               {#if $panelLayout.rightView !== null}
                 <div class="right-tab">
                   <span class="right-tab-label">
-                    {$panelLayout.rightView === "tree" ? "🌳 Árbol" : $panelLayout.rightView === "dashboard" ? "📊 Resumen" : $panelLayout.rightView === "calendar" ? "📅 Calendario" : "📈 Gráficos"}
+                    {#if $panelLayout.rightProject}
+                      {$panelLayout.rightProject} ·
+                    {/if}
+                    {$panelLayout.rightView === "tree" ? $_("sidebar.view.tree") : $panelLayout.rightView === "dashboard" ? $_("sidebar.view.dashboard") : $panelLayout.rightView === "calendar" ? $_("sidebar.view.calendar") : $_("sidebar.view.progress")}
                   </span>
                   <button
                     class="right-tab-close"
                     on:click={() => panelLayout.closeSplit()}
-                    title="Cerrar panel"
+                    title={$_("app.closePanel")}
                   >✕</button>
                 </div>
               {/if}

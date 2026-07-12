@@ -1,11 +1,16 @@
 <script lang="ts">
+  import { setContext } from "svelte";
   import type { View } from "../../stores/panelStore";
+  import type { PanelId } from "../../types";
   import TreeCanvas from "../tree/TreeCanvas.svelte";
   import Calendar from "../../pages/Calendar.svelte";
   import Progress from "../../pages/Progress.svelte";
   import Dashboard from "../../pages/Dashboard.svelte";
 
-  let { view }: { view: View } = $props();
+  let { view, panelId }: { view: View; panelId: PanelId } = $props();
+
+  // Inject panelId into Svelte context so children can access it
+  setContext("panelId", panelId);
 </script>
 
 {#if view === "tree"}

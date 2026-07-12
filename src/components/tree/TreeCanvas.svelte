@@ -1,6 +1,9 @@
 <script lang="ts">
+  import { getContext } from "svelte";
   import Node from "./Node.svelte";
-  import { tree, favoritesFilter } from "../../stores/treeStore";
+  import { favoritesFilter } from "../../stores/treeStore";
+  import { getPanelInstance } from "../../stores/panelRegistry";
+  import type { PanelId } from "../../types";
   import { buildVisibleTree } from "../../utils/buildVisibleTree";
   import { getFavoriteIds } from "../../utils/treeUtils";
   import { COLUMN_WIDTH, ROW_HEIGHT } from "../../constants/layout";
@@ -8,6 +11,10 @@
   import { tagFilter } from "../../stores/tagStore";
   import { writable } from "svelte/store";
   import type { NodeMeasurement } from "../../stores/nodeMeasurementsStore";
+
+  const panelId: PanelId = getContext("panelId") ?? "left";
+  const instance = getPanelInstance(panelId);
+  const tree = instance.tree;
 
   const nodeMeasurements = writable(new Map<string, NodeMeasurement>());
 

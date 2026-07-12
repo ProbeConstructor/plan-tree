@@ -1,13 +1,18 @@
-import { writable } from "svelte/store";
-import type { CompletionsMap } from "../types";
-import { snapshot } from "./treeStore";
+import type { PanelId } from "../types";
+import { getPanelInstance, snapshotInstance } from "./panelRegistry";
 
-export const completions = writable<CompletionsMap>({});
+// ── Backward-compatible alias (left panel) ───────────────────
+export const completions = getPanelInstance("left").completions;
 
-export function toggle(nodeId: string, date: string): void {
+// ── Panel-scoped toggle ──────────────────────────────────────
+
+export function toggle(nodeId: string, date: string, panelId: PanelId = "left"): void {
+  const instance = getPanelInstance(panelId);
+
   // Snapshot BEFORE mutation so undo restores the pre-toggle state
-  snapshot();
-  completions.update((map) => {
+  snapshotInstance(instance);
+
+  instance.completions.update((map) => {
     const nodeCompletions = map[nodeId];
     if (nodeCompletions?.[date]) {
       // Remove completion
@@ -26,6 +31,6 @@ export function toggle(nodeId: string, date: string): void {
   });
 }
 
-export function reset(): void {
-  completions.set({});
+export function reset(panelId: PanelId = "left"): void {
+  getPanelInstance(panelId).completions.set({});
 }

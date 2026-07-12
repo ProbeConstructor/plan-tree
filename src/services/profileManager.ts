@@ -121,7 +121,12 @@ export async function saveTagDefs(
 /** Layout de paneles guardado para ESTE perfil. */
 export async function getPanelLayout(
   profile: string,
-): Promise<{ rightView: string | null; splitPosition: number } | null> {
+): Promise<{
+  rightView: string | null;
+  splitPosition: number;
+  leftProject: string | null;
+  rightProject: string | null;
+} | null> {
   return profileData.getPanelLayout(profile);
 }
 
@@ -130,6 +135,8 @@ export async function savePanelLayout(
   profile: string,
   rightView: string | null,
   splitPosition: number,
+  leftProject: string | null,
+  rightProject: string | null,
 ): Promise<void> {
-  await profileData.savePanelLayout(profile, rightView, splitPosition);
+  await profileData.savePanelLayout(profile, rightView, splitPosition, leftProject, rightProject);
 }

@@ -40,7 +40,7 @@
     role="region"
     aria-label="Left panel"
   >
-    <ViewRenderer view={$panelLayout.leftView} />
+    <ViewRenderer view={$panelLayout.leftView} panelId="left" />
   </div>
 
   {#if $panelLayout.rightView !== null}
@@ -57,7 +57,7 @@
       role="region"
       aria-label="Right panel"
     >
-      <ViewRenderer view={$panelLayout.rightView} />
+      <ViewRenderer view={$panelLayout.rightView} panelId="right" />
     </div>
   {:else}
     <button class="open-btn" on:click={() => panelLayout.openSplit()}>↤</button>

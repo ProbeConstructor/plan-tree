@@ -7,10 +7,11 @@
     Tooltip,
     Legend,
   } from "chart.js";
+  import { _ } from "svelte-i18n";
 
   Chart.register(DoughnutController, ArcElement, Title, Tooltip, Legend);
 
-  let { data = [] as { label: string; value: number; color: string }[], title = "Estado actual" }: {
+  let { data = [] as { label: string; value: number; color: string }[], title = "" }: {
     data?: { label: string; value: number; color: string }[];
     title?: string;
   } = $props();
@@ -62,7 +63,7 @@
 
 <div class="chart-container" class:empty={isEmpty}>
   {#if isEmpty}
-    <div class="empty-chart"><p>Sin datos para mostrar</p></div>
+    <div class="empty-chart"><p>{$_("chart.noData")}</p></div>
   {/if}
   <div class="chart-wrapper" class:hidden={isEmpty}>
     <canvas bind:this={canvas}></canvas>

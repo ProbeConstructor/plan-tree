@@ -3,6 +3,7 @@
   import { refreshProfiles } from "../services/profileManager";
   import { deleteProfileWithAuth } from "../services/userManager";
   import { onMount } from "svelte";
+  import { t } from "svelte-i18n";
   import Logo from "./Logo.svelte";
 
   export let onBack: () => void;
@@ -33,7 +34,7 @@
     error = "";
 
     if (!password) {
-      error = "Ingresa la contraseña de este perfil";
+      error = $t('user.enterPassword');
       return;
     }
 
@@ -41,7 +42,7 @@
     try {
       const ok = await deleteProfileWithAuth(openFor, password);
       if (!ok) {
-        error = "Contraseña incorrecta";
+        error = $t('user.wrongPassword');
         return;
       }
     } catch (e) {
@@ -62,10 +63,10 @@
     <Logo size={200} />
     <h1>Plan Tree</h1>
   </div>
-  <p class="hint">Administrar usuarios</p>
+  <p class="hint">{$t('user.manage')}</p>
 
   {#if $profiles.length === 0}
-    <p class="hint">No hay perfiles creados todavía.</p>
+    <p class="hint">{$t('user.noProfiles')}</p>
   {:else}
     <ul class="profile-list">
       {#each $profiles as name}
@@ -75,16 +76,16 @@
               <span class="profile-name">👤 {name}</span>
               <input
                 type="password"
-                placeholder="Contraseña de {name}"
+                placeholder={$t('user.passwordOf', { values: { name } })}
                 bind:value={password}
                 disabled={loading}
                 on:keydown={(e) => e.key === "Enter" && confirmDelete()}
               />
               <div class="delete-actions">
                 <button class="danger" on:click={confirmDelete} disabled={loading}>
-                  {loading ? "..." : "Confirmar borrado"}
+                  {loading ? "..." : $t('user.confirmDelete')}
                 </button>
-                <button on:click={cancel} disabled={loading}>Cancelar</button>
+                <button on:click={cancel} disabled={loading}>{$t('user.cancel')}</button>
               </div>
               {#if error}<p class="error">{error}</p>{/if}
             </div>
@@ -92,7 +93,7 @@
             <div class="profile-row">
               <span class="profile-name">👤 {name}</span>
               <button class="danger" on:click={() => openDeleteForm(name)}>
-                🗑️ Eliminar
+                {$t('user.delete')}
               </button>
             </div>
           {/if}
@@ -101,7 +102,7 @@
     </ul>
   {/if}
 
-  <button class="link-btn" on:click={onBack}>Volver al login</button>
+  <button class="link-btn" on:click={onBack}>{$t('user.backToLogin')}</button>
 </div>
 
 <style>

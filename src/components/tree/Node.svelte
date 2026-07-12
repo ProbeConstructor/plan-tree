@@ -1,7 +1,8 @@
 <script lang="ts">
+  import { getContext } from "svelte";
   import NodeCard from "./NodeCard.svelte";
-  import { focusedNodeId, progressMap } from "../../stores/treeStore";
-  import type { TreeNode } from "../../types";
+  import { getPanelInstance } from "../../stores/panelRegistry";
+  import type { PanelId, TreeNode } from "../../types";
   import { extractNodeToNewProject } from "../../services/projectSplitter";
   import * as commands from "../../commands/treeCommands";
   import { pickAndResizeImage } from "../../lib/resizeImage";
@@ -13,6 +14,13 @@
   import NodeDetailModal from "../../modals/NodeDetailModal.svelte";
   import ConfirmModal from "../../modals/ConfirmModal.svelte";
   import { onMount, tick } from "svelte";
+  import { _ } from "svelte-i18n";
+
+  const panelId: PanelId = getContext("panelId") ?? "left";
+  const instance = getPanelInstance(panelId);
+  const focusedNodeId = instance.focusedNodeId;
+  const progressMap = instance.progressMap;
+  const draggedNodeId = instance.draggedNodeId;
   import { onDestroy } from "svelte";
 
   export let node: TreeNode;
@@ -42,6 +50,7 @@
     lastNodeId = node.id;
     drag = useDrag(node, {
       setDragOver: (v) => (dragOver = v),
+      draggedNodeId,
     });
   }
 
@@ -80,15 +89,15 @@
   function confirmDelete() {
     if (layout.isRoot) return;
     const descendants = countDescendants(node);
-    const parts = [`¿Eliminar "${node.title}"`];
+    let message = $_("node.deleteConfirm", { values: { title: node.title } });
     if (descendants > 0) {
-      parts.push(` y ${descendants} ${descendants === 1 ? "subnodo" : "subnodos"}`);
+      message += $_("node.deleteWithDescendants", { values: { count: String(descendants) } });
     }
-    parts.push("? Esta acción no se puede deshacer.");
+    message += $_("node.deleteIrreversible");
     openModal(ConfirmModal, {
-      title: "Eliminar nodo",
-      message: parts.join(""),
-      confirmLabel: "Eliminar",
+      title: $_("node.delete"),
+      message,
+      confirmLabel: $_("modal.confirm.delete"),
       danger: true,
       onConfirm: () => commands.removeNode(node.id),
     });
@@ -97,9 +106,9 @@
   function extractToProject() {
     if (layout.isRoot) return;
     openModal(ConfirmModal, {
-      title: "Extraer a nuevo proyecto",
-      message: `Esto moverá "${node.title}" y todo su contenido a un proyecto nuevo. Esta acción no se puede deshacer. ¿Querés continuar?`,
-      confirmLabel: "Extraer",
+      title: $_("node.extract"),
+      message: $_("node.extractConfirm", { values: { title: node.title } }),
+      confirmLabel: $_("node.extractLabel"),
       danger: false,
       onConfirm: () => extractNodeToNewProject(node.id),
     });

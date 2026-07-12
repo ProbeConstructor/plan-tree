@@ -1,4 +1,5 @@
 import { get } from "svelte/store";
+import type { PanelId } from "../types";
 import { tree, resetTree, defaultTree, recalcProgress } from "../stores/treeStore";
 import { completions } from "../stores/completionStore";
 import { projects, activeProject } from "../stores/workspaceStore";
@@ -16,38 +17,48 @@ import {
 } from "./projectManager";
 
 import { getLastProject, setLastProject } from "./profileManager";
-import { AutoSaveStrategy } from "./autoSaveStrategy";
 import { progressSnapshot } from "./progressSnapshotService";
 import { loadTags, cleanStaleTagRefs } from "../stores/tagStore";
 import { panelLayout } from "../stores/panelStore";
+import {
+  loadProjectIntoPanel,
+  switchPanelProject as loadSwitchPanelProject,
+  getAutoSaveForProject,
+  setLoading,
+  getFocusedPanel,
+  getProjectForPanel,
+  unloadPanel,
+  flushAllAutoSaves,
+  startPanelAutoSaves,
+} from "./panelManager";
+import { getPanelInstance, getPanelProject } from "../stores/panelRegistry";
 
-import type { TreeNode, ProjectData } from "../types";
+// ── Auto-save: now managed by panelManager ───────────────────
 
-let isLoading = false;
-
-export const autoSave = new AutoSaveStrategy(saveProject);
-autoSave.onAfterSave = (_project, data) => {
-  progressSnapshot.capture(_project, data.tree);
+export const autoSave = {
+  async flush() {
+    await flushAllAutoSaves();
+  },
 };
+
+// ── Project list ─────────────────────────────────────────────
 
 export async function refreshProjects(): Promise<void> {
   const list = await listProjects();
   projects.set(list);
 }
 
-/**
- * Decide qué proyecto debe quedar activo para el perfil actual: su
- * último proyecto recordado (si todavía existe), o el primero
- * disponible. Si el perfil es nuevo y no tiene NINGÚN proyecto, le
- * crea uno por defecto ("Principal") para que nunca quede sin nada
- * que mostrar.
- */
+// ── Resolve which project should be active ───────────────────
+
 async function resolveActiveProject(): Promise<void> {
   const profile = get(activeProfile);
   let list = get(projects);
 
   if (list.length === 0) {
-    await createProjectFile("Principal", { tree: defaultTree(), completions: {} });
+    await createProjectFile("Principal", {
+      tree: defaultTree(),
+      completions: {},
+    });
     await refreshProjects();
     list = get(projects);
   }
@@ -62,66 +73,80 @@ async function resolveActiveProject(): Promise<void> {
   }
 }
 
+// ── Load all panel projects on init ──────────────────────────
+
 export async function loadCurrentProject(): Promise<void> {
-  isLoading = true;
+  setLoading(true);
 
   await resolveActiveProject();
 
-  const name = get(activeProject);
-  const project = name ? await loadProject(name) : null;
-
-  // Load tag definitions for current profile
   const profile = get(activeProfile);
   if (profile) {
     await loadTags(profile);
-
-    // Restore panel layout for this profile
     await panelLayout.loadFromProfile(profile);
   }
 
-  if (project) {
-    tree.set(project.tree);
-    completions.set(project.completions);
-    recalcProgress();
+  const layout = get(panelLayout);
 
-    // Clean stale tag refs on load
-    const cleaned = cleanStaleTagRefs(project.tree);
-    if (cleaned !== project.tree) {
-      tree.set(cleaned);
-    }
-
-    // 🛡️ Sincronizar contador de nodos para la guarda de datos vacíos
-    autoSave.syncNodeCount(name, project.tree);
-    // 📸 Forzar snapshot inicial para que el mes actual tenga datos
-    progressSnapshot.capture(name, project.tree);
+  // Load left panel project
+  const leftProject = layout.leftProject;
+  if (leftProject) {
+    await loadProjectIntoPanel("left", leftProject);
   } else {
-    // 🔐 sin esto, si el perfil nuevo no tiene este proyecto, se queda
-    // visible lo que estaba cargado del perfil/proyecto ANTERIOR.
-    resetTree();
+    // Fallback: load the resolved active project into left panel
+    const name = get(activeProject);
+    if (name) {
+      await loadProjectIntoPanel("left", name);
+      panelLayout.update((p) => ({ ...p, leftProject: name }));
+    } else {
+      resetTree("left");
+    }
   }
 
-  isLoading = false;
+  // Load right panel project (if split is open and has a project)
+  if (layout.rightView !== null && layout.rightProject) {
+    await loadProjectIntoPanel("right", layout.rightProject);
+  }
+
+  // Start auto-save subscriptions for all active panels
+  startPanelAutoSaves();
+
+  setLoading(false);
 }
 
-export async function switchProject(name: string): Promise<void> {
-  activeProject.set(name);
+// ── Panel-scoped project switching ───────────────────────────
+
+export async function switchProjectForPanel(
+  panelId: PanelId,
+  name: string,
+): Promise<void> {
+  await loadSwitchPanelProject(panelId, name);
 
   const profile = get(activeProfile);
-  if (profile) {
+  if (profile && panelId === "left") {
     await setLastProject(profile, name);
   }
 
-  await loadCurrentProject();
+  activeProject.set(name);
 }
 
+// ── Backward-compatible: switch focused panel's project ──────
+
+export async function switchProject(name: string): Promise<void> {
+  const focused = getFocusedPanel();
+  await switchProjectForPanel(focused, name);
+}
+
+// ── Create project: auto-assigns to focused panel ────────────
+
 export async function createProject(name: string): Promise<void> {
-  const data: ProjectData = {
+  const data = {
     tree: {
       id: "root",
       title: name,
       expanded: true,
-      status: "todo",
-      priority: "medium",
+      status: "todo" as const,
+      priority: "medium" as const,
       startDate: new Date().toISOString().slice(0, 10),
       children: [],
     },
@@ -130,19 +155,44 @@ export async function createProject(name: string): Promise<void> {
 
   await createProjectFile(name, data);
   await refreshProjects();
-  await switchProject(name);
+
+  // Auto-assign to focused panel
+  const focused = getFocusedPanel();
+  await switchProjectForPanel(focused, name);
 }
 
+// ── Rename: update all panels referencing this project ────────
+
 export async function renameProject(newName: string): Promise<void> {
-  const oldName = get(activeProject);
+  const layout = get(panelLayout);
+  const oldName = layout.leftProject ?? get(activeProject);
 
   await renameProjectFile(oldName, newName);
   await refreshProjects();
-  await switchProject(newName);
+
+  // Update panel bindings
+  if (layout.leftProject === oldName) {
+    panelLayout.update((p) => ({ ...p, leftProject: newName }));
+    // Reload the panel with new name
+    await loadProjectIntoPanel("left", newName);
+  }
+  if (layout.rightProject === oldName) {
+    panelLayout.update((p) => ({ ...p, rightProject: newName }));
+    await loadProjectIntoPanel("right", newName);
+  }
+
+  activeProject.set(newName);
+  const profile = get(activeProfile);
+  if (profile) {
+    await setLastProject(profile, newName);
+  }
 }
 
+// ── Delete: empties the panel that showed the project ────────
+
 export async function deleteProject(): Promise<void> {
-  const current = get(activeProject);
+  const layout = get(panelLayout);
+  const current = layout.leftProject ?? get(activeProject);
   const all = await listProjects();
 
   if (all.length <= 1) {
@@ -160,33 +210,20 @@ export async function deleteProject(): Promise<void> {
   await deleteProjectFile(current);
   await refreshProjects();
 
+  // Empty the panel(s) that showed this project
+  if (layout.leftProject === current) {
+    unloadPanel("left");
+  }
+  if (layout.rightProject === current) {
+    unloadPanel("right");
+  }
+
+  // Switch to next available project in left panel
   const list = get(projects);
   if (list.length > 0) {
-    await switchProject(list[0]);
+    await switchProjectForPanel("left", list[0]);
   }
 }
 
-// 💾 autoguardado: cada vez que el árbol cambia, se agenda una
-// escritura diferida (debounce 2s) con reintentos. Si el cambio
-// viene de una CARGA (isLoading = true), se saltea para no
-// sobreescribir el archivo con datos a medio cargar.
-tree.subscribe((value) => {
-  if (isLoading) return;
-
-  const project = get(activeProject);
-  if (!project) return;
-
-  autoSave.schedule(project, { tree: value, completions: get(completions) });
-});
-
-// Completions-only changes (e.g. Calendar toggle) also need persistence
-completions.subscribe((value) => {
-  if (isLoading) return;
-
-  const project = get(activeProject);
-  if (!project) return;
-
-  autoSave.schedule(project, { tree: get(tree), completions: value });
-});
-
-
+// ── Backward compat: loadCurrentProject loads left panel ─────
+// (already handled above in loadCurrentProject)

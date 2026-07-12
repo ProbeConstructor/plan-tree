@@ -21,10 +21,13 @@
   import DonutChart from "../components/charts/DonutChart.svelte";
   import StatsCards from "../components/charts/StatsCards.svelte";
   import ProjectSelector from "../components/charts/ProjectSelector.svelte";
+  import { _ } from "svelte-i18n";
 
-  const MONTHS = [
-    "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
-    "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre",
+  const MONTH_KEYS = [
+    "calendar.months.january", "calendar.months.february", "calendar.months.march",
+    "calendar.months.april", "calendar.months.may", "calendar.months.june",
+    "calendar.months.july", "calendar.months.august", "calendar.months.september",
+    "calendar.months.october", "calendar.months.november", "calendar.months.december",
   ];
 
   const DEFAULT_PALETTE = [
@@ -45,7 +48,7 @@
   let loadingMulti = $state(true);
   let initialized = $state(false);
 
-  let monthYear = $derived(`${MONTHS[currentMonth]} ${currentYear}`);
+  let monthYear = $derived(`${$_(MONTH_KEYS[currentMonth])} ${currentYear}`);
 
   let dailyBarData = $derived(snapshotsToDailyGroupedByWeek(snapshots));
   let donutData = $derived(snapshotToDonutData(snapshots));
@@ -170,7 +173,7 @@
       snapshots = await progressSnapshot.loadSnapshots(project, currentYear, currentMonth);
     } catch (err) {
       console.error("Error al cargar snapshots:", err);
-      error = "Error al cargar datos de progreso.";
+      error = $_("progress.loadError");
       snapshots = [];
     } finally {
       loading = false;
@@ -238,17 +241,17 @@
     <button class="nav-btn" onclick={prevMonth}>◀</button>
     <h2 class="month-title">{monthYear}</h2>
     <button class="nav-btn" onclick={nextMonth}>▶</button>
-    <button class="today-btn" onclick={goToToday}>Hoy</button>
+    <button class="today-btn" onclick={goToToday}>{$_("calendar.today")}</button>
   </div>
 
   {#if loading}
-    <div class="state-msg">Cargando...</div>
+    <div class="state-msg">{$_("progress.loading")}</div>
   {:else if error}
     <div class="state-msg error">{error}</div>
   {:else if isEmpty}
     <div class="state-msg empty">
-      <p>No hay datos para este mes</p>
-      <p class="sub">Los snapshots se capturan automáticamente al guardar el árbol.</p>
+      <p>{$_("progress.noData")}</p>
+      <p class="sub">{$_("progress.noDataSub")}</p>
     </div>
   {:else}
     <StatsCards total={stats?.total ?? 0} done={stats?.done ?? 0} progress={stats?.progress ?? 0} />
@@ -256,7 +259,7 @@
     <div class="charts-grid">
       <div class="chart-block">
         <div class="chart-header">
-          <span class="chart-title">Progreso diario</span>
+          <span class="chart-title">{$_("progress.dailyProgress")}</span>
           <ProjectSelector
             projects={selectorProjects}
             onSelectionChange={onSelectionChange}
@@ -266,17 +269,17 @@
 
         {#if selectedProjects.length === 0}
           <div class="empty-chart">
-            <p>Seleccioná proyectos para ver</p>
+            <p>{$_("progress.selectProjects")}</p>
           </div>
         {:else if loadingMulti}
           <div class="empty-chart">
-            <p>Cargando datos...</p>
+            <p>{$_("progress.loadingData")}</p>
           </div>
         {:else}
           <MultiProjectLineChart
             datasets={multiProjectData.datasets}
             labels={multiProjectData.labels}
-            title=""
+            title={$_("progress.dailyProgress")}
           />
         {/if}
       </div>
@@ -286,11 +289,11 @@
           labels={dailyBarData.labels}
           weekIndices={dailyBarData.weekIndices}
           weekLabels={dailyBarData.weekLabels}
-          title="Completados por día"
+          title={$_("progress.completedByDay")}
         />
       </div>
       <div class="chart-block">
-        <DonutChart data={donutData} title="Estado actual" />
+        <DonutChart data={donutData} title={$_("progress.currentStatus")} />
       </div>
     </div>
   {/if}

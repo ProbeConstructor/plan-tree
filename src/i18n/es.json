@@ -240,5 +240,17 @@
   "commandPalette.cmd.progress": "Ver gráficos",
   "commandPalette.cmd.lock": "Bloquear",
   "commandPalette.cmd.favorites": "Solo favoritos",
-  "commandPalette.cmd.manageTags": "Administrar tags"
+  "commandPalette.cmd.manageTags": "Administrar tags",
+  "commandPalette.cmd.deleteProject": "Eliminar proyecto",
+  "commandPalette.cmd.openSplit": "Abrir panel dividido",
+  "commandPalette.cmd.closeSplit": "Cerrar panel dividido",
+  "commandPalette.cmd.showShortcuts": "Ver atajos de teclado",
+  "commandPalette.cmd.switchToProject": "Cambiar a: {name}",
+  "commandPalette.cmd.filterTag": "Filtrar: {name}",
+
+  "shortcutHelp.title": "Atajos de teclado",
+  "shortcutHelp.ctrlK": "Paleta de comandos",
+  "shortcutHelp.ctrlF": "Buscar nodos",
+  "shortcutHelp.ctrlZ": "Deshacer",
+  "shortcutHelp.f1": "Ver atajos de teclado"
 }

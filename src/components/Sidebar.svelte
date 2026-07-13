@@ -195,7 +195,7 @@
     {:else if $checkingUpdate}
       <button class="update-btn" disabled> {$_("sidebar.update.checking")} </button>
     {:else if $upToDate}
-      <button class="update-btn up-to-date" disabled>
+      <button class="update-btn up-to-date" on:click={checkForUpdates}>
         {$_("sidebar.update.upToDate")}
       </button>
     {:else if $updateError}
@@ -352,8 +352,12 @@
     background: rgba(34, 197, 94, 0.1) !important;
     border-color: #22c55e !important;
     color: #22c55e !important;
-    cursor: default !important;
+    cursor: pointer !important;
     font-size: 12px;
+  }
+
+  .update-btn.up-to-date:hover {
+    background: rgba(34, 197, 94, 0.2) !important;
   }
 
   .update-btn.update-error {

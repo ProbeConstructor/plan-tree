@@ -240,5 +240,17 @@
   "commandPalette.cmd.progress": "View charts",
   "commandPalette.cmd.lock": "Lock",
   "commandPalette.cmd.favorites": "Favorites only",
-  "commandPalette.cmd.manageTags": "Manage tags"
+  "commandPalette.cmd.manageTags": "Manage tags",
+  "commandPalette.cmd.deleteProject": "Delete project",
+  "commandPalette.cmd.openSplit": "Open split panel",
+  "commandPalette.cmd.closeSplit": "Close split panel",
+  "commandPalette.cmd.showShortcuts": "Show shortcuts",
+  "commandPalette.cmd.switchToProject": "Switch to: {name}",
+  "commandPalette.cmd.filterTag": "Filter: {name}",
+
+  "shortcutHelp.title": "Keyboard Shortcuts",
+  "shortcutHelp.ctrlK": "Command palette",
+  "shortcutHelp.ctrlF": "Search nodes",
+  "shortcutHelp.ctrlZ": "Undo",
+  "shortcutHelp.f1": "Show shortcuts"
 }

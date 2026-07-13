@@ -227,11 +227,13 @@
     // Record recent
     recordRecent(cmd.id);
 
-    // Execute action
-    cmd.action();
-
-    // Close palette
+    // Close palette first so that modals opened by the action
+    // (e.g. ShortcutHelpModal) are not immediately closed by closeModal()
     closeModal();
+
+    // Defer action to next microtask so Svelte processes the palette
+    // close before the new modal opens
+    setTimeout(() => cmd.action(), 0);
   }
 
   function handleBackdropClick(e: MouseEvent) {

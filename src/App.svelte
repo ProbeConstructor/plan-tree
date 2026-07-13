@@ -20,6 +20,7 @@
   import ErrorBoundary from "./components/ErrorBoundary.svelte";
   import { checkForUpdates } from "./stores/updateStore";
   import NodeSearch from "./components/tree/NodeSearch.svelte";
+  import CommandPalette from "./components/CommandPalette.svelte";
   import { openModal } from "./stores/modalStore";
   import { panelLayout } from "./stores/panelStore";
   import { loadLanguage } from "./stores/languageStore";
@@ -104,6 +105,14 @@
     if (e.ctrlKey && e.key === "f") {
       e.preventDefault();
       openModal(NodeSearch, {});
+    }
+    if (e.ctrlKey && e.key === "k") {
+      // Don't open if focus is inside an editor (easymde conflict)
+      const tag = document.activeElement?.tagName;
+      if (tag !== "TEXTAREA" && tag !== "INPUT") {
+        e.preventDefault();
+        openModal(CommandPalette, {});
+      }
     }
   }}
 />

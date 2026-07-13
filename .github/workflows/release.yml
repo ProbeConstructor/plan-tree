@@ -90,6 +90,12 @@ jobs:
         run: |
           shopt -s nullglob
           built=false
+          # Ensure AppImage has execute permission (GitHub releases strip it)
+          for appimage in src-tauri/target/release/bundle/*/*.AppImage; do
+            [[ -f "$appimage" ]] || continue
+            chmod +x "$appimage"
+            echo "Set +x on: $appimage"
+          done
           # Upload installers first
           for f in src-tauri/target/release/bundle/*/*.AppImage \
                     src-tauri/target/release/bundle/*/*.dmg \

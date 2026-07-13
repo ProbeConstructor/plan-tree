@@ -181,7 +181,8 @@
             await relaunch();
           } catch (e) {
             console.error("Update failed:", e);
-            installError = $_("sidebar.update.error");
+            const msg = e instanceof Error ? e.message : String(e);
+            installError = msg || $_("sidebar.update.error");
           }
         }}
       >

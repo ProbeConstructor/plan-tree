@@ -50,6 +50,7 @@ Break down complex projects into smaller pieces, visualize your progress, and ne
 | 👤 **Multiple profiles** | Isolated vaults per user. Each profile has its own projects. |
 | 📈 **Progress tracking** | Multi-project line charts with custom colors and selectors. |
 | 💾 **Auto-save + undo** | Automatic saving with 50 snapshot undo history. |
+| ⌨️ **Command palette** | Ctrl+K for all actions. F1 for shortcuts. Keyboard-first navigation. |
 | 🔄 **Auto-updater** | Signed updates via GitHub Releases. No manual downloads needed. |
 
 <!-- TODO: Add screenshots of encryption flow, profiles, and progress charts here -->
@@ -114,6 +115,7 @@ Get the latest version from [GitHub Releases](https://github.com/ProbeConstructo
 | 📐 **Split panel** | Tree + dashboard/calendar/progress side by side |
 | 📤 **Export/Import** | Full tree export to markdown |
 | 🔄 **Auto-updater** | Signed with private key, served via GitHub Releases |
+| ⌨️ **Command palette** | Ctrl+K: 16 commands + dynamic per-project/per-tag. F1: shortcuts modal |
 | 🛡️ **Error boundary** | Global error capture without data loss |
 | 🌐 **Bilingual** | English and Spanish with instant switching |
 
@@ -131,11 +133,11 @@ Get the latest version from [GitHub Releases](https://github.com/ProbeConstructo
 - ✅ Progress visualization
 - ✅ Auto-updater
 - ✅ Bilingual support (EN/ES)
+- ✅ Command palette (Ctrl+K) with F1 shortcuts
 
 ### Under evaluation
 
 - 🔌 **Plugin system** — Extensible architecture for custom integrations
-- ⌨️ **Command palette** — Keyboard-driven navigation and actions
 - 📱 **Mobile companion** — Read-only viewer for on-the-go access
 - 🔗 **Import/export formats** — JSON, CSV, and Markdown compatibility
 

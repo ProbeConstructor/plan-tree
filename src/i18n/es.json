@@ -219,5 +219,26 @@
   "search.field.comment": "Comentario",
 
   "tagPopover.label": "Etiquetas",
-  "tagPopover.placeholder": "Buscar o crear tag..."
+  "tagPopover.placeholder": "Buscar o crear tag...",
+
+  "commandPalette.placeholder": "Buscar comandos...",
+  "commandPalette.noResults": "Sin resultados",
+  "commandPalette.noProject": "No hay proyecto cargado",
+  "commandPalette.category.recent": "Recientes",
+  "commandPalette.category.project": "Proyecto",
+  "commandPalette.category.node": "Nodo",
+  "commandPalette.category.navigation": "Navegación",
+  "commandPalette.category.utilities": "Utilidades",
+  "commandPalette.cmd.newProject": "Nuevo proyecto",
+  "commandPalette.cmd.renameProject": "Renombrar proyecto",
+  "commandPalette.cmd.exportProject": "Exportar proyecto",
+  "commandPalette.cmd.importProject": "Importar proyecto",
+  "commandPalette.cmd.undo": "Deshacer",
+  "commandPalette.cmd.tree": "Ver árbol",
+  "commandPalette.cmd.dashboard": "Ver resumen",
+  "commandPalette.cmd.calendar": "Ver calendario",
+  "commandPalette.cmd.progress": "Ver gráficos",
+  "commandPalette.cmd.lock": "Bloquear",
+  "commandPalette.cmd.favorites": "Solo favoritos",
+  "commandPalette.cmd.manageTags": "Administrar tags"
 }

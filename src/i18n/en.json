@@ -219,5 +219,26 @@
   "search.field.comment": "Comment",
 
   "tagPopover.label": "Tags",
-  "tagPopover.placeholder": "Search or create tag..."
+  "tagPopover.placeholder": "Search or create tag...",
+
+  "commandPalette.placeholder": "Search commands...",
+  "commandPalette.noResults": "No results",
+  "commandPalette.noProject": "No project loaded",
+  "commandPalette.category.recent": "Recent",
+  "commandPalette.category.project": "Project",
+  "commandPalette.category.node": "Node",
+  "commandPalette.category.navigation": "Navigation",
+  "commandPalette.category.utilities": "Utilities",
+  "commandPalette.cmd.newProject": "New project",
+  "commandPalette.cmd.renameProject": "Rename project",
+  "commandPalette.cmd.exportProject": "Export project",
+  "commandPalette.cmd.importProject": "Import project",
+  "commandPalette.cmd.undo": "Undo",
+  "commandPalette.cmd.tree": "View tree",
+  "commandPalette.cmd.dashboard": "View summary",
+  "commandPalette.cmd.calendar": "View calendar",
+  "commandPalette.cmd.progress": "View charts",
+  "commandPalette.cmd.lock": "Lock",
+  "commandPalette.cmd.favorites": "Favorites only",
+  "commandPalette.cmd.manageTags": "Manage tags"
 }

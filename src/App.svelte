@@ -21,6 +21,8 @@
   import { checkForUpdates } from "./stores/updateStore";
   import NodeSearch from "./components/tree/NodeSearch.svelte";
   import CommandPalette from "./components/CommandPalette.svelte";
+  import ShortcutHelpModal from "./components/ShortcutHelpModal.svelte";
+  import "./commands/index"; // Registers all Ctrl+K commands
   import { openModal } from "./stores/modalStore";
   import { panelLayout } from "./stores/panelStore";
   import { loadLanguage } from "./stores/languageStore";
@@ -113,6 +115,10 @@
         e.preventDefault();
         openModal(CommandPalette, {});
       }
+    }
+    if (e.key === "F1") {
+      e.preventDefault();
+      openModal(ShortcutHelpModal, {});
     }
   }}
 />

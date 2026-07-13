@@ -2,23 +2,22 @@
 
 <script lang="ts">
   import { tick, onMount } from "svelte";
+  import { get } from "svelte/store";
   import { _ } from "svelte-i18n";
   import {
     getCommands,
     searchCommands,
-    nodeCommandsFromTree,
     recordRecent,
     getRecentIds,
+    clearFuseCache,
   } from "../services/commandRegistry";
-  import type { Command, NodeCommand } from "../services/commandRegistry";
+  import type { Command } from "../services/commandRegistry";
   import { closeModal } from "../stores/modalStore";
   import { panelLayout } from "../stores/panelStore";
-  import { getPanelInstance } from "../stores/panelRegistry";
-  import { get } from "svelte/store";
-
-  function hasLocation(cmd: Command): cmd is NodeCommand {
-    return "location" in cmd;
-  }
+  import { projects } from "../stores/workspaceStore";
+  import { tagDefs, tagFilter } from "../stores/tagStore";
+  import { switchPanelProject } from "../services/panelManager";
+  import type { PanelId } from "../types";
 
   // ── State ──────────────────────────────────────────────────
   let query = $state("");
@@ -93,40 +92,61 @@
   // Flat list for keyboard navigation (only interactive items)
   let flatItems = $derived(groupedItems.flatMap((g) => g.items));
 
-  // Check if any project is loaded
-  let hasProject = $derived(
-    $panelLayout.leftProject !== null || $panelLayout.rightProject !== null,
-  );
-
   // ── Lifecycle ──────────────────────────────────────────────
   onMount(() => {
-    // Load commands
+    clearFuseCache();
     allCommands = getCommands();
+    injectDynamicCommands();
     recentIds = getRecentIds();
-
-    // Inject node commands from both panels
-    injectNodeCommands();
-
-    // Focus input after tick
     tick().then(() => inputEl?.focus());
   });
 
-  function injectNodeCommands() {
-    const leftProject = $panelLayout.leftProject;
-    const rightProject = $panelLayout.rightProject;
-
-    if (leftProject) {
-      const inst = getPanelInstance("left");
-      const tree = get(inst.tree);
-      const nodeCmds = nodeCommandsFromTree(tree, leftProject);
-      allCommands = [...allCommands, ...nodeCmds];
+  function injectDynamicCommands() {
+    // One command per project: "Switch to: {name}"
+    const projectList = get(projects);
+    for (const name of projectList) {
+      allCommands = [
+        ...allCommands,
+        {
+          id: `switchProject:${name}`,
+          label: "commandPalette.cmd.switchToProject",
+          labelArgs: { name },
+          category: "project",
+          icon: "📂",
+          enabled: () => true,
+          action: () => {
+            const panel = (get(panelLayout).focused ?? "left") as PanelId;
+            switchPanelProject(panel, name);
+          },
+        },
+      ];
     }
 
-    if (rightProject) {
-      const inst = getPanelInstance("right");
-      const tree = get(inst.tree);
-      const nodeCmds = nodeCommandsFromTree(tree, rightProject);
-      allCommands = [...allCommands, ...nodeCmds];
+    // One command per tag: "Filter: {name}"
+    const tags = get(tagDefs);
+    for (const tag of tags) {
+      allCommands = [
+        ...allCommands,
+        {
+          id: `filterTag:${tag.id}`,
+          label: "commandPalette.cmd.filterTag",
+          labelArgs: { name: tag.name },
+          category: "utilities",
+          icon: "🏷️",
+          enabled: () => true,
+          action: () => {
+            tagFilter.update((current) => {
+              const next = new Set(current);
+              if (next.has(tag.id)) {
+                next.delete(tag.id);
+              } else {
+                next.add(tag.id);
+              }
+              return next;
+            });
+          },
+        },
+      ];
     }
   }
 
@@ -207,11 +227,13 @@
     // Record recent
     recordRecent(cmd.id);
 
-    // Execute action
-    cmd.action();
-
-    // Close palette
+    // Close palette first so that modals opened by the action
+    // (e.g. ShortcutHelpModal) are not immediately closed by closeModal()
     closeModal();
+
+    // Defer action to next microtask so Svelte processes the palette
+    // close before the new modal opens
+    setTimeout(() => cmd.action(), 0);
   }
 
   function handleBackdropClick(e: MouseEvent) {
@@ -236,52 +258,45 @@
     on:click|stopPropagation
     on:keydown|stopPropagation
   >
-    {#if hasProject}
-      <input
-        bind:this={inputEl}
-        bind:value={query}
-        type="text"
-        class="search-input"
-        placeholder={$_("commandPalette.placeholder")}
-        on:keydown={handleKeydown}
-      />
+    <input
+      bind:this={inputEl}
+      bind:value={query}
+      type="text"
+      class="search-input"
+      placeholder={$_("commandPalette.placeholder")}
+      on:keydown={handleKeydown}
+    />
 
-      {#if flatItems.length === 0}
-        <div class="no-results">{$_("commandPalette.noResults")}</div>
-      {:else}
-        <div class="results-list">
-          {#each groupedItems as group}
-            {#if group.items.length > 0}
-              <div class="category-header">
-                {$_(`commandPalette.category.${group.category}`)}
-              </div>
-              {#each group.items as item, idx}
-                {@const globalIdx = flatItems.indexOf(item)}
-                <button
-                  class="result-item"
-                  class:selected={globalIdx === selectedIndex}
-                  data-index={globalIdx}
-                  on:click={() => {
-                    selectedIndex = globalIdx;
-                    executeSelected();
-                  }}
-                  on:mouseenter={() => (selectedIndex = globalIdx)}
-                >
-                  {#if item.icon}
-                    <span class="item-icon">{item.icon}</span>
-                  {/if}
-                  <span class="item-label">{$_(item.label)}</span>
-                  {#if hasLocation(item)}
-                    <span class="item-location">{item.location}</span>
-                  {/if}
-                </button>
-              {/each}
-            {/if}
-          {/each}
-        </div>
-      {/if}
+    {#if flatItems.length === 0}
+      <div class="no-results">{$_("commandPalette.noResults")}</div>
     {:else}
-      <div class="no-project">{$_("commandPalette.noProject")}</div>
+      <div class="results-list">
+        {#each groupedItems as group}
+          {#if group.items.length > 0}
+            <div class="category-header">
+              {$_(`commandPalette.category.${group.category}`)}
+            </div>
+            {#each group.items as item, idx}
+              {@const globalIdx = flatItems.indexOf(item)}
+              <button
+                class="result-item"
+                class:selected={globalIdx === selectedIndex}
+                data-index={globalIdx}
+                on:click={() => {
+                  selectedIndex = globalIdx;
+                  executeSelected();
+                }}
+                on:mouseenter={() => (selectedIndex = globalIdx)}
+              >
+                {#if item.icon}
+                  <span class="item-icon">{item.icon}</span>
+                {/if}
+                <span class="item-label">{$_(item.label, item.labelArgs ? { values: item.labelArgs } : undefined)}</span>
+              </button>
+            {/each}
+          {/if}
+        {/each}
+      </div>
     {/if}
   </div>
 </div>
@@ -376,17 +391,7 @@
     white-space: nowrap;
   }
 
-  .item-location {
-    font-size: 12px;
-    color: #6b7280;
-    max-width: 150px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  .no-results,
-  .no-project {
+  .no-results {
     padding: 20px;
     text-align: center;
     color: #6b7280;

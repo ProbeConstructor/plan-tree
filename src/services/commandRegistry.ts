@@ -16,6 +16,8 @@ export interface Command {
   id: string;
   /** i18n key — resolved at render time via $_() */
   label: string;
+  /** Optional interpolation params for i18n: $_(label, { values: labelArgs }) */
+  labelArgs?: Record<string, string | number>;
   category: CommandCategory;
   icon?: string;
   enabled: () => boolean;

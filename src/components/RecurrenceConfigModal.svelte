@@ -167,7 +167,7 @@
 
   .field > span:first-child {
     font-size: 13px;
-    color: #9aa1ab;
+    color: var(--text-secondary);
   }
 
   .interval-row {
@@ -183,9 +183,9 @@
   input[type="number"],
   input[type="date"],
   select {
-    background: #0f1115;
-    border: 1px solid #2a2f37;
-    color: #e7e9ee;
+    background: var(--bg-deepest);
+    border: 1px solid var(--border-default);
+    color: var(--text-primary);
     border-radius: 6px;
     padding: 6px 10px;
     font-size: 14px;
@@ -200,20 +200,20 @@
     width: 36px;
     height: 32px;
     border-radius: 6px;
-    border: 1px solid #2a2f37;
-    background: #0f1115;
-    color: #e7e9ee;
+    border: 1px solid var(--border-default);
+    background: var(--bg-deepest);
+    color: var(--text-primary);
     font-size: 12px;
     cursor: pointer;
   }
 
   .day-btn:hover {
-    background: #1f2329;
+    background: var(--bg-elevated);
   }
 
   .day-btn.selected {
-    background: #3b82f6;
-    border-color: #3b82f6;
+    background: var(--accent-primary);
+    border-color: var(--accent-primary);
   }
 
   .buttons {
@@ -232,13 +232,13 @@
   }
 
   .btn.primary {
-    background: #1f2329;
-    border: 1px solid #30363d;
-    color: #e7e9ee;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-strong);
+    color: var(--text-primary);
   }
 
   .btn.danger {
-    background: #b91c1c;
-    color: white;
+    background: var(--accent-danger);
+    color: var(--text-inverse);
   }
 </style>

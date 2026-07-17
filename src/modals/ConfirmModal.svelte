@@ -60,11 +60,11 @@ button, .btn{
 }
 
 .danger{
-    background:#b91c1c;
+    background:var(--accent-danger);
 }
 
 .primary{
-    background:#1f2329;
-    border:1px solid #30363d;
+    background:var(--bg-elevated);
+    border:1px solid var(--border-strong);
 }
 </style>

@@ -86,7 +86,7 @@
   }
 
   .panel-right {
-    border-left: 1px solid #2a2f37;
+    border-left: 1px solid var(--border-default);
   }
 
   .panel.focused {
@@ -94,7 +94,7 @@
   }
 
   .panel.highlight {
-    border-color: #22c55e;
+    border-color: var(--accent-success);
   }
 
   .open-btn {
@@ -102,20 +102,20 @@
     right: 0;
     top: 50%;
     transform: translateY(-50%);
-    background: #1f2329;
-    border: 1px solid #2a2f37;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-default);
     border-right: none;
     border-radius: 6px 0 0 6px;
     padding: 10px 6px;
     cursor: pointer;
     font-size: 18px;
-    color: #9aa1ab;
+    color: var(--text-secondary);
     z-index: 5;
     line-height: 1;
   }
 
   .open-btn:hover {
-    background: #2b3138;
-    color: white;
+    background: var(--bg-hover);
+    color: var(--text-primary);
   }
 </style>

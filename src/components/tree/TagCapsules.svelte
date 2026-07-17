@@ -49,9 +49,9 @@
     padding: 1px 6px;
     border-radius: 4px;
     font-size: 10px;
-    color: #d6dae2;
-    background: color-mix(in srgb, var(--tag-color) 15%, #1a1d24);
-    border: 1px solid color-mix(in srgb, var(--tag-color) 30%, #262b33);
+    color: var(--text-primary);
+    background: color-mix(in srgb, var(--tag-color) 15%, var(--bg-surface));
+    border: 1px solid color-mix(in srgb, var(--tag-color) 30%, var(--bg-muted));
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -71,7 +71,7 @@
     padding: 1px 5px;
     border-radius: 4px;
     font-size: 10px;
-    color: #9ca3af;
-    background: #262b33;
+    color: var(--text-muted);
+    background: var(--bg-muted);
   }
 </style>

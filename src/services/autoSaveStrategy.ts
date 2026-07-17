@@ -109,7 +109,8 @@ export class AutoSaveStrategy {
       // onAfterSave fire-and-forget — error NO debe afectar el save ni el status
       try {
         await this.onAfterSave?.(project, data);
-      } catch {
+      } catch (e) {
+        console.error("[SNAPSHOT-DEBUG] onAfterSave THREW:", e);
         // silently swallow: snapshot errors no interrumpen el auto-save
       }
 

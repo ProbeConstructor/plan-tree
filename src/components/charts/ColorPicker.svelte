@@ -79,12 +79,12 @@
   }
 
   .swatch.active {
-    border-color: #e7e9ee;
+    border-color: var(--text-primary);
   }
 
   .custom-btn {
-    background: #1f2329;
-    border: 1px solid #30363d;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-strong);
     border-radius: 50%;
     width: 26px;
     height: 26px;
@@ -98,7 +98,7 @@
   }
 
   .custom-btn:hover {
-    background: #2b3138;
+    background: var(--bg-hover);
   }
 
   .hidden-input {

@@ -178,7 +178,13 @@
   "progress.loadError": "Error al cargar datos de progreso.",
   "progress.dailyProgress": "Progreso diario",
   "progress.completedByDay": "Completados por día",
+  "progress.branchProgress": "Progreso por rama",
   "progress.currentStatus": "Estado actual",
+  "progress.legendLow": "0%",
+  "progress.legendHigh": "100%",
+  "progress.statusDone": "Completado",
+  "progress.statusInProgress": "En progreso",
+  "progress.statusPending": "Pendiente",
 
   "chart.totalNodes": "Total nodos",
   "chart.completed": "Completados",

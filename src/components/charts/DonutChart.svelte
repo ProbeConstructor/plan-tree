@@ -8,6 +8,7 @@
     Legend,
   } from "chart.js";
   import { _ } from "svelte-i18n";
+  import { currentTheme } from "../../stores/themeStore";
 
   Chart.register(DoughnutController, ArcElement, Title, Tooltip, Legend);
 
@@ -21,12 +22,19 @@
   const isEmpty = $derived(data.length === 0 || data.every((d) => d.value === 0));
 
   $effect(() => {
+    const _theme = $currentTheme;
     if (!canvas) return;
 
     const existing = Chart.getChart(canvas);
     existing?.destroy();
 
     if (isEmpty) return;
+
+    // Read CSS custom properties for theming
+    const styles = getComputedStyle(document.documentElement);
+    const bgSidebar = styles.getPropertyValue('--bg-sidebar').trim() || '#17191d';
+    const textPrimary = styles.getPropertyValue('--text-primary').trim() || '#e7e9ee';
+    const textSecondary = styles.getPropertyValue('--text-secondary').trim() || '#9aa1ab';
 
     new Chart(canvas, {
       type: "doughnut",
@@ -36,7 +44,7 @@
           {
             data: data.map((d) => d.value),
             backgroundColor: data.map((d) => d.color),
-            borderColor: "#17191d",
+            borderColor: bgSidebar,
             borderWidth: 2,
           },
         ],
@@ -45,10 +53,10 @@
         responsive: true,
         maintainAspectRatio: false,
         plugins: {
-          title: { display: true, text: title, color: "#e7e9ee", font: { size: 14 } },
+          title: { display: true, text: title, color: textPrimary, font: { size: 14 } },
           legend: {
             position: "bottom",
-            labels: { color: "#9aa1ab", font: { size: 11 }, boxWidth: 12, padding: 8 },
+            labels: { color: textSecondary, font: { size: 11 }, boxWidth: 12, padding: 8 },
           },
         },
       },
@@ -88,7 +96,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #6b7280;
+    color: var(--text-muted);
     font-size: 14px;
   }
 </style>

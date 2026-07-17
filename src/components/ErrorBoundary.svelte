@@ -80,15 +80,15 @@
   .error-overlay {
     position: fixed;
     inset: 0;
-    background: #0f1115;
+    background: var(--bg-deepest);
     display: flex;
     align-items: center;
     justify-content: center;
     z-index: 9999;
   }
   .error-card {
-    background: #1a1d23;
-    border: 1px solid #f43f5e;
+    background: var(--bg-surface);
+    border: 1px solid var(--accent-danger);
     border-radius: 12px;
     padding: 32px;
     max-width: 520px;
@@ -97,10 +97,10 @@
   h1 {
     margin: 0 0 12px;
     font-size: 20px;
-    color: #f43f5e;
+    color: var(--accent-danger);
   }
   .error-message {
-    color: #d1d5db;
+    color: var(--text-primary);
     font-size: 14px;
     margin: 0 0 16px;
     line-height: 1.5;
@@ -108,18 +108,18 @@
   .toggle-details {
     background: none;
     border: none;
-    color: #6b7280;
+    color: var(--text-muted);
     cursor: pointer;
     font-size: 12px;
     padding: 0;
     margin-bottom: 12px;
   }
   .toggle-details:hover {
-    color: #9ca3af;
+    color: var(--text-muted);
   }
   .error-stack {
-    background: #0d0f12;
-    color: #9ca3af;
+    background: var(--bg-inset);
+    color: var(--text-muted);
     padding: 12px;
     border-radius: 6px;
     font-size: 11px;
@@ -133,8 +133,8 @@
     gap: 8px;
   }
   .btn-recover {
-    background: #2563eb;
-    color: white;
+    background: var(--accent-primary);
+    color: var(--text-inverse);
     border: none;
     padding: 8px 20px;
     border-radius: 6px;
@@ -142,11 +142,12 @@
     font-size: 14px;
   }
   .btn-recover:hover {
-    background: #1d4ed8;
+    background: var(--accent-primary);
+    opacity: 0.9;
   }
   .btn-reset {
-    background: #374151;
-    color: #d1d5db;
+    background: var(--bg-muted);
+    color: var(--text-primary);
     border: none;
     padding: 8px 20px;
     border-radius: 6px;
@@ -154,6 +155,6 @@
     font-size: 14px;
   }
   .btn-reset:hover {
-    background: #4b5563;
+    background: var(--bg-hover);
   }
 </style>

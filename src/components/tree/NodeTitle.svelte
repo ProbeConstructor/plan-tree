@@ -75,7 +75,7 @@
     border-radius: 6px;
   }
   .title-row:hover {
-    background: #20242c40;
+    background: var(--bg-hover);
   }
   .title-row:focus-visible {
     outline: 2px solid var(--accent);
@@ -87,30 +87,30 @@
     cursor: text;
   }
   .node-type {
-    color: #6b7280;
+    color: var(--text-muted);
     font-size: 10px;
     text-transform: uppercase;
     letter-spacing: 0.05em;
   }
   .title {
-    color: #e7e9ee;
+    color: var(--text-primary);
     font-size: 14px;
   }
   .title-input {
-    background: #0f1115;
+    background: var(--bg-deepest);
     border: 1px solid var(--accent);
-    color: #e7e9ee;
+    color: var(--text-primary);
     border-radius: 4px;
     padding: 2px 6px;
     font-size: 14px;
   }
   .progress-pct {
-    color: #6b7280;
+    color: var(--text-muted);
     font-size: 11px;
     margin-left: auto;
   }
   .chevron {
-    color: #6b7280;
+    color: var(--text-muted);
     font-size: 10px;
     margin-left: 4px;
   }

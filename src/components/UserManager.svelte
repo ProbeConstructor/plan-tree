@@ -126,7 +126,7 @@
   }
   .hint {
     font-size: 13px;
-    color: #9aa1ab;
+    color: var(--text-secondary);
   }
   .profile-list {
     list-style: none;
@@ -140,20 +140,21 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background: #1a1d24;
-    border: 1px solid #2a2f37;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-default);
     border-radius: 8px;
     padding: 10px;
   }
   .profile-name {
     font-size: 14px;
+    color: var(--text-primary);
   }
   .delete-form {
     display: flex;
     flex-direction: column;
     gap: 8px;
-    background: #1a1d24;
-    border: 1px solid #ef4444;
+    background: var(--bg-surface);
+    border: 1px solid var(--accent-danger);
     border-radius: 8px;
     padding: 10px;
   }
@@ -162,36 +163,36 @@
     gap: 8px;
   }
   input {
-    background: #0f1115;
-    border: 1px solid #2a2f37;
-    color: #e7e9ee;
+    background: var(--bg-deepest);
+    border: 1px solid var(--border-default);
+    color: var(--text-primary);
     border-radius: 6px;
     padding: 8px;
   }
   button {
-    background: #1a1d24;
-    border: 1px solid #2a2f37;
-    color: #e7e9ee;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-default);
+    color: var(--text-primary);
     border-radius: 6px;
     padding: 8px;
     cursor: pointer;
     flex: 1;
   }
   button.danger {
-    border-color: #ef4444;
-    color: #ef4444;
+    border-color: var(--accent-danger);
+    color: var(--accent-danger);
   }
   .link-btn {
     background: none;
     border: none;
-    color: #6b7280;
+    color: var(--text-muted);
     font-size: 12px;
     text-decoration: underline;
     cursor: pointer;
     padding: 0;
   }
   .error {
-    color: #ef4444;
+    color: var(--accent-danger);
     font-size: 13px;
     margin: 0;
   }

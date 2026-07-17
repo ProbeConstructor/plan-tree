@@ -48,7 +48,7 @@
   .panel-divider {
     width: 8px;
     flex-shrink: 0;
-    background: #2a2f37;
+    background: var(--border-default);
     cursor: col-resize;
     display: flex;
     align-items: center;
@@ -60,7 +60,7 @@
 
   .panel-divider:hover,
   .panel-divider.dragging {
-    background: #3b4450;
+    background: var(--bg-hover);
   }
 
   .handle {
@@ -74,11 +74,11 @@
     width: 3px;
     height: 3px;
     border-radius: 50%;
-    background: #6b7280;
+    background: var(--text-muted);
   }
 
   .panel-divider:hover .dot,
   .panel-divider.dragging .dot {
-    background: #9aa1ab;
+    background: var(--text-secondary);
   }
 </style>

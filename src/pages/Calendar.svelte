@@ -204,15 +204,15 @@
     margin: 0;
     font-size: 20px;
     font-weight: 600;
-    color: #e7e9ee;
+    color: var(--text-primary);
     min-width: 180px;
     text-align: center;
   }
 
   .nav-btn {
-    background: #1f2329;
-    color: #e7e9ee;
-    border: 1px solid #30363d;
+    background: var(--bg-elevated);
+    color: var(--text-primary);
+    border: 1px solid var(--border-strong);
     border-radius: 6px;
     padding: 6px 12px;
     cursor: pointer;
@@ -220,14 +220,14 @@
   }
 
   .nav-btn:hover {
-    background: #2b3138;
+    background: var(--bg-hover);
   }
 
   .today-btn {
     margin-left: auto;
-    background: #1f2329;
+    background: var(--bg-elevated);
     color: #58a6ff;
-    border: 1px solid #30363d;
+    border: 1px solid var(--border-strong);
     border-radius: 6px;
     padding: 6px 16px;
     cursor: pointer;
@@ -236,7 +236,7 @@
   }
 
   .today-btn:hover {
-    background: #2b3138;
+    background: var(--bg-hover);
   }
 
   /* -- Week day headers -- */
@@ -250,7 +250,7 @@
     text-align: center;
     font-size: 12px;
     font-weight: 600;
-    color: #9aa1ab;
+    color: var(--text-secondary);
     text-transform: uppercase;
     padding: 6px 0;
     letter-spacing: 0.5px;
@@ -261,14 +261,14 @@
     display: grid;
     grid-template-columns: repeat(7, 1fr);
     gap: 1px;
-    background: #2a2f37;
-    border: 1px solid #2a2f37;
+    background: var(--border-default);
+    border: 1px solid var(--border-default);
     border-radius: 8px;
     overflow: hidden;
   }
 
   .day-cell {
-    background: #17191d;
+    background: var(--bg-sidebar);
     min-height: 100px;
     padding: 4px;
     display: flex;
@@ -276,20 +276,20 @@
   }
 
   .day-cell.today {
-    outline: 2px solid #facc15;
+    outline: 2px solid var(--accent-warning);
     outline-offset: -2px;
     z-index: 1;
   }
 
   .day-cell.empty {
-    background: #13151a;
+    background: var(--bg-inset);
     min-height: 100px;
   }
 
   .day-number {
     font-size: 12px;
     font-weight: 600;
-    color: #e7e9ee;
+    color: var(--text-primary);
     padding: 2px 4px;
     margin-bottom: 2px;
   }
@@ -308,7 +308,7 @@
     gap: 4px;
     background: transparent;
     border: none;
-    color: #e7e9ee;
+    color: var(--text-primary);
     cursor: pointer;
     padding: 2px 4px;
     border-radius: 3px;
@@ -320,7 +320,7 @@
   }
 
   .node-entry:hover {
-    background: #1f2329;
+    background: var(--bg-elevated);
   }
 
   .node-entry.done {
@@ -338,7 +338,7 @@
 
   .missed-label {
     font-size: 10px;
-    color: #991b1b;
+    color: var(--accent-danger);
     margin-left: auto;
     flex-shrink: 0;
   }

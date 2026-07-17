@@ -35,8 +35,8 @@
     margin-bottom: 20px;
   }
   .stat-card {
-    background: #1a1d24;
-    border: 1px solid #262b33;
+    background: var(--bg-surface);
+    border: 1px solid var(--bg-muted);
     border-radius: 10px;
     padding: 16px;
     text-align: center;
@@ -46,20 +46,20 @@
   }
   .stat-label {
     font-size: 12px;
-    color: #9aa1ab;
+    color: var(--text-secondary);
     text-transform: uppercase;
     letter-spacing: 0.05em;
   }
   .stat-value {
     font-size: 28px;
     font-weight: 700;
-    color: #e7e9ee;
+    color: var(--text-primary);
   }
   .stat-value.done {
-    color: #4caf50;
+    color: var(--accent-success);
   }
   .stat-value.pending {
-    color: #f59e0b;
+    color: var(--accent-warning);
   }
   .stat-value.pct {
     color: #58a6ff;

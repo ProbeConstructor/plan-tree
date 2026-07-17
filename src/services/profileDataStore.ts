@@ -13,6 +13,7 @@ interface ProfilesFile {
   tagsByProfile: Record<string, TagDefinition[]>;
   panelLayoutByProfile: Record<string, { rightView: string | null; splitPosition: number }>;
   panelProjectsByProfile: Record<string, { left: string; right: string | null }>;
+  pluginSettingsByProfile: Record<string, Record<string, Record<string, unknown>>>;
 }
 
 function defaultData(): ProfilesFile {
@@ -26,6 +27,7 @@ function defaultData(): ProfilesFile {
     tagsByProfile: {},
     panelLayoutByProfile: {},
     panelProjectsByProfile: {},
+    pluginSettingsByProfile: {},
   };
 }
 
@@ -256,6 +258,73 @@ class ProfileDataStore {
       data.panelLayoutByProfile[profile] = { rightView, splitPosition };
       if (leftProject) {
         data.panelProjectsByProfile[profile] = { left: leftProject, right: rightProject };
+      }
+      this.dirty = true;
+      await this.flush();
+    });
+  }
+
+  // ── Plugin Settings ────────────────────────────────────────
+
+  /**
+   * Read a plugin setting from the in-memory cache.
+   * Returns undefined if profile or key doesn't exist (no error thrown).
+   */
+  getPluginSettingsCached(
+    profile: string,
+    pluginId: string,
+    key: string,
+  ): unknown {
+    if (!this.data) return undefined;
+    const profileSettings = this.data.pluginSettingsByProfile[profile];
+    if (!profileSettings) return undefined;
+    const pluginSettings = profileSettings[pluginId];
+    if (!pluginSettings) return undefined;
+    return pluginSettings[key];
+  }
+
+  /**
+   * Read all settings for a plugin in a profile.
+   */
+  async getPluginSettings(
+    profile: string,
+    pluginId: string,
+  ): Promise<Record<string, unknown>> {
+    const data = await this.load();
+    return data.pluginSettingsByProfile[profile]?.[pluginId] ?? {};
+  }
+
+  /**
+   * Write a single plugin setting (profile-scoped).
+   */
+  async setPluginSettings(
+    profile: string,
+    pluginId: string,
+    key: string,
+    value: unknown,
+  ): Promise<void> {
+    return this.serialized(async () => {
+      const data = await this.load();
+      if (!data.pluginSettingsByProfile[profile]) {
+        data.pluginSettingsByProfile[profile] = {};
+      }
+      if (!data.pluginSettingsByProfile[profile][pluginId]) {
+        data.pluginSettingsByProfile[profile][pluginId] = {};
+      }
+      data.pluginSettingsByProfile[profile][pluginId][key] = value;
+      this.dirty = true;
+      await this.flush();
+    });
+  }
+
+  /**
+   * Remove all settings for a plugin across all profiles (uninstall cleanup).
+   */
+  async clearPluginSettings(pluginId: string): Promise<void> {
+    return this.serialized(async () => {
+      const data = await this.load();
+      for (const profile of Object.keys(data.pluginSettingsByProfile)) {
+        delete data.pluginSettingsByProfile[profile][pluginId];
       }
       this.dirty = true;
       await this.flush();

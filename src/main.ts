@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-only
 
 import { mount } from "svelte";
-//import './app.css'
+import "./styles/tokens.css";
 import App from "./App.svelte";
 
 // 🐛 Trampa global de errores

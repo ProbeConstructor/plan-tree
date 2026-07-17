@@ -124,7 +124,7 @@
     align-items: center;
     gap: 8px;
     padding: 6px 0;
-    border-bottom: 1px solid #262b33;
+    border-bottom: 1px solid var(--bg-muted);
   }
 
   .tag-row:last-child {
@@ -151,14 +151,14 @@
     width: 16px;
     height: 16px;
     border-radius: 50%;
-    border: 2px solid #30363d;
+    border: 2px solid var(--border-strong);
   }
 
   .name-btn {
     flex: 1;
     background: none;
     border: none;
-    color: #d6dae2;
+    color: var(--text-primary);
     text-align: left;
     padding: 4px 8px;
     border-radius: 4px;
@@ -167,14 +167,14 @@
   }
 
   .name-btn:hover {
-    background: #262b33;
+    background: var(--bg-muted);
   }
 
   .rename-input {
     flex: 1;
-    background: #0f1115;
-    border: 1px solid #3b82f6;
-    color: #e5e7eb;
+    background: var(--bg-deepest);
+    border: 1px solid var(--accent-primary);
+    color: var(--text-primary);
     border-radius: 4px;
     padding: 4px 8px;
     font-size: 13px;
@@ -182,7 +182,7 @@
   }
 
   .node-count {
-    color: #6b7280;
+    color: var(--text-muted);
     font-size: 12px;
     min-width: 24px;
     text-align: right;
@@ -205,7 +205,7 @@
   }
 
   .empty {
-    color: #6b7280;
+    color: var(--text-muted);
     text-align: center;
     padding: 20px;
     font-size: 13px;

@@ -62,14 +62,14 @@ input{
   width:100%;
   padding:10px;
   box-sizing:border-box;
-  background:#20242c;
-  color:#fff;
-  border:1px solid #333;
+  background:var(--bg-inset);
+  color:var(--text-primary);
+  border:1px solid var(--border-default);
   border-radius:8px;
 }
 
 .error{
-  color:#ef4444;
+  color:var(--accent-danger);
   font-size:13px;
   margin:4px 0;
 }

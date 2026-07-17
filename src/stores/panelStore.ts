@@ -3,7 +3,7 @@ import type { PanelId } from "../types";
 import { profileData } from "../services/profileDataStore";
 import { activeProfile } from "./profileStore";
 
-export type View = "tree" | "dashboard" | "calendar" | "progress";
+export type View = "tree" | "dashboard" | "calendar" | "progress" | (string & {});
 
 export interface PanelLayout {
   leftView: View;

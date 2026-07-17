@@ -13,4 +13,10 @@
   });
 </script>
 
-<path d={path} fill="none" stroke="#64748b" stroke-width="2" />
+<path class="connection" d={path} fill="none" stroke-width="2" />
+
+<style>
+  .connection {
+    stroke: var(--text-muted);
+  }
+</style>

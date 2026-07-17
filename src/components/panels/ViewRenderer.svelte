@@ -2,31 +2,33 @@
   import { setContext } from "svelte";
   import type { View } from "../../stores/panelStore";
   import type { PanelId } from "../../types";
+  import { getView } from "../../stores/viewRegistry";
   import TreeCanvas from "../tree/TreeCanvas.svelte";
-  import Calendar from "../../pages/Calendar.svelte";
-  import Progress from "../../pages/Progress.svelte";
-  import Dashboard from "../../pages/Dashboard.svelte";
+  import ErrorBoundary from "../ErrorBoundary.svelte";
 
   let { view, panelId }: { view: View; panelId: PanelId } = $props();
 
   // Inject panelId into Svelte context so children can access it
   setContext("panelId", panelId);
+
+  // Resolve view component from registry (built-in or plugin-registered)
+  let ViewComponent = $derived(getView(view) ?? TreeCanvas);
 </script>
 
-{#if view === "tree"}
-  <div id="tree-anchor"></div>
-  <div class="tree-viewport">
-    <div class="tree-canvas">
-      <TreeCanvas />
-    </div>
-  </div>
-{:else if view === "calendar"}
-  <Calendar />
-{:else if view === "progress"}
-  <Progress />
-{:else if view === "dashboard"}
-  <Dashboard />
-{/if}
+<ErrorBoundary>
+  {#snippet children()}
+    {#if view === "tree"}
+      <div id="tree-anchor"></div>
+      <div class="tree-viewport">
+        <div class="tree-canvas">
+          <svelte:component this={ViewComponent} />
+        </div>
+      </div>
+    {:else}
+      <svelte:component this={ViewComponent} />
+    {/if}
+  {/snippet}
+</ErrorBoundary>
 
 <style>
   .tree-viewport {

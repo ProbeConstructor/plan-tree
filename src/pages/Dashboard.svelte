@@ -237,8 +237,8 @@ function focusAndScroll(id:string){
 }
 
 .summary-block {
-    background: #1a1d24;
-    border: 1px solid #262b33;
+    background: var(--bg-surface);
+    border: 1px solid var(--bg-muted);
     border-radius: 12px;
     padding: 18px;
     box-sizing: border-box;
@@ -249,7 +249,7 @@ function focusAndScroll(id:string){
     font-size: 15px;
     text-transform: uppercase;
     letter-spacing: .05em;
-    color: #9aa1ab;
+    color: var(--text-secondary);
 }
 
 .summary-block ul{
@@ -262,20 +262,20 @@ function focusAndScroll(id:string){
 }
 
 .empty{
-    color:#6b7280;
+    color:var(--text-muted);
 }
 
 .global-bar{
     height:10px;
     border-radius:999px;
     overflow:hidden;
-    background:#0f1115;
+    background:var(--bg-deepest);
     margin-bottom:14px;
 }
 
 .global-bar-fill{
     height:100%;
-    background:#4caf50;
+    background:var(--accent-success);
     transition:.2s;
 }
 
@@ -298,13 +298,13 @@ function focusAndScroll(id:string){
 }
 
 .branch-pct{
-    color:#6b7280;
+    color:var(--text-muted);
 }
 
 .link-item{
     background:none;
     border:none;
-    color:#d6dae2;
+    color:var(--text-primary);
     cursor:pointer;
     text-align:left;
     padding:0;
@@ -312,12 +312,12 @@ function focusAndScroll(id:string){
 }
 
 .link-item:hover{
-    color:#facc15;
+    color:var(--accent-warning);
     text-decoration:underline;
 }
 
 .link-item.overdue{
-    color:#ef4444;
+    color:var(--accent-danger);
 }
 
 .tag-count-list{
@@ -342,12 +342,12 @@ function focusAndScroll(id:string){
 
 .tag-name{
     flex:1;
-    color:#d6dae2;
+    color:var(--text-primary);
     font-size:14px;
 }
 
 .tag-count{
-    color:#6b7280;
+    color:var(--text-muted);
     font-size:13px;
 }
 </style>

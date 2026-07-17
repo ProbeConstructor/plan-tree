@@ -12,6 +12,7 @@
     Filler,
   } from "chart.js";
   import { _ } from "svelte-i18n";
+  import { currentTheme } from "../../stores/themeStore";
 
   Chart.register(
     LineController,
@@ -39,6 +40,7 @@
   let canvas: HTMLCanvasElement | undefined = $state();
 
   $effect(() => {
+    const _theme = $currentTheme;
     if (!canvas) return;
 
     // Destruir SIEMPRE cualquier chart existente en este canvas
@@ -47,6 +49,13 @@
     existing?.destroy();
 
     if (data.length === 0) return;
+
+    // Read CSS custom properties for theming
+    const styles = getComputedStyle(document.documentElement);
+    const textPrimary = styles.getPropertyValue('--text-primary').trim() || '#e7e9ee';
+    const textSecondary = styles.getPropertyValue('--text-secondary').trim() || '#9aa1ab';
+    const textMuted = styles.getPropertyValue('--text-muted').trim() || '#6b7280';
+    const chartGrid = styles.getPropertyValue('--chart-grid').trim() || 'rgba(255,255,255,0.04)';
 
     const labels = data.map((d) => {
       return String(parseInt(d.date.slice(8, 10), 10));
@@ -93,21 +102,21 @@
         responsive: true,
         maintainAspectRatio: false,
         plugins: {
-          title: { display: true, text: title, color: "#e7e9ee", font: { size: 14 } },
+          title: { display: true, text: title, color: textPrimary, font: { size: 14 } },
           legend: {
-            labels: { color: "#9aa1ab", font: { size: 11 }, boxWidth: 12, padding: 8 },
+            labels: { color: textSecondary, font: { size: 11 }, boxWidth: 12, padding: 8 },
           },
         },
         scales: {
           x: {
-            ticks: { color: "#6b7280" },
-            grid: { color: "rgba(255,255,255,0.04)" },
+            ticks: { color: textMuted },
+            grid: { color: chartGrid },
           },
           y: {
             min: 0,
             max: 100,
-            ticks: { color: "#6b7280", callback: (v) => `${v}%` },
-            grid: { color: "rgba(255,255,255,0.04)" },
+            ticks: { color: textMuted, callback: (v) => `${v}%` },
+            grid: { color: chartGrid },
           },
         },
       },
@@ -147,7 +156,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #6b7280;
+    color: var(--text-muted);
     font-size: 14px;
   }
 </style>

@@ -10,6 +10,7 @@
     Legend,
   } from "chart.js";
   import { _ } from "svelte-i18n";
+  import { currentTheme } from "../../stores/themeStore";
 
   Chart.register(
     BarController,
@@ -50,6 +51,12 @@
       const xScale = chart.scales.x;
       if (!xScale || labels.length === 0) return;
 
+      // Read theme colors at draw time
+      const styles = getComputedStyle(document.documentElement);
+      const textMuted = styles.getPropertyValue('--text-muted').trim() || '#6a6a6a';
+      const bandFill = styles.getPropertyValue('--bg-muted').trim() || '#333333';
+      const separatorColor = styles.getPropertyValue('--border-default').trim() || '#3c3c3c';
+
       // Calcular gap entre categorías para posicionamiento
       const gap = labels.length > 1
         ? Math.abs(xScale.getPixelForValue(1) - xScale.getPixelForValue(0))
@@ -66,14 +73,14 @@
 
         // Fondo alternado
         if (w % 2 === 0) {
-          ctx.fillStyle = "rgba(255,255,255,0.03)";
+          ctx.fillStyle = bandFill + '40';
           ctx.fillRect(x1, top, x2 - x1, bottom - top);
         }
 
         // Línea vertical separadora antes de cada semana (excepto la primera)
         if (w > 0) {
           ctx.beginPath();
-          ctx.strokeStyle = "rgba(255,255,255,0.08)";
+          ctx.strokeStyle = separatorColor;
           ctx.lineWidth = 1;
           ctx.setLineDash([3, 3]);
           ctx.moveTo(x1, top);
@@ -83,7 +90,7 @@
         }
 
         // Etiqueta de semana centrada arriba
-        ctx.fillStyle = "#8b949e";
+        ctx.fillStyle = textMuted;
         ctx.font = "11px system-ui, sans-serif";
         ctx.textAlign = "center";
         ctx.textBaseline = "top";
@@ -94,6 +101,7 @@
   };
 
   $effect(() => {
+    const _theme = $currentTheme;
     if (!canvas) return;
 
     const existing = Chart.getChart(canvas);
@@ -101,6 +109,12 @@
 
     const hasData = data.length > 0 && data.some((v) => v > 0);
     if (!hasData) return;
+
+    // Read CSS custom properties for theming
+    const styles = getComputedStyle(document.documentElement);
+    const textPrimary = styles.getPropertyValue('--text-primary').trim() || '#e7e9ee';
+    const textMuted = styles.getPropertyValue('--text-muted').trim() || '#6b7280';
+    const chartGrid = styles.getPropertyValue('--chart-grid').trim() || 'rgba(255,255,255,0.04)';
 
     new Chart(canvas, {
       type: "bar",
@@ -120,26 +134,26 @@
         responsive: true,
         maintainAspectRatio: false,
         plugins: {
-          title: { display: true, text: title, color: "#e7e9ee", font: { size: 14 } },
+          title: { display: true, text: title, color: textPrimary, font: { size: 14 } },
           legend: { display: false },
         },
         scales: {
           x: {
             ticks: {
-              color: "#6b7280",
+              color: textMuted,
               maxTicksLimit: 31,
               autoSkip: true,
               maxRotation: 0,
             },
-            grid: { color: "rgba(255,255,255,0.04)" },
+            grid: { color: chartGrid },
           },
           y: {
             beginAtZero: true,
             ticks: {
-              color: "#6b7280",
+              color: textMuted,
               precision: 0,
             },
-            grid: { color: "rgba(255,255,255,0.04)" },
+            grid: { color: chartGrid },
           },
         },
       },
@@ -182,7 +196,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #6b7280;
+    color: var(--text-muted);
     font-size: 14px;
   }
 </style>

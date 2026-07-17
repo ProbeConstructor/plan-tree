@@ -54,7 +54,7 @@
   display:flex;
   justify-content:center;
   align-items:center;
-  background:rgba(0,0,0,.6);
+  background:var(--backdrop);
   backdrop-filter:blur(5px);
   z-index:1000;
 }
@@ -69,8 +69,8 @@
   max-height:85vh;
   resize:both;
   overflow:hidden;
-  background:#1a1d24;
-  border:1px solid #2a2f37;
+  background:var(--bg-surface);
+  border:1px solid var(--border-default);
   border-radius:12px;
 }
 
@@ -79,7 +79,7 @@ header{
   justify-content:space-between;
   align-items:center;
   padding:16px 18px;
-  border-bottom:1px solid #2a2f37;
+  border-bottom:1px solid var(--border-default);
 }
 
 section{
@@ -93,12 +93,13 @@ section{
 h2{
   margin:0;
   font-size:18px;
+  color:var(--text-primary);
 }
 
 .close{
   background:none;
   border:none;
-  color:#aaa;
+  color:var(--text-muted);
   font-size:18px;
   cursor:pointer;
 }

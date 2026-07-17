@@ -1,0 +1,13 @@
+{
+  "id": "example-plugin",
+  "name": "Example Plugin",
+  "version": "0.1.0",
+  "permissions": ["tree_read", "view_register", "command_register", "css_inject"],
+  "entry": "index.js",
+  "settingsSchema": {
+    "greeting": {
+      "type": "string",
+      "default": "Hello from plugin!"
+    }
+  }
+}

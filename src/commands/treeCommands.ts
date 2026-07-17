@@ -2,21 +2,31 @@
  * treeCommands — entry point único para todas las mutaciones del árbol.
  *
  * Cada función se encarga internamente de:
- *  - snapshot() para undo
- *  - mutateTree() para la mutación inmutable
+ *  - snapshot() para undo (en el panel activo)
+ *  - mutateTree() para la mutación inmutable (en el panel activo)
  *  - recalcProgress() cuando corresponde
  *
  * Los componentes llaman a estas funciones; nunca importan mutateTree
  * o snapshot directamente.
+ *
+ * IMPORTANT: All mutations operate on the FOCUSED panel (not always "left").
  */
 import type { TreeNode } from "../types";
-import {
-  snapshot,
-  mutateTree,
-  focusedNodeId,
-  recalcProgress,
-} from "../stores/treeStore";
+import { focusedNodeId, recalcProgress } from "../stores/treeStore";
+import { getFocusedPanel } from "../services/panelManager";
+import { getPanelInstance, snapshotInstance } from "../stores/panelRegistry";
 import { updateNode, deleteNode, getDefaultTitle, moveNode } from "../utils/treeUtils";
+
+/** Snapshot the focused panel's tree (for undo). */
+function snapshot(): void {
+  snapshotInstance(getPanelInstance(getFocusedPanel()));
+}
+
+/** Mutate the focused panel's tree. */
+function mutateTree(callback: (tree: TreeNode) => TreeNode): void {
+  const inst = getPanelInstance(getFocusedPanel());
+  inst.tree.update(callback);
+}
 
 // ── Child management ───────────────────────────────────────
 

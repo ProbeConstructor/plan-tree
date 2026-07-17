@@ -27,6 +27,7 @@
   import { panelLayout } from "./stores/panelStore";
   import { loadLanguage } from "./stores/languageStore";
   import { profileData } from "./services/profileDataStore";
+  import { currentTheme, initTheme } from "./stores/themeStore";
   import { _ } from "svelte-i18n";
 
   // Initialize svelte-i18n (side-effect import)
@@ -38,6 +39,8 @@
   let showUserManager = false;
 
   onMount(() => {
+    initTheme();
+
     // bootstrap is async but onMount must not return a promise with cleanup
     const setup = async () => {
       try {
@@ -166,6 +169,7 @@
 
         <ModalHost />
       </main>
+      <div id="plugin-css-container" style="display:none"></div>
     {/if}
   {/snippet}
 </ErrorBoundary>
@@ -173,8 +177,8 @@
 <style>
   :global(body) {
     margin: 0;
-    background: #0f1115;
-    color: #e7e9ee;
+    background: var(--bg-deepest);
+    color: var(--text-primary);
     font-family:
       system-ui,
       -apple-system,
@@ -199,7 +203,7 @@
   .loading {
     text-align: center;
     margin-top: 80px;
-    color: #6b7280;
+    color: var(--text-muted);
   }
 
   .topbar {
@@ -208,7 +212,7 @@
     justify-content: space-between;
     padding: 0 0 12px 0;
     font-size: 13px;
-    color: #9aa1ab;
+    color: var(--text-secondary);
     flex-shrink: 0;
   }
 
@@ -223,12 +227,12 @@
     align-items: center;
     gap: 8px;
     padding: 4px 10px;
-    background: #1a1d24;
-    border: 1px solid #2a2f37;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-default);
     border-bottom: none;
     border-radius: 6px 6px 0 0;
     font-size: 12px;
-    color: #e7e9ee;
+    color: var(--text-primary);
     margin-bottom: -12px;
     align-self: flex-end;
   }
@@ -236,7 +240,7 @@
   .right-tab-close {
     background: transparent;
     border: none;
-    color: #6b7280;
+    color: var(--text-muted);
     cursor: pointer;
     font-size: 12px;
     padding: 1px 4px;
@@ -245,7 +249,7 @@
   }
 
   .right-tab-close:hover {
-    background: #2a2f37;
-    color: white;
+    background: var(--border-default);
+    color: var(--text-inverse);
   }
 </style>

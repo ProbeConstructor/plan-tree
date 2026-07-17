@@ -14,7 +14,7 @@
   .bar {
     width: 150px;
     height: 6px;
-    background: #0f1115;
+    background: var(--bg-deepest);
     border-radius: 4px;
     overflow: hidden;
   }

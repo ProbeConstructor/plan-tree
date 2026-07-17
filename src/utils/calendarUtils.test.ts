@@ -459,15 +459,15 @@ describe("isToday", () => {
 
 describe("getStatusDotColor", () => {
   it("returns gray for 'todo'", () => {
-    expect(getStatusDotColor("todo")).toBe("#6b7280");
+    expect(getStatusDotColor("todo")).toBe("var(--text-muted)");
   });
 
   it("returns blue for 'doing'", () => {
-    expect(getStatusDotColor("doing")).toBe("#3b82f6");
+    expect(getStatusDotColor("doing")).toBe("var(--accent-primary)");
   });
 
   it("returns green for 'done'", () => {
-    expect(getStatusDotColor("done")).toBe("#22c55e");
+    expect(getStatusDotColor("done")).toBe("var(--accent-success)");
   });
 });
 

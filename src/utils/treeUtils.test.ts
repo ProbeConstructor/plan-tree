@@ -356,10 +356,10 @@ describe("calculateGlobalProgress", () => {
 
 describe("getPriorityColor", () => {
   const tests: [string, string][] = [
-    ["critical", "#ef4444"],
-    ["high", "#f59e0b"],
-    ["medium", "#3b82f6"],
-    ["low", "#6b7280"],
+    ["critical", "var(--accent-danger)"],
+    ["high", "var(--accent-warning)"],
+    ["medium", "var(--accent-primary)"],
+    ["low", "var(--text-muted)"],
   ];
 
   it.each(tests)("returns %s for priority '%s'", (priority, expected) => {
@@ -367,7 +367,7 @@ describe("getPriorityColor", () => {
   });
 
   it("returns gray for unknown priority", () => {
-    expect(getPriorityColor("unknown")).toBe("#6b7280");
+    expect(getPriorityColor("unknown")).toBe("var(--text-muted)");
   });
 });
 
@@ -377,12 +377,12 @@ describe("getPriorityColor", () => {
 
 describe("getProgressColor", () => {
   const tests: [number, string][] = [
-    [100, "#4CAF50"],
-    [75, "#FFC107"],
-    [50, "#FFC107"],
-    [25, "#FF9800"],
-    [1, "#FF9800"],
-    [0, "#F44336"],
+    [100, "var(--accent-success)"],
+    [75, "var(--accent-warning)"],
+    [50, "var(--accent-warning)"],
+    [25, "var(--accent-warning)"],
+    [1, "var(--accent-warning)"],
+    [0, "var(--accent-danger)"],
   ];
 
   it.each(tests)("returns '%s' for progress %d", (progress, expected) => {

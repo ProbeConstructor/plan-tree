@@ -12,6 +12,7 @@
     Filler,
   } from "chart.js";
   import { _ } from "svelte-i18n";
+  import { currentTheme } from "../../stores/themeStore";
 
   Chart.register(
     LineController,
@@ -50,6 +51,7 @@
   ];
 
   $effect(() => {
+    const _theme = $currentTheme;
     if (!canvas) return;
 
     const existing = Chart.getChart(canvas);
@@ -57,12 +59,19 @@
 
     if (datasets.length === 0 || labels.length === 0) return;
 
+    // Read CSS custom properties for theming
+    const styles = getComputedStyle(document.documentElement);
+    const textPrimary = styles.getPropertyValue('--text-primary').trim() || '#e7e9ee';
+    const textSecondary = styles.getPropertyValue('--text-secondary').trim() || '#9aa1ab';
+    const textMuted = styles.getPropertyValue('--text-muted').trim() || '#6b7280';
+    const chartGrid = styles.getPropertyValue('--chart-grid').trim() || 'rgba(255,255,255,0.04)';
+
     const chartDatasets = datasets.map((ds, i) => ({
       label: ds.project,
       data: ds.data,
       borderColor: ds.color ?? defaultColors[i % defaultColors.length],
       backgroundColor: ds.color
-        ? ds.color + "1a"  // ~10% opacity hex
+        ? ds.color + "1a"
         : defaultColors[i % defaultColors.length] + "1a",
       fill: false,
       tension: 0.3,
@@ -84,12 +93,12 @@
           title: {
             display: true,
             text: title,
-            color: "#e7e9ee",
+            color: textPrimary,
             font: { size: 14 },
           },
           legend: {
             labels: {
-              color: "#9aa1ab",
+              color: textSecondary,
               font: { size: 11 },
               boxWidth: 12,
               padding: 8,
@@ -107,21 +116,21 @@
         scales: {
           x: {
             ticks: {
-              color: "#6b7280",
+              color: textMuted,
               maxTicksLimit: 31,
               autoSkip: true,
               maxRotation: 0,
             },
-            grid: { color: "rgba(255,255,255,0.04)" },
+            grid: { color: chartGrid },
           },
           y: {
             min: 0,
             max: 100,
             ticks: {
-              color: "#6b7280",
+              color: textMuted,
               callback: (v) => `${v}%`,
             },
-            grid: { color: "rgba(255,255,255,0.04)" },
+            grid: { color: chartGrid },
           },
         },
       },
@@ -163,7 +172,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #6b7280;
+    color: var(--text-muted);
     font-size: 14px;
   }
 </style>

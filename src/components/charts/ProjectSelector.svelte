@@ -49,18 +49,25 @@
     open = false;
     colorPickerFor = null;
   }
+
+  function onTriggerMouseDown(e: MouseEvent) {
+    e.preventDefault(); // Prevents focus shift → avoids onblur closing the dropdown
+    open = !open;
+  }
 </script>
 
-<svelte:window onkeydown={(e) => e.key === "Escape" && closeDropdown()} />
+<svelte:window onkeydown={(e) => e.key === "Escape" && closeDropdown()} onmousedown={(e) => {
+  if (open && !(e.target as Element)?.closest('.selector')) closeDropdown();
+}} />
 
 <div class="selector">
-  <button class="trigger" onclick={() => (open = !open)} onblur={() => setTimeout(() => (open = false), 200)}>
+  <button class="trigger" onmousedown={onTriggerMouseDown}>
     <span>{$_("projectSelector.projects", { values: { count: String(selectedCount) } })}</span>
     <span class="arrow">{open ? "▲" : "▼"}</span>
   </button>
 
   {#if open}
-    <div class="dropdown" role="listbox" aria-multiselectable="true">
+    <div class="dropdown" role="listbox" aria-multiselectable="true" onmousedown={(e) => e.stopPropagation()}>
       <div class="actions">
         <button class="action-btn" onclick={selectAll}>{$_("projectSelector.all")}</button>
         <button class="action-btn" onclick={deselectAll}>{$_("projectSelector.none")}</button>
@@ -110,9 +117,9 @@
 
   .trigger {
     width: 100%;
-    background: #1f2329;
-    color: #e7e9ee;
-    border: 1px solid #30363d;
+    background: var(--bg-elevated);
+    color: var(--text-primary);
+    border: 1px solid var(--border-strong);
     border-radius: 8px;
     padding: 8px 12px;
     cursor: pointer;
@@ -123,7 +130,7 @@
   }
 
   .trigger:hover {
-    background: #2b3138;
+    background: var(--bg-hover);
   }
 
   .arrow {
@@ -136,8 +143,8 @@
     top: calc(100% + 4px);
     left: 0;
     right: 0;
-    background: #1a1d24;
-    border: 1px solid #30363d;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-strong);
     border-radius: 8px;
     z-index: 100;
     padding: 6px;
@@ -150,14 +157,14 @@
     display: flex;
     gap: 6px;
     padding: 4px 6px 8px;
-    border-bottom: 1px solid #262b33;
+    border-bottom: 1px solid var(--bg-muted);
     margin-bottom: 4px;
   }
 
   .action-btn {
-    background: #17191d;
+    background: var(--bg-sidebar);
     color: #58a6ff;
-    border: 1px solid #30363d;
+    border: 1px solid var(--border-strong);
     border-radius: 4px;
     padding: 3px 10px;
     font-size: 11px;
@@ -165,7 +172,7 @@
   }
 
   .action-btn:hover {
-    background: #2b3138;
+    background: var(--bg-hover);
   }
 
   .item {
@@ -174,7 +181,7 @@
   }
 
   .item:hover {
-    background: #1f2329;
+    background: var(--bg-elevated);
   }
 
   .label {
@@ -183,11 +190,11 @@
     gap: 8px;
     cursor: pointer;
     font-size: 13px;
-    color: #e7e9ee;
+    color: var(--text-primary);
   }
 
   .label input[type="checkbox"] {
-    accent-color: #4caf50;
+    accent-color: var(--accent-success);
   }
 
   .color-dot {
@@ -196,7 +203,7 @@
     border-radius: 50%;
     cursor: pointer;
     flex-shrink: 0;
-    border: 1px solid rgba(255, 255, 255, 0.15);
+    border: 1px solid var(--border-strong);
   }
 
   .color-dot:hover {

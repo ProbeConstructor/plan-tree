@@ -32,6 +32,7 @@ import {
   startPanelAutoSaves,
 } from "./panelManager";
 import { getPanelInstance, getPanelProject } from "../stores/panelRegistry";
+import { pluginManager } from "./pluginManager";
 
 // ── Auto-save: now managed by panelManager ───────────────────
 
@@ -110,6 +111,9 @@ export async function loadCurrentProject(): Promise<void> {
 
   // Start auto-save subscriptions for all active panels
   startPanelAutoSaves();
+
+  // Initialize plugin system after profile is bootstrapped
+  await pluginManager.init();
 
   setLoading(false);
 }

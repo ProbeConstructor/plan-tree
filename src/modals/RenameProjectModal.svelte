@@ -62,7 +62,7 @@ function focus(node: HTMLInputElement) {
 
 <style>
 .error{
-    color:#ef4444;
+    color:var(--accent-danger);
     font-size:13px;
     margin:4px 0;
 }

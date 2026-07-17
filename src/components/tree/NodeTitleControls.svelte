@@ -124,7 +124,7 @@
 
   .comment-btn:hover {
     opacity: 1;
-    background: #2a2f37;
+    background: var(--bg-muted);
   }
 
   .star-btn {
@@ -137,15 +137,15 @@
     line-height: 1;
     flex-shrink: 0;
     opacity: 1;
-    color: #fff;
+    color: var(--text-secondary);
     transition: opacity 0.15s, border-color 0.15s, background 0.15s;
-    border-color: rgba(255, 255, 255, 0.08);
+    border-color: var(--border-default);
   }
 
   .star-btn:hover {
     opacity: 1;
-    background: #2a2f37;
-    border-color: rgba(255, 255, 255, 0.15);
+    background: var(--bg-muted);
+    border-color: var(--border-strong);
   }
 
   .star-btn.fav {
@@ -168,19 +168,19 @@
 
   .recurrence-badge:hover {
     opacity: 1;
-    background: #2a2f37;
-    border-color: #2a2f37;
+    background: var(--bg-muted);
+    border-color: var(--border-default);
   }
 
   .recurrence-badge.active {
     opacity: 1;
-    border-color: #facc15;
+    border-color: var(--accent-warning);
     background: rgba(250, 204, 21, 0.1);
   }
 
   .comment-btn.has-comments {
     opacity: 1;
-    border-color: #3b82f6;
+    border-color: var(--accent-primary);
     background: rgba(59, 130, 246, 0.1);
   }
 
@@ -199,12 +199,12 @@
 
   .tag-btn:hover {
     opacity: 1;
-    background: #2a2f37;
+    background: var(--bg-muted);
   }
 
   .tag-btn.has-tags {
     opacity: 1;
-    border-color: #a855f7;
+    border-color: var(--accent-purple);
     background: rgba(168, 85, 247, 0.1);
   }
 </style>

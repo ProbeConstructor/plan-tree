@@ -1,4 +1,4 @@
-import type { TreeNode, Snapshot } from "../types";
+import type { TreeNode, Snapshot, CompletionsMap } from "../types";
 import { encryptText, decryptText } from "./vaultManager";
 import { activeProfileDir } from "../utils/pathUtils";
 import { readTextFile, writeTextFile, mkdir, rename, remove } from "./fsAdapter";
@@ -8,8 +8,15 @@ import {
   getPriorityBreakdown,
   getStatusBreakdown,
 } from "../utils/treeUtils";
+import { writable, get } from "svelte/store";
 
 const PROGRESS_EXTENSION = ".progress.plan";
+
+/**
+ * Store that increments every time a snapshot is captured.
+ * Progress.svelte subscribes to re-fetch data after auto-save.
+ */
+export const snapshotEvent = writable(0);
 
 function projectsDir(): string {
   return `${activeProfileDir()}/projects`;
@@ -24,17 +31,24 @@ export function progressPath(name: string): string {
  * Calcula un Snapshot a partir del árbol actual.
  * Reusa treeUtils para todos los cómputos.
  */
-export function computeSnapshot(data: TreeNode): Snapshot {
-  const globalProgress = calculateGlobalProgress(data);
+export function computeSnapshot(data: TreeNode, completions?: CompletionsMap): Snapshot {
+  const globalProgress = calculateGlobalProgress(data, completions);
   const branchProgress = getDirectBranches(data);
-  const statusBreakdown = getStatusBreakdown(data);
-  const priorityBreakdown = getPriorityBreakdown(data);
+  const statusBreakdown = getStatusBreakdown(data, completions);
+  const priorityBreakdown = getPriorityBreakdown(data, completions);
 
   let totalNodes = 0;
   let doneNodes = 0;
   function walk(node: TreeNode) {
     totalNodes++;
-    if (node.status === "done") doneNodes++;
+    if (
+      node.status === "done" ||
+      (completions != null &&
+        completions[node.id] != null &&
+        Object.keys(completions[node.id]).length > 0)
+    ) {
+      doneNodes++;
+    }
     (node.children ?? []).forEach(walk);
   }
   walk(data);
@@ -61,7 +75,9 @@ class ProgressSnapshotService {
   private async serialized<T>(fn: () => Promise<T>): Promise<T> {
     const result: Promise<T> = this.writeQueue.then(fn);
     // Engullir errores en la cadena para que la cola nunca se rompa
-    this.writeQueue = result.then(() => {}, () => {});
+    this.writeQueue = result.then(() => {}, (e) => {
+      console.error("[SNAPSHOT-DEBUG] serialized queue swallowed error:", e);
+    });
     return result;
   }
 
@@ -70,9 +86,10 @@ class ProgressSnapshotService {
    * Fire-and-forget desde la perspectiva del llamante:
    * la serialización interna evita condiciones de carrera.
    */
-  async capture(project: string, data: TreeNode): Promise<void> {
+  async capture(project: string, data: TreeNode, completions?: CompletionsMap): Promise<void> {
     return this.serialized(async () => {
-      const snapshot = computeSnapshot(data);
+      const snapshot = computeSnapshot(data, completions);
+      console.log(`[SNAPSHOT-DEBUG] capture(): computed snapshot — totalNodes=${snapshot.totalNodes}, doneNodes=${snapshot.doneNodes}, progress=${snapshot.globalProgress}`);
 
       // Leer snapshots existentes
       let snapshots: Snapshot[] = [];
@@ -87,11 +104,17 @@ class ProgressSnapshotService {
       }
 
       snapshots.push(snapshot);
+      console.log(`[SNAPSHOT-DEBUG] capture(): total snapshots in file now: ${snapshots.length}, latest doneNodes: ${snapshots[snapshots.length - 1].doneNodes}`);
 
       // Escribir
       const encrypted = await encryptText(JSON.stringify(snapshots));
       await mkdir(projectsDir(), { recursive: true });
       await writeTextFile(progressPath(project), encrypted);
+      console.log(`[SNAPSHOT-DEBUG] capture(): wrote ${progressPath(project)} successfully`);
+
+      // Notificar a suscriptores (Progress.svelte) que hay un snapshot nuevo
+      snapshotEvent.update((n) => n + 1);
+      console.log(`[SNAPSHOT-DEBUG] capture(): snapshotEvent incremented to ${get(snapshotEvent)}`);
     });
   }
 
@@ -108,11 +131,14 @@ class ProgressSnapshotService {
       const raw = await readTextFile(progressPath(project));
       const decrypted = await decryptText(raw);
       const all: Snapshot[] = JSON.parse(decrypted);
-      return all.filter((s) => {
+      const filtered = all.filter((s) => {
         const d = new Date(s.timestamp);
-        return d.getUTCFullYear() === year && d.getUTCMonth() === month;
+        return d.getFullYear() === year && d.getMonth() === month;
       });
+      console.log(`[SNAPSHOT-DEBUG] loadSnapshots("${project}", ${year}, ${month}): total=${all.length}, filtered=${filtered.length}, lastDoneNodes=${filtered.length > 0 ? filtered[filtered.length - 1].doneNodes : "N/A"}`);
+      return filtered;
     } catch {
+      console.log(`[SNAPSHOT-DEBUG] loadSnapshots("${project}", ${year}, ${month}): file not found or corrupt, returning []`);
       return [];
     }
   }

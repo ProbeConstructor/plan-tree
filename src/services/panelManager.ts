@@ -12,6 +12,7 @@ import { cleanStaleTagRefs } from "../stores/tagStore";
 import { recalcInstanceProgress } from "../stores/treeInstance";
 import { AutoSaveStrategy } from "./autoSaveStrategy";
 import { saveProject } from "./projectManager";
+import { progressSnapshot } from "./progressSnapshotService";
 
 // ── Panel Manager ────────────────────────────────────────────
 // Coordinates project loading into specific panels.
@@ -195,6 +196,14 @@ function startAutoSaveForPanel(panelId: PanelId): void {
 
   const instance = getPanelInstance(panelId);
   const as = getAutoSaveForProject(projectName);
+  as.onAfterSave = (project, data) => {
+    // [SNAPSHOT-DEBUG] trace: does the tree have done nodes when capture fires?
+    let total = 0, done = 0;
+    const walk = (n: any) => { total++; if (n.status === "done") done++; (n.children ?? []).forEach(walk); };
+    walk(data.tree);
+    console.log(`[SNAPSHOT-DEBUG] onAfterSave fired for "${project}": tree has ${total} nodes, ${done} done`);
+    return progressSnapshot.capture(project, data.tree, data.completions);
+  };
   const unsubs: Array<() => void> = [];
 
   // Subscribe to tree changes

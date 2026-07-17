@@ -46,7 +46,7 @@
   }
   .subtitle {
     font-size: 14px;
-    color: #9aa1ab;
+    color: var(--text-secondary);
     margin: 0;
   }
   .cards {
@@ -60,17 +60,17 @@
     align-items: center;
     gap: 12px;
     padding: 24px 32px;
-    background: #1a1d24;
-    border: 1px solid #2a2f37;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-default);
     border-radius: 10px;
-    color: #e7e9ee;
+    color: var(--text-primary);
     cursor: pointer;
     transition: border-color 0.15s, background 0.15s;
     min-width: 140px;
   }
   .lang-card:hover {
-    border-color: #4b5563;
-    background: #22252d;
+    border-color: var(--text-disabled);
+    background: var(--bg-hover);
   }
   .flag {
     font-size: 36px;
@@ -81,7 +81,7 @@
   }
   .hint {
     font-size: 12px;
-    color: #6b7280;
+    color: var(--text-muted);
     margin: 0;
   }
 </style>

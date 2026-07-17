@@ -68,8 +68,8 @@
     left: 0;
     width: 320px;
     max-height: 360px;
-    background: #1a1d24;
-    border: 1px solid #30363d;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-strong);
     border-radius: 10px;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
     display: flex;
@@ -82,12 +82,12 @@
     justify-content: space-between;
     align-items: center;
     padding: 10px 12px;
-    border-bottom: 1px solid #2a2f37;
+    border-bottom: 1px solid var(--border-default);
   }
 
   .label {
     font-size: 12px;
-    color: #9ca3af;
+    color: var(--text-muted);
     text-transform: uppercase;
     letter-spacing: 0.05em;
   }
@@ -95,7 +95,7 @@
   .close-btn {
     background: none;
     border: none;
-    color: #6b7280;
+    color: var(--text-muted);
     cursor: pointer;
     font-size: 14px;
     padding: 2px 6px;
@@ -103,15 +103,15 @@
   }
 
   .close-btn:hover {
-    background: #2a2f37;
-    color: #e5e7eb;
+    background: var(--bg-muted);
+    color: var(--text-primary);
   }
 
   .content {
     padding: 12px;
     overflow-y: auto;
     flex: 1;
-    color: #d6dae2;
+    color: var(--text-primary);
     font-size: 13px;
     line-height: 1.5;
   }
@@ -121,7 +121,7 @@
   .content :global(h2),
   .content :global(h3),
   .content :global(h4) {
-    color: #e5e7eb;
+    color: var(--text-primary);
     margin: 8px 0 4px;
     font-size: 14px;
   }
@@ -145,15 +145,15 @@
   }
 
   .content :global(code) {
-    background: #0f1115;
+    background: var(--bg-deepest);
     padding: 1px 4px;
     border-radius: 3px;
     font-size: 12px;
-    color: #facc15;
+    color: var(--accent-warning);
   }
 
   .content :global(pre) {
-    background: #0f1115;
+    background: var(--bg-deepest);
     padding: 8px 12px;
     border-radius: 6px;
     overflow-x: auto;
@@ -163,14 +163,14 @@
   .content :global(pre code) {
     background: none;
     padding: 0;
-    color: #e5e7eb;
+    color: var(--text-primary);
   }
 
   .content :global(blockquote) {
-    border-left: 3px solid #3b82f6;
+    border-left: 3px solid var(--accent-primary);
     padding-left: 10px;
     margin: 8px 0;
-    color: #9ca3af;
+    color: var(--text-muted);
   }
 
   .content :global(a) {
@@ -179,25 +179,25 @@
   }
 
   .content :global(strong) {
-    color: #e5e7eb;
+    color: var(--text-primary);
   }
 
   .empty {
-    color: #6b7280;
+    color: var(--text-muted);
     text-align: center;
     padding: 12px;
   }
 
   .popover-footer {
     padding: 8px 12px;
-    border-top: 1px solid #2a2f37;
+    border-top: 1px solid var(--border-default);
   }
 
   .edit-btn {
     width: 100%;
-    background: #1f2329;
-    color: #e5e7eb;
-    border: 1px solid #30363d;
+    background: var(--bg-elevated);
+    color: var(--text-primary);
+    border: 1px solid var(--border-strong);
     border-radius: 6px;
     padding: 6px 12px;
     cursor: pointer;
@@ -205,6 +205,6 @@
   }
 
   .edit-btn:hover {
-    background: #2b3138;
+    background: var(--bg-hover);
   }
 </style>

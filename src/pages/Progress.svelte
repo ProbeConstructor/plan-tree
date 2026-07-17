@@ -2,7 +2,7 @@
   import { get } from "svelte/store";
   import { projects, activeProject } from "../stores/workspaceStore";
   import { activeProfile } from "../stores/profileStore";
-  import { progressSnapshot } from "../services/progressSnapshotService";
+  import { progressSnapshot, snapshotEvent } from "../services/progressSnapshotService";
   import {
     getProjectColors,
     saveProjectColor,
@@ -17,7 +17,6 @@
     snapshotToStats,
   } from "../utils/chartDataUtils";
   import MultiProjectLineChart from "../components/charts/MultiProjectLineChart.svelte";
-  import BarChart from "../components/charts/BarChart.svelte";
   import DonutChart from "../components/charts/DonutChart.svelte";
   import StatsCards from "../components/charts/StatsCards.svelte";
   import ProjectSelector from "../components/charts/ProjectSelector.svelte";
@@ -171,6 +170,7 @@
     error = null;
     try {
       snapshots = await progressSnapshot.loadSnapshots(project, currentYear, currentMonth);
+      console.log(`[SNAPSHOT-DEBUG] fetchSnapshots: got ${snapshots.length} snapshots for "${project}", stats:`, snapshots.length > 0 ? snapshots[snapshots.length - 1] : "empty");
     } catch (err) {
       console.error("Error al cargar snapshots:", err);
       error = $_("progress.loadError");
@@ -233,6 +233,15 @@
       loadMultiProjectSnapshots();
     }
   });
+
+  // Re-fetch cuando se crea un nuevo snapshot (auto-save)
+  $effect(() => {
+    void $snapshotEvent;
+    if (initialized) {
+      fetchSnapshots();
+      loadMultiProjectSnapshots();
+    }
+  });
 </script>
 
 <div class="progress-page">
@@ -284,15 +293,6 @@
         {/if}
       </div>
       <div class="chart-block">
-        <BarChart
-          data={dailyBarData.data}
-          labels={dailyBarData.labels}
-          weekIndices={dailyBarData.weekIndices}
-          weekLabels={dailyBarData.weekLabels}
-          title={$_("progress.completedByDay")}
-        />
-      </div>
-      <div class="chart-block">
         <DonutChart data={donutData} title={$_("progress.currentStatus")} />
       </div>
     </div>
@@ -315,15 +315,15 @@
     margin: 0;
     font-size: 20px;
     font-weight: 600;
-    color: #e7e9ee;
+    color: var(--text-primary);
     min-width: 180px;
     text-align: center;
   }
 
   .nav-btn {
-    background: #1f2329;
-    color: #e7e9ee;
-    border: 1px solid #30363d;
+    background: var(--bg-elevated);
+    color: var(--text-primary);
+    border: 1px solid var(--border-strong);
     border-radius: 6px;
     padding: 6px 12px;
     cursor: pointer;
@@ -331,14 +331,14 @@
   }
 
   .nav-btn:hover {
-    background: #2b3138;
+    background: var(--bg-hover);
   }
 
   .today-btn {
     margin-left: auto;
-    background: #1f2329;
+    background: var(--bg-elevated);
     color: #58a6ff;
-    border: 1px solid #30363d;
+    border: 1px solid var(--border-strong);
     border-radius: 6px;
     padding: 6px 16px;
     cursor: pointer;
@@ -347,7 +347,7 @@
   }
 
   .today-btn:hover {
-    background: #2b3138;
+    background: var(--bg-hover);
   }
 
   .charts-grid {
@@ -357,8 +357,8 @@
   }
 
   .chart-block {
-    background: #1a1d24;
-    border: 1px solid #262b33;
+    background: var(--bg-surface);
+    border: 1px solid var(--bg-muted);
     border-radius: 12px;
     padding: 18px;
   }
@@ -373,7 +373,7 @@
   .chart-title {
     font-size: 14px;
     font-weight: 600;
-    color: #e7e9ee;
+    color: var(--text-primary);
   }
 
   .empty-chart {
@@ -381,23 +381,23 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #6b7280;
+    color: var(--text-muted);
     font-size: 14px;
   }
 
   .state-msg {
     text-align: center;
     padding: 60px 20px;
-    color: #9aa1ab;
+    color: var(--text-secondary);
     font-size: 15px;
   }
 
   .state-msg.error {
-    color: #ef4444;
+    color: var(--accent-danger);
   }
 
   .state-msg .sub {
-    color: #6b7280;
+    color: var(--text-muted);
     font-size: 13px;
     margin-top: 8px;
   }

@@ -16,11 +16,11 @@
   import { relaunch } from "@tauri-apps/plugin-process";
   import { tagDefs, tagFilter } from "../stores/tagStore";
   import TagManagerModal from "../modals/TagManagerModal.svelte";
-  import { getFocusedPanel, getProjectForPanel, switchPanelProject } from "../services/panelManager";
   import { getPanelInstance } from "../stores/panelRegistry";
   import type { PanelId } from "../types";
   import { _ } from "svelte-i18n";
   import { setLanguage, currentLanguage } from "../stores/languageStore";
+  import { currentTheme } from "../stores/themeStore";
 
   let installError = $state("");
 
@@ -74,7 +74,7 @@
 
   function changeProject(event: Event) {
     const name = (event.target as HTMLSelectElement).value;
-    switchPanelProject(focusedPanel, name);
+    switchProject(name);
   }
 
   function toggleTagFilter(tagId: string) {
@@ -217,6 +217,15 @@
       <option value="en">🇺🇸 EN</option>
     </select>
 
+    <button
+      class="theme-toggle"
+      on:click={() => currentTheme.toggle()}
+      aria-label={$currentTheme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+      title={$currentTheme === "dark" ? "Light mode" : "Dark mode"}
+    >
+      {$currentTheme === "dark" ? "\u2600\uFE0F" : "\uD83C\uDF19"}
+    </button>
+
     <button on:click={() => session.logout()}> {$_("sidebar.lock")} </button>
 
     <span class="sidebar-version">v{__APP_VERSION__}</span>
@@ -234,8 +243,8 @@
     overflow: hidden;
     box-sizing: border-box;
 
-    background: #17191d;
-    border-right: 1px solid #2a2f37;
+    background: var(--bg-sidebar);
+    border-right: 1px solid var(--border-default);
   }
 
   .scrollable-content {
@@ -251,16 +260,16 @@
   button {
     width: 100%;
     box-sizing: border-box;
-    background: #1f2329;
-    color: white;
-    border: 1px solid #30363d;
+    background: var(--bg-elevated);
+    color: var(--text-primary);
+    border: 1px solid var(--border-strong);
     border-radius: 8px;
     padding: 10px;
     cursor: pointer;
   }
 
   button:hover:not(:disabled) {
-    background: #2b3138;
+    background: var(--bg-hover);
   }
 
   button:disabled {
@@ -273,13 +282,13 @@
     width: calc(100% - 12px);
     padding: 6px 10px !important;
     font-size: 12px !important;
-    background: #1a1d24 !important;
-    border-color: #2a2f37 !important;
+    background: var(--bg-surface) !important;
+    border-color: var(--border-default) !important;
   }
 
   .filter-btn.active {
-    background: rgba(250, 204, 21, 0.1) !important;
-    border-color: #facc15 !important;
+    background: var(--bg-warning-subtle) !important;
+    border-color: var(--accent-warning) !important;
   }
 
   .tag-filter-section {
@@ -291,7 +300,7 @@
 
   .tag-filter-label {
     font-size: 11px;
-    color: #9ca3af;
+    color: var(--text-muted);
     text-transform: uppercase;
     letter-spacing: 0.05em;
     padding: 4px 0;
@@ -305,7 +314,7 @@
 
   .tag-toggle.active {
     background: rgba(168, 85, 247, 0.1) !important;
-    border-color: #a855f7 !important;
+    border-color: var(--accent-purple) !important;
   }
 
   .tag-dot {
@@ -322,9 +331,9 @@
   select {
     width: 100%;
     box-sizing: border-box;
-    background: #1f2329;
-    color: black;
-    border: 1px solid #30363d;
+    background: var(--bg-elevated);
+    color: var(--text-primary);
+    border: 1px solid var(--border-strong);
     border-radius: 8px;
     padding: 10px;
     cursor: pointer;
@@ -333,7 +342,7 @@
   hr {
     width: 100%;
     border: none;
-    border-top: 1px solid #30363d;
+    border-top: 1px solid var(--border-strong);
   }
 
   .bottom-section {
@@ -346,25 +355,25 @@
   .sidebar-version {
     text-align: center;
     font-size: 11px;
-    color: #4b5563;
+    color: var(--text-disabled);
   }
 
   .update-btn.up-to-date {
-    background: rgba(34, 197, 94, 0.1) !important;
-    border-color: #22c55e !important;
-    color: #22c55e !important;
+    background: var(--bg-success-subtle) !important;
+    border-color: var(--accent-success) !important;
+    color: var(--accent-success) !important;
     cursor: pointer !important;
     font-size: 12px;
   }
 
   .update-btn.up-to-date:hover {
-    background: rgba(34, 197, 94, 0.2) !important;
+    background: var(--bg-success-subtle) !important;
   }
 
   .update-btn.update-error {
-    background: rgba(239, 68, 68, 0.1) !important;
-    border-color: #ef4444 !important;
-    color: #ef4444 !important;
+    background: var(--bg-danger-subtle) !important;
+    border-color: var(--accent-danger) !important;
+    color: var(--accent-danger) !important;
     cursor: default !important;
     font-size: 12px;
   }
@@ -372,12 +381,29 @@
   .lang-select {
     width: 100%;
     box-sizing: border-box;
-    background: #1f2329;
-    color: #e5e7eb;
-    border: 1px solid #30363d;
+    background: var(--bg-elevated);
+    color: var(--text-primary);
+    border: 1px solid var(--border-strong);
     border-radius: 8px;
     padding: 8px 10px;
     cursor: pointer;
     font-size: 13px;
+  }
+
+  .theme-toggle {
+    width: 100%;
+    box-sizing: border-box;
+    background: var(--bg-elevated);
+    color: var(--text-primary);
+    border: 1px solid var(--border-strong);
+    border-radius: 8px;
+    padding: 8px 10px;
+    cursor: pointer;
+    font-size: 14px;
+    text-align: center;
+  }
+
+  .theme-toggle:hover {
+    background: var(--bg-hover);
   }
 </style>

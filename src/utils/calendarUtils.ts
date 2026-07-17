@@ -176,12 +176,12 @@ export function isToday(year: number, month: number, day: number): boolean {
  */
 export function getStatusDotColor(status: string): string {
   const colors: Record<string, string> = {
-    todo: "#6b7280",
-    doing: "#3b82f6",
-    done: "#22c55e",
-    missed: "#991b1b",
+    todo: "var(--text-muted)",
+    doing: "var(--accent-primary)",
+    done: "var(--accent-success)",
+    missed: "var(--accent-danger)",
   };
-  return colors[status] ?? "#6b7280"; // fallback to gray for unknown status
+  return colors[status] ?? "var(--text-muted)";
 }
 
 // ---------------------------------------------------------------------------

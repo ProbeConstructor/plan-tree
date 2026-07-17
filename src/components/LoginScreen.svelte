@@ -256,23 +256,23 @@
   }
   .hint {
     font-size: 13px;
-    color: #9aa1ab;
+    color: var(--text-secondary);
   }
   .error {
-    color: #ef4444;
+    color: var(--accent-danger);
     font-size: 13px;
   }
   input {
-    background: #1a1d24;
-    border: 1px solid #2a2f37;
-    color: #e7e9ee;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-default);
+    color: var(--text-primary);
     border-radius: 6px;
     padding: 8px;
   }
   button {
-    background: #1a1d24;
-    border: 1px solid #2a2f37;
-    color: #e7e9ee;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-default);
+    color: var(--text-primary);
     border-radius: 6px;
     padding: 8px;
     cursor: pointer;
@@ -280,7 +280,7 @@
   .link-btn {
     background: none;
     border: none;
-    color: #6b7280;
+    color: var(--text-muted);
     font-size: 12px;
     text-decoration: underline;
     cursor: pointer;
@@ -293,15 +293,15 @@
   }
   .version-badge {
     font-size: 11px;
-    color: #4b5563;
+    color: var(--text-disabled);
     margin: 40px 0 0 0;
     text-align: left;
   }
 
   .recovery-key {
-    background: #1a1d24;
-    border: 1px solid #facc15;
-    color: #facc15;
+    background: var(--bg-surface);
+    border: 1px solid var(--accent-warning);
+    color: var(--accent-warning);
     border-radius: 6px;
     padding: 10px;
     font-size: 13px;
@@ -310,9 +310,9 @@
   }
 
   .lang-select {
-    background: #1a1d24;
-    border: 1px solid #2a2f37;
-    color: #e7e9ee;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-default);
+    color: var(--text-primary);
     border-radius: 6px;
     padding: 8px;
     cursor: pointer;

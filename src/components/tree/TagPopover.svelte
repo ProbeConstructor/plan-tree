@@ -146,8 +146,8 @@
     left: 0;
     width: 260px;
     max-height: 320px;
-    background: #1a1d24;
-    border: 1px solid #30363d;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-strong);
     border-radius: 10px;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
     display: flex;
@@ -160,12 +160,12 @@
     justify-content: space-between;
     align-items: center;
     padding: 8px 12px;
-    border-bottom: 1px solid #2a2f37;
+    border-bottom: 1px solid var(--border-default);
   }
 
   .label {
     font-size: 12px;
-    color: #9ca3af;
+    color: var(--text-muted);
     text-transform: uppercase;
     letter-spacing: 0.05em;
   }
@@ -173,7 +173,7 @@
   .close-btn {
     background: none;
     border: none;
-    color: #6b7280;
+    color: var(--text-muted);
     cursor: pointer;
     font-size: 14px;
     padding: 2px 6px;
@@ -181,20 +181,20 @@
   }
 
   .close-btn:hover {
-    background: #2a2f37;
-    color: #e5e7eb;
+    background: var(--bg-muted);
+    color: var(--text-primary);
   }
 
   .input-row {
     padding: 8px 12px;
-    border-bottom: 1px solid #2a2f37;
+    border-bottom: 1px solid var(--border-default);
   }
 
   .tag-input {
     width: 100%;
-    background: #0f1115;
-    border: 1px solid #30363d;
-    color: #e5e7eb;
+    background: var(--bg-deepest);
+    border: 1px solid var(--border-strong);
+    color: var(--text-primary);
     border-radius: 6px;
     padding: 6px 8px;
     font-size: 12px;
@@ -203,7 +203,7 @@
   }
 
   .tag-input:focus {
-    border-color: #3b82f6;
+    border-color: var(--accent-primary);
   }
 
   .suggestions {
@@ -219,7 +219,7 @@
     width: 100%;
     background: none;
     border: none;
-    color: #d6dae2;
+    color: var(--text-primary);
     cursor: pointer;
     padding: 6px 12px;
     font-size: 12px;
@@ -227,7 +227,7 @@
   }
 
   .suggestion-item:hover {
-    background: #262b33;
+    background: var(--bg-muted);
   }
 
   .suggestion-item.assigned {
@@ -235,7 +235,7 @@
   }
 
   .suggestion-item.create {
-    color: #9ca3af;
+    color: var(--text-muted);
     font-style: italic;
   }
 
@@ -251,12 +251,12 @@
   }
 
   .check {
-    color: #3b82f6;
+    color: var(--accent-primary);
     font-weight: bold;
   }
 
   .empty {
-    color: #6b7280;
+    color: var(--text-muted);
     text-align: center;
     padding: 12px;
     font-size: 12px;

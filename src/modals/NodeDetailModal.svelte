@@ -206,23 +206,23 @@
   .field-label {
     display: block;
     font-size: 12px;
-    color: #9ca3af;
+    color: var(--text-muted);
     margin-bottom: 4px;
   }
 
   input,
   select {
     width: 100%;
-    background: #1a1d24;
-    border: 1px solid #2a2f37;
-    color: #e5e7eb;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-default);
+    color: var(--text-primary);
     padding: 8px;
     border-radius: 4px;
     box-sizing: border-box;
   }
 
   .error {
-    color: #ef4444;
+    color: var(--accent-danger);
     font-size: 13px;
   }
 
@@ -234,12 +234,12 @@
   }
 
   .readonly-title {
-    color: #e5e7eb;
+    color: var(--text-primary);
     font-weight: 500;
   }
 
   .text-muted {
-    color: #9ca3af;
+    color: var(--text-muted);
     text-align: center;
     padding: 24px;
   }
@@ -249,14 +249,14 @@
     border-radius: 4px;
     border: none;
     cursor: pointer;
-    background: #1f2329;
-    border: 1px solid #30363d;
-    color: #e5e7eb;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-strong);
+    color: var(--text-primary);
   }
 
   .btn.primary {
-    background: #3b82f6;
-    color: white;
+    background: var(--accent-primary);
+    color: var(--text-inverse);
     border: none;
   }
 
@@ -284,33 +284,33 @@
 
   :global(.editor-toolbar) {
     flex-shrink: 0;
-    background: #0f1115;
-    border: 1px solid #2a2f37;
+    background: var(--bg-deepest);
+    border: 1px solid var(--border-default);
     border-bottom: none;
     border-radius: 4px 4px 0 0;
   }
 
   :global(.editor-toolbar button) {
-    color: #9ca3af;
+    color: var(--text-muted);
   }
 
   :global(.editor-toolbar button:hover) {
-    background: #1a1d24;
-    color: #e5e7eb;
+    background: var(--bg-surface);
+    color: var(--text-primary);
   }
 
   :global(.editor-toolbar button.active) {
-    background: #2a2f37;
-    color: #e5e7eb;
+    background: var(--bg-muted);
+    color: var(--text-primary);
   }
 
   :global(.CodeMirror) {
     flex: 1;
     min-height: 0;
     height: auto;
-    background: #0f1115;
-    color: #e5e7eb;
-    border: 1px solid #2a2f37;
+    background: var(--bg-deepest);
+    color: var(--text-primary);
+    border: 1px solid var(--border-default);
     border-radius: 0 0 4px 4px;
   }
 
@@ -319,12 +319,12 @@
   }
 
   :global(.CodeMirror-cursor) {
-    border-color: #e5e7eb;
+    border-color: var(--text-primary);
   }
 
   :global(.CodeMirror-gutters) {
-    background: #1a1d24;
-    border-right: 1px solid #2a2f37;
+    background: var(--bg-surface);
+    border-right: 1px solid var(--border-default);
   }
 
   .mde-textarea {

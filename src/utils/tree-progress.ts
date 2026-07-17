@@ -1,8 +1,20 @@
 import type { TreeNode, VirtualInstance, CompletionsMap } from "../types";
 
-export function calculateNodeProgress(node: TreeNode): number {
+function isNodeDone(node: TreeNode, completions?: CompletionsMap): boolean {
+  return (
+    node.status === "done" ||
+    (completions != null &&
+      completions[node.id] != null &&
+      Object.keys(completions[node.id]).length > 0)
+  );
+}
+
+export function calculateNodeProgress(
+  node: TreeNode,
+  completions?: CompletionsMap,
+): number {
   if (node.children.length === 0) {
-    if (node.status === "done") return 100;
+    if (isNodeDone(node, completions)) return 100;
     if (node.status === "doing") return 50;
     return 0;
   }
@@ -10,15 +22,18 @@ export function calculateNodeProgress(node: TreeNode): number {
   const total = node.children.length;
 
   const sum = node.children.reduce(
-    (acc, child) => acc + calculateNodeProgress(child),
+    (acc, child) => acc + calculateNodeProgress(child, completions),
     0,
   );
 
   return Math.round(sum / total);
 }
 
-export function calculateGlobalProgress(node: TreeNode): number {
-  return calculateNodeProgress(node);
+export function calculateGlobalProgress(
+  node: TreeNode,
+  completions?: CompletionsMap,
+): number {
+  return calculateNodeProgress(node, completions);
 }
 
 export function calculateProgressMap(root: TreeNode): Map<string, number> {
@@ -60,7 +75,7 @@ export function getDirectBranches(
   }));
 }
 
-export function getPriorityBreakdown(root: TreeNode) {
+export function getPriorityBreakdown(root: TreeNode, completions?: CompletionsMap) {
   const breakdown = {
     critical: { total: 0, done: 0 },
     high: { total: 0, done: 0 },
@@ -71,7 +86,7 @@ export function getPriorityBreakdown(root: TreeNode) {
   function walk(node: TreeNode) {
     if (breakdown[node.priority]) {
       breakdown[node.priority].total++;
-      if (node.status === "done") breakdown[node.priority].done++;
+      if (isNodeDone(node, completions)) breakdown[node.priority].done++;
     }
     node.children.forEach(walk);
   }
@@ -81,13 +96,16 @@ export function getPriorityBreakdown(root: TreeNode) {
   return breakdown;
 }
 
-export function getStatusBreakdown(root: TreeNode): { todo: number; doing: number; done: number } {
+export function getStatusBreakdown(
+  root: TreeNode,
+  completions?: CompletionsMap,
+): { todo: number; doing: number; done: number } {
   const breakdown = { todo: 0, doing: 0, done: 0 };
 
   function walk(node: TreeNode) {
-    if (node.status === "todo") breakdown.todo++;
+    if (isNodeDone(node, completions)) breakdown.done++;
     else if (node.status === "doing") breakdown.doing++;
-    else if (node.status === "done") breakdown.done++;
+    else breakdown.todo++;
     node.children.forEach(walk);
   }
 

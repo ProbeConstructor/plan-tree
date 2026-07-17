@@ -41,7 +41,7 @@
 
   .desc {
     margin-left: auto;
-    color: #9ca3af;
+    color: var(--text-muted);
     font-size: 14px;
   }
 
@@ -50,16 +50,16 @@
     padding: 3px 8px;
     font-size: 12px;
     font-family: inherit;
-    color: #e7e9ee;
-    background: #2a2f37;
-    border: 1px solid #3a4049;
+    color: var(--text-primary);
+    background: var(--border-default);
+    border: 1px solid var(--border-strong);
     border-radius: 4px;
     min-width: 24px;
     text-align: center;
   }
 
   .plus {
-    color: #6b7280;
+    color: var(--text-muted);
     font-size: 12px;
   }
 </style>

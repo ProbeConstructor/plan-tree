@@ -77,6 +77,21 @@ npm run build               # frontend build only; tauri build wraps it
 - `snapshotsToMultiProjectLineData()` en `chartDataUtils.ts`: carry-forward progress, proyectos sin snapshots como 0%.
 - Selección guardada por perfil en `profiles.json` (`graphSelectionByProfile` + `projectColorsByProfile`).
 
+### Plugin System
+
+- Plugins are local ES modules loaded via dynamic `import()` from `~/.config/plan-tree/plugins/`.
+- Each plugin has a `manifest.json` (id, name, version, permissions, entry) and an ES module entry point.
+- `PluginManager` service (`src/services/pluginManager.ts`): discovery, manifest validation, parallel loading, lifecycle (enable/disable/reload).
+- `PluginAPI` facade (`src/services/pluginApi.ts`): typed, permission-enforced surface — views, commands, tree mutations, events, CSS injection, settings.
+- `PermissionVerifier` (`src/services/permissionVerifier.ts`): manifest validation + call-time enforcement + auto-disable at 3 violations.
+- `PluginEventBus` (`src/services/pluginEventBus.ts`): typed event emitter for plugin lifecycle + tree mutation events.
+- `PluginStore` (`src/stores/pluginStore.ts`): Svelte writable store with `PluginMeta[]` (loaded/active/disabled/errored).
+- `ViewRegistry` (`src/stores/viewRegistry.ts`): `Map<string, Component>` — built-in views + plugin-registered views.
+- `ViewRenderer.svelte`: registry-based dispatch with ErrorBoundary per view.
+- Plugin settings: profile-scoped via `pluginSettingsByProfile` in `profiles.json`.
+- Crash isolation: try/catch per PluginAPI call; plugins auto-disable on failure.
+- Permissions: `tree_read`, `tree_write`, `view_register`, `command_register`, `css_inject`, `settings_write`.
+
 ## Commands
 
 | Command | What |
@@ -116,6 +131,14 @@ npm run build               # frontend build only; tauri build wraps it
 - `src/components/Sidebar.svelte` — update button + navigation.
 - `.github/workflows/release.yml` — CI release pipeline with signing + latest.json.
 - `plan-tree.fish` — dev launcher script with the WebKit env var.
+- `src/services/pluginManager.ts` — plugin discovery, loading, enable/disable lifecycle.
+- `src/services/pluginApi.ts` — typed PluginAPI facade with permission enforcement.
+- `src/services/permissionVerifier.ts` — manifest + call-time permission checking.
+- `src/services/pluginEventBus.ts` — typed event emitter for plugin lifecycle.
+- `src/stores/pluginStore.ts` — Svelte store for plugin metadata.
+- `src/stores/viewRegistry.ts` — Map<string, Component> for view dispatch.
+- `src/components/PluginSettings.svelte` — plugin settings panel UI.
+- `src/components/PluginErrorFallback.svelte` — error fallback for crashed plugin views.
 
 ## graphify
 

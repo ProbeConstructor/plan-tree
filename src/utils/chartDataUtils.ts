@@ -239,9 +239,11 @@ export function snapshotToStats(
   if (snapshots.length === 0) return null;
 
   const latest = snapshots[snapshots.length - 1];
-  return {
+  const stats = {
     total: latest.totalNodes,
     done: latest.doneNodes,
     progress: latest.globalProgress,
   };
+  console.log(`[SNAPSHOT-DEBUG] snapshotToStats: ${snapshots.length} snapshots, latest ts=${latest.timestamp}, stats=`, stats);
+  return stats;
 }

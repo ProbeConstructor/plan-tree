@@ -1,0 +1,104 @@
+/* SPDX-License-Identifier: GPL-3.0-only */
+
+/*
+ * Design tokens — light/dark mode theming system.
+ * Dark mode: Spotify/Discord-inspired deep dark palette.
+ * Light mode: Clean modern palette with Discord-style contrast.
+ */
+
+/* ── Dark mode (default) ────────────────────────────── */
+
+[data-theme="dark"] {
+  /* Backgrounds — VS Code-inspired depth hierarchy */
+  --bg-deepest: #1e1e1e;
+  --bg-surface: #252526;
+  --bg-elevated: #333333;
+  --bg-sidebar: #252526;
+  --bg-inset: #181818;
+  --bg-hover: #2a2d2e;
+  --bg-muted: #333333;
+  --bg-input: #3c3c3c;
+
+  /* Borders — subtle, visible separation */
+  --border-default: #3c3c3c;
+  --border-strong: #474747;
+  --border-focus: #5865f2;
+
+  /* Text — high contrast, easy on eyes */
+  --text-primary: #cccccc;
+  --text-secondary: #969696;
+  --text-muted: #6a6a6a;
+  --text-disabled: #4a4a4a;
+  --text-inverse: #ffffff;
+
+  /* Accent / functional — Discord blurple + Spotify green */
+  --accent-primary: #5865f2;
+  --accent-success: #23a55a;
+  --accent-warning: #f0b232;
+  --accent-danger: #f23f43;
+  --accent-purple: #9b59b6;
+  --bg-danger-subtle: rgba(242, 63, 67, 0.12);
+  --bg-success-subtle: rgba(35, 165, 90, 0.12);
+  --bg-warning-subtle: rgba(240, 178, 50, 0.12);
+  --backdrop: rgba(0, 0, 0, 0.6);
+
+  /* Chart */
+  --chart-grid: rgba(255, 255, 255, 0.06);
+  --chart-text: #6a6a6a;
+}
+
+/* ── Light mode ─────────────────────────────────────── */
+
+[data-theme="light"] {
+  /* Backgrounds — soft pastel depth */
+  --bg-deepest: #e8eaef;
+  --bg-surface: #f6f7fa;
+  --bg-elevated: #ffffff;
+  --bg-sidebar: #dfe2ea;
+  --bg-inset: #dce0e8;
+  --bg-hover: #d0d5e0;
+  --bg-muted: #d5d9e2;
+  --bg-input: #ffffff;
+
+  /* Borders — visible, clear definition */
+  --border-default: #b8beca;
+  --border-strong: #9aa2b0;
+  --border-focus: #5865f2;
+
+  /* Text — dark enough to read on pastels */
+  --text-primary: #1e2028;
+  --text-secondary: #4a5060;
+  --text-muted: #7a8090;
+  --text-disabled: #b0b5c0;
+  --text-inverse: #ffffff;
+
+  /* Accent / functional — pastel-tinted */
+  --accent-primary: #6366f1;
+  --accent-success: #22c55e;
+  --accent-warning: #eab308;
+  --accent-danger: #ef4444;
+  --accent-purple: #a855f7;
+  --bg-danger-subtle: #fde8e8;
+  --bg-success-subtle: #dcfce7;
+  --bg-warning-subtle: #fef9c3;
+  --backdrop: rgba(0, 0, 0, 0.2);
+
+  /* Chart */
+  --chart-grid: rgba(0, 0, 0, 0.08);
+  --chart-text: #4a5060;
+}
+
+/* ── Transition ─────────────────────────────────────── */
+
+*,
+*::before,
+*::after {
+  transition: background-color 200ms ease, color 200ms ease, border-color 200ms ease;
+}
+
+svg,
+svg *,
+canvas,
+canvas * {
+  transition: none !important;
+}

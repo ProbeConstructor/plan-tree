@@ -5,23 +5,23 @@ import { t } from "svelte-i18n";
 export function getPriorityColor(priority: string): string {
   switch (priority) {
     case "critical":
-      return "#ef4444";
+      return "var(--accent-danger)";
     case "high":
-      return "#f59e0b";
+      return "var(--accent-warning)";
     case "medium":
-      return "#3b82f6";
+      return "var(--accent-primary)";
     case "low":
-      return "#6b7280";
+      return "var(--text-muted)";
     default:
-      return "#6b7280";
+      return "var(--text-muted)";
   }
 }
 
 export function getProgressColor(progress: number): string {
-  if (progress === 100) return "#4CAF50";
-  if (progress >= 50) return "#FFC107";
-  if (progress > 0) return "#FF9800";
-  return "#F44336";
+  if (progress === 100) return "var(--accent-success)";
+  if (progress >= 50) return "var(--accent-warning)";
+  if (progress > 0) return "var(--accent-warning)";
+  return "var(--accent-danger)";
 }
 
 export function getPriorityEmoji(priority: string): string {

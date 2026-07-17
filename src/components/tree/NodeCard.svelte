@@ -210,9 +210,9 @@
     display: flex;
     gap: 10px;
     align-items: flex-start;
-    background: #1a1d24;
+    background: var(--bg-surface);
     position: relative;
-    border: 1px solid #262b33;
+    border: 1px solid var(--border-default);
     border-left: 4px solid var(--accent);
     border-radius: 10px;
     padding: 10px 12px;
@@ -239,7 +239,7 @@
   }
 
   .card.focused-card {
-    outline: 2px solid #facc15;
+    outline: 2px solid var(--accent-warning);
     box-shadow: 0 0 14px rgba(250, 204, 21, 0.35);
   }
 
@@ -268,9 +268,9 @@
     min-width: 0;
     width: 100%;
     box-sizing: border-box;
-    background: #0f1115;
+    background: var(--bg-deepest);
     border: 1px solid var(--accent);
-    color: white;
+    color: var(--text-inverse);
     border-radius: 4px;
     padding: 2px 6px;
   }

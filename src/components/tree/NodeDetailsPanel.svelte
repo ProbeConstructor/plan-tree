@@ -127,7 +127,7 @@
   .bar {
     width: 150px;
     height: 6px;
-    background: #0f1115;
+    background: var(--bg-deepest);
     border-radius: 4px;
     overflow: hidden;
   }
@@ -181,9 +181,9 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    background: #1f2329;
-    color: #e7e9ee;
-    border: 1px solid #30363d;
+    background: var(--bg-elevated);
+    color: var(--text-primary);
+    border: 1px solid var(--border-strong);
     border-radius: 6px;
     cursor: pointer;
     font-size: 14px;
@@ -192,21 +192,21 @@
   }
 
   .icon-btn:hover {
-    background: #2b3138;
+    background: var(--bg-hover);
   }
 
   .icon-btn.active {
     background: rgba(250, 204, 21, 0.15);
-    border-color: #facc15;
+    border-color: var(--accent-warning);
   }
 
   .icon-btn.danger {
-    color: #ef4444;
+    color: var(--accent-danger);
   }
 
   .icon-btn.danger:hover {
     background: rgba(239, 68, 68, 0.15);
-    border-color: #ef4444;
+    border-color: var(--accent-danger);
   }
 
   .action-grid {
